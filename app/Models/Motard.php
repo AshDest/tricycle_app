@@ -47,6 +47,14 @@ class Motard extends Model
     }
 
     /**
+     * Alias pour motoActuelle - la moto assignée au motard
+     */
+    public function moto(): HasOne
+    {
+        return $this->hasOne(Moto::class);
+    }
+
+    /**
      * Historique de toutes les motos conduites
      */
     public function motos(): HasMany

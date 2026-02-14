@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Versement;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -14,29 +15,61 @@ class Index extends Component
 
     public $search = '';
     public $filterStatut = '';
+    public $filterMode = '';
+    public $filterDate = '';
     public $perPage = 15;
 
-    protected $queryString = ['search', 'filterStatut'];
+    // Stats
+    public $totalAujourdhui = 0;
+    public $nombreVersementsJour = 0;
+    public $soldeEnCaisse = 0;
+    public $motardsServisJour = 0;
 
-    public function updatingSearch()
+    protected $queryString = ['search', 'filterStatut', 'filterMode', 'filterDate'];
+
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingFilterStatut() { $this->resetPage(); }
+    public function updatingFilterMode() { $this->resetPage(); }
+    public function updatingFilterDate() { $this->resetPage(); }
+
+    public function resetFilters()
     {
+        $this->reset(['search', 'filterStatut', 'filterMode', 'filterDate']);
         $this->resetPage();
     }
 
-    public function updatingFilterStatut()
+    public function voirDetails($versementId)
     {
-        $this->resetPage();
+        // Peut ouvrir un modal ou rediriger
     }
 
     public function render()
     {
-        $caissier_id = auth()->user()->caissier?->id;
+        $caissier = auth()->user()->caissier;
+        $caissier_id = $caissier?->id;
+        $today = Carbon::today();
 
-        $versements = Versement::with(['motard'])
+        // Calculer les stats du jour
+        if ($caissier_id) {
+            $versementsJour = Versement::where('caissier_id', $caissier_id)
+                ->whereDate('date_versement', $today);
+
+            $this->totalAujourdhui = (clone $versementsJour)->sum('montant');
+            $this->nombreVersementsJour = (clone $versementsJour)->count();
+            $this->motardsServisJour = (clone $versementsJour)->distinct('motard_id')->count('motard_id');
+            $this->soldeEnCaisse = $caissier->solde_actuel ?? 0;
+        }
+
+        // Query principale avec filtres
+        $versements = Versement::with(['motard.user', 'moto'])
             ->where('caissier_id', $caissier_id)
-            ->when($this->filterStatut, function ($q) {
-                $q->where('statut', $this->filterStatut);
+            ->when($this->search, function ($q) {
+                $q->whereHas('motard.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'))
+                  ->orWhereHas('moto', fn($q2) => $q2->where('plaque_immatriculation', 'like', '%'.$this->search.'%'));
             })
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
+            ->when($this->filterMode, fn($q) => $q->where('mode_paiement', $this->filterMode))
+            ->when($this->filterDate, fn($q) => $q->whereDate('date_versement', $this->filterDate))
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 

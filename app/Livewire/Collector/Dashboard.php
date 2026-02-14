@@ -8,15 +8,16 @@ use App\Models\Collecteur;
 use App\Models\Tournee;
 use App\Models\Collecte;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 #[Layout('components.dashlite-layout')]
 class Dashboard extends Component
 {
-    public $collecteur;
-    public $tourneesDuJour = [];
-    public $collectesDuJour = [];
+    public $collecteur = null;
     public $totalEncaisse = 0;
-    public $historiqueRecent = [];
+    public $collectesReussies = 0;
+    public $tourneesTerminees = 0;
+    public $totalTourneesJour = 0;
 
     public function mount()
     {
@@ -24,31 +25,61 @@ class Dashboard extends Component
         $this->collecteur = $user->collecteur;
 
         if ($this->collecteur) {
-            // Tournees du jour
-            $this->tourneesDuJour = Tournee::where('collecteur_id', $this->collecteur->id)
-                ->whereDate('date', Carbon::today())
-                ->with('collectes.caissier.user')
+            $today = Carbon::today();
+
+            // Tournées du jour
+            $tourneesDuJour = Tournee::where('collecteur_id', $this->collecteur->id)
+                ->whereDate('date', $today)
                 ->get();
 
-            // Collectes du jour
-            $tourneeIds = $this->tourneesDuJour->pluck('id');
-            $this->collectesDuJour = Collecte::whereIn('tournee_id', $tourneeIds)
-                ->with('caissier.user')
-                ->get();
+            $this->totalTourneesJour = $tourneesDuJour->count();
+            $this->tourneesTerminees = $tourneesDuJour->where('statut', 'terminee')->count();
 
-            // Total encaisse aujourd'hui
-            $this->totalEncaisse = $this->collectesDuJour->sum('montant_collecte');
-
-            // Historique recent (10 dernieres tournees)
-            $this->historiqueRecent = Tournee::where('collecteur_id', $this->collecteur->id)
-                ->orderBy('date', 'desc')
-                ->take(10)
-                ->get();
+            // Collectes du jour via les tournées
+            $tourneeIds = $tourneesDuJour->pluck('id');
+            if ($tourneeIds->isNotEmpty()) {
+                $collectesDuJour = Collecte::whereIn('tournee_id', $tourneeIds)->get();
+                $this->totalEncaisse = $collectesDuJour->sum('montant_collecte') ?? 0;
+                $this->collectesReussies = $collectesDuJour->where('statut', 'reussie')->count();
+            }
         }
     }
 
     public function render()
     {
-        return view('livewire.collector.dashboard');
+        $tourneesDuJour = collect();
+        $collectesDuJour = collect();
+        $historiqueRecent = collect();
+
+        if ($this->collecteur) {
+            $today = Carbon::today();
+
+            // Tournées du jour
+            $tourneesDuJour = Tournee::where('collecteur_id', $this->collecteur->id)
+                ->whereDate('date', $today)
+                ->with(['collectes.caissier'])
+                ->get();
+
+            // Collectes du jour
+            $tourneeIds = $tourneesDuJour->pluck('id');
+            if ($tourneeIds->isNotEmpty()) {
+                $collectesDuJour = Collecte::whereIn('tournee_id', $tourneeIds)
+                    ->with(['caissier'])
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
+
+            // Historique récent (10 dernières tournées)
+            $historiqueRecent = Tournee::where('collecteur_id', $this->collecteur->id)
+                ->orderBy('date', 'desc')
+                ->take(10)
+                ->get();
+        }
+
+        return view('livewire.collector.dashboard', [
+            'tourneesDuJour' => $tourneesDuJour,
+            'collectesDuJour' => $collectesDuJour,
+            'historiqueRecent' => $historiqueRecent,
+        ]);
     }
 }
