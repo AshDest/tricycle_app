@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'Liste des Motos')
 
     @if(session()->has('success'))
     <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2" role="alert">

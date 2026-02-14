@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'Ajouter un Motard')
 
     <!-- Page Header -->
     <div class="page-header d-flex justify-content-between align-items-center">

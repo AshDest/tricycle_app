@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'Liste des Motards')
 
     <!-- Flash Messages -->
     @if(session()->has('success'))

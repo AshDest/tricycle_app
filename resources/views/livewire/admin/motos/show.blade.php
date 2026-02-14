@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'D&eacute;tail Moto')
 
     <div class="page-header d-flex justify-content-between align-items-center">
         <div>

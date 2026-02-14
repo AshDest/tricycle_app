@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin\Proprietaires;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Proprietaire;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Show extends Component
 {
     public Proprietaire $proprietaire;

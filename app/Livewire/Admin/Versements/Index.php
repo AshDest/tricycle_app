@@ -4,8 +4,10 @@ namespace App\Livewire\Admin\Versements;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Layout;
 use App\Models\Versement;
 
+#[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;

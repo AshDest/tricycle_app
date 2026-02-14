@@ -3,10 +3,12 @@
 namespace App\Livewire\Admin\Payments;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Payment;
 use App\Models\Proprietaire;
 use App\Services\PaymentService;
 
+#[Layout('components.dashlite-layout')]
 class Create extends Component
 {
     public $proprietaire_id = '';

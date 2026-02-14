@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'Modifier la Zone')
     <div class="page-header d-flex justify-content-between align-items-center">
         <div><h4>Modifier la Zone</h4><p class="text-muted small mb-0">{{ $nom }}</p></div>
         <a href="{{ route('admin.zones.index') }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i> Retour</a>

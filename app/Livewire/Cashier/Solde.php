@@ -3,7 +3,9 @@
 namespace App\Livewire\Cashier;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 
+#[Layout('components.dashlite-layout')]
 class Solde extends Component
 {
     public $caissier;

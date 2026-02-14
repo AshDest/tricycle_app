@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'D&eacute;tail Versement')
     <div class="page-header d-flex justify-content-between align-items-center">
         <div><h4>D&eacute;tail du Versement</h4><p class="text-muted small mb-0">#{{ $versement->id }}</p></div>
         <a href="{{ route('admin.versements.index') }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i> Retour</a>

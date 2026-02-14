@@ -3,11 +3,13 @@
 namespace App\Livewire\Admin\Proprietaires;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\User;
 use App\Models\Proprietaire;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
+#[Layout('components.dashlite-layout')]
 class Edit extends Component
 {
     public Proprietaire $proprietaire;

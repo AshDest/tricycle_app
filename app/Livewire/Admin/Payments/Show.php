@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin\Payments;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Payment;
 
+#[Layout('components.dashlite-layout')]
 class Show extends Component
 {
     public Payment $payment;

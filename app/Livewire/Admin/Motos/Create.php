@@ -3,10 +3,12 @@
 namespace App\Livewire\Admin\Motos;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Moto;
 use App\Models\Proprietaire;
 use App\Models\Motard;
 
+#[Layout('components.dashlite-layout')]
 class Create extends Component
 {
     public $numero_matricule = '';

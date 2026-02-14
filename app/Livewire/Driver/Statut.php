@@ -3,8 +3,10 @@
 namespace App\Livewire\Driver;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Motard;
 
+#[Layout('components.dashlite-layout')]
 class Statut extends Component
 {
     public $motard;

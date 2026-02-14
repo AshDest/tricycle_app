@@ -3,11 +3,13 @@
 namespace App\Livewire\Collector;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Collecteur;
 use App\Models\Tournee;
 use App\Models\Collecte;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Dashboard extends Component
 {
     public $collecteur;

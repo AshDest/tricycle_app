@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin\Reports;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Monthly extends Component
 {
     public $month;

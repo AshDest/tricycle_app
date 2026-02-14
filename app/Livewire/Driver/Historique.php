@@ -3,9 +3,11 @@
 namespace App\Livewire\Driver;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Versement;
 
+#[Layout('components.dashlite-layout')]
 class Historique extends Component
 {
     use WithPagination;

@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin\Tournees;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Tournee;
 use App\Models\Collecteur;
 
+#[Layout('components.dashlite-layout')]
 class Create extends Component
 {
     public $collecteur_id = '';

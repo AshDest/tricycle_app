@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'Zones')
     <div class="page-header d-flex justify-content-between align-items-center">
         <div><h4>Zones</h4><p class="text-muted small mb-0">Gestion des zones g&eacute;ographiques</p></div>
         <a href="{{ route('admin.zones.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Nouvelle Zone</a>

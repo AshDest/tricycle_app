@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin\Versements;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Versement;
 
+#[Layout('components.dashlite-layout')]
 class Show extends Component
 {
     public Versement $versement;

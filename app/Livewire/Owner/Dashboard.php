@@ -3,11 +3,13 @@
 namespace App\Livewire\Owner;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Proprietaire;
 use App\Models\Versement;
 use App\Models\Payment;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Dashboard extends Component
 {
     public $proprietaire;

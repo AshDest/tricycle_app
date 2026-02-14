@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin\Motos;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Moto;
 
+#[Layout('components.dashlite-layout')]
 class Show extends Component
 {
     public Moto $moto;

@@ -3,10 +3,12 @@
 namespace App\Livewire\Cashier;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Versement;
 use App\Models\Caissier;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Dashboard extends Component
 {
     public $caissier;

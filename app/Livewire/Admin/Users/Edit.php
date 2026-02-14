@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin\Users;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\User;
 
+#[Layout('components.dashlite-layout')]
 class Edit extends Component
 {
     public $user;

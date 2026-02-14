@@ -8,9 +8,6 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     */
-    /**
-     * Run the migrations.
      * Versement = paiement journalier du motard au caissier (point de collecte).
      * Flux: Motard → Caissier (validation) → Collecteur (ramassage) → NTH (Admin)
      */
@@ -37,8 +34,8 @@ return new class extends Migration
             $table->timestamp('validated_by_okami_at')->nullable();
             $table->text('okami_notes')->nullable();
 
-            // Référence à la collecte (quand le collecteur ramasse l'argent chez le caissier)
-            $table->foreignId('collecte_id')->nullable()->constrained('collectes')->nullOnDelete();
+            // Référence à la collecte - ajoutée plus tard via migration séparée
+            $table->unsignedBigInteger('collecte_id')->nullable();
 
             $table->text('notes')->nullable();
             $table->timestamps();

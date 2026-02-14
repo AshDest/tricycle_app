@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin\Zones;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Zone;
 
+#[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;

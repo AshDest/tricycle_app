@@ -3,8 +3,10 @@
 namespace App\Livewire\Admin\Motards;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Motard;
 
+#[Layout('components.dashlite-layout')]
 class Edit extends Component
 {
     public Motard $motard;

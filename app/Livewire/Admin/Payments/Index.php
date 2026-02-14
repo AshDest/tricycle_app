@@ -3,10 +3,12 @@
 namespace App\Livewire\Admin\Payments;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Models\Proprietaire;
 
+#[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;

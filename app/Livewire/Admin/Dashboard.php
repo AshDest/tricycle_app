@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\User;
 use App\Models\Motard;
 use App\Models\Proprietaire;
@@ -14,6 +15,7 @@ use App\Models\Accident;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Dashboard extends Component
 {
     public $totalUsers = 0;

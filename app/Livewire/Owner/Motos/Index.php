@@ -3,9 +3,11 @@
 namespace App\Livewire\Owner\Motos;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Moto;
 
+#[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;

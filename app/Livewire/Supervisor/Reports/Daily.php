@@ -3,8 +3,10 @@
 namespace App\Livewire\Supervisor\Reports;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Daily extends Component
 {
     public $date;

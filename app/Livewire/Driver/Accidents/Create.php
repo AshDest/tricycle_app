@@ -3,9 +3,11 @@
 namespace App\Livewire\Driver\Accidents;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Accident;
 use App\Models\Motard;
 
+#[Layout('components.dashlite-layout')]
 class Create extends Component
 {
     public $moto_id = '';

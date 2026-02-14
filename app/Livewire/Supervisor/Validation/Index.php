@@ -3,9 +3,11 @@
 namespace App\Livewire\Supervisor\Validation;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Tournee;
 
+#[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;

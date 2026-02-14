@@ -1,5 +1,4 @@
 <div>
-    @section('title', 'Tableau de Bord')
 
     <!-- Page Header -->
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -115,9 +114,6 @@
                     <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                         <i class="bi bi-graph-up-arrow"></i>
                     </div>
-                </div>
-            </div>
-        </div>
                 </div>
             </div>
         </div>

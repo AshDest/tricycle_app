@@ -3,7 +3,9 @@
 namespace App\Livewire\Admin\Settings;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 
+#[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     public $app_name = '';

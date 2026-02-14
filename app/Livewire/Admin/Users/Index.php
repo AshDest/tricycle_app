@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin\Users;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\User;
 
+#[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;

@@ -3,9 +3,11 @@
 namespace App\Livewire\Driver;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Services\PaymentService;
 use App\Models\Versement;
 
+#[Layout('components.dashlite-layout')]
 class Dashboard extends Component
 {
     public $motard;

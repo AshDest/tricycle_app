@@ -3,10 +3,12 @@
 namespace App\Livewire\Admin\Collecteurs;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\User;
 use App\Models\Collecteur;
 use Illuminate\Support\Facades\Hash;
 
+#[Layout('components.dashlite-layout')]
 class Create extends Component
 {
     public $name = '';

@@ -3,12 +3,14 @@
 namespace App\Livewire\Supervisor;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Motard;
 use App\Models\Versement;
 use App\Models\Tournee;
 use App\Services\ReportService;
 use Carbon\Carbon;
 
+#[Layout('components.dashlite-layout')]
 class Dashboard extends Component
 {
     public $motardsEnRetard = [];

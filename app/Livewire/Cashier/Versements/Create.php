@@ -3,9 +3,11 @@
 namespace App\Livewire\Cashier\Versements;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Versement;
 use App\Models\Motard;
 
+#[Layout('components.dashlite-layout')]
 class Create extends Component
 {
     public $motard_id = '';

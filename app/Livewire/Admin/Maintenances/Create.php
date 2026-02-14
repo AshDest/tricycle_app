@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin\Maintenances;
 
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 use App\Models\Moto;
 use App\Models\Maintenance;
 
+#[Layout('components.dashlite-layout')]
 class Create extends Component
 {
     public $moto_id = '';
