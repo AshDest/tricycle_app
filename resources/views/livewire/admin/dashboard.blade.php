@@ -122,7 +122,7 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Arriérés Cumulés</p>
-                        <h3 class="fw-bold text-danger mb-1">{{ number_format($arrieresCumules) }}</h3>
+                        <h3 class="fw-bold text-danger mb-1">{{ number_format($arrieresCumules ?? 0) }}</h3>
                         <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-danger bg-opacity-10 text-danger">
