@@ -12,6 +12,14 @@
         </button>
     </div>
 
+    <!-- Message Alert -->
+    @if($message)
+    <div class="alert alert-{{ $messageType }} alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-info-circle me-2"></i>{{ $message }}
+        <button type="button" class="btn-close" wire:click="closeMessage" aria-label="Close"></button>
+    </div>
+    @endif
+
     <!-- Stats -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-3">

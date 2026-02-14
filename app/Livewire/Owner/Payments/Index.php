@@ -26,6 +26,10 @@ class Index extends Component
     public $enAttente = 0;
     public $arrieres = 0;
 
+    // Message
+    public $message = '';
+    public $messageType = 'info';
+
     protected $queryString = ['search', 'filterStatut', 'filterPeriode', 'dateFrom', 'dateTo'];
 
     public function updatingSearch() { $this->resetPage(); }
@@ -42,9 +46,13 @@ class Index extends Component
 
     public function demanderRetrait()
     {
-        // Pour l'instant, afficher un message
-        // Dans une version future, on pourrait ouvrir un modal ou rediriger vers un formulaire
-        session()->flash('info', 'La fonctionnalité de demande de retrait sera bientôt disponible. Veuillez contacter l\'administration.');
+        $this->message = 'La fonctionnalité de demande de retrait sera bientôt disponible. Veuillez contacter l\'administration pour effectuer un retrait.';
+        $this->messageType = 'info';
+    }
+
+    public function closeMessage()
+    {
+        $this->message = '';
     }
 
     public function telechargerRecu($paymentId)
