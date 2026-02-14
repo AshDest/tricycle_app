@@ -30,53 +30,60 @@ new #[Layout('layouts.auth')] class extends Component
 }; ?>
 
 <div>
-    @section('title', 'Mot de passe oubli&eacute;')
+    @section('title', 'Mot de passe oublié')
 
     <div class="auth-card">
         <div class="auth-header">
-            <div class="auth-logo">
-                <i class="bi bi-key"></i>
-            </div>
-            <h4>Mot de passe oubli&eacute; ?</h4>
-            <p>Entrez votre email pour recevoir un lien de r&eacute;initialisation</p>
+            <h4>Mot de passe oublié ? 🔐</h4>
+            <p>Pas de panique ! Entrez votre email pour recevoir un lien de réinitialisation</p>
         </div>
 
         <div class="auth-body">
             @if (session('status'))
-                <div class="alert alert-success d-flex align-items-center gap-2 small" role="alert">
-                    <i class="bi bi-check-circle-fill"></i>
-                    <div>{{ session('status') }}</div>
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    <span>{{ session('status') }}</span>
                 </div>
             @endif
 
             <form wire:submit="sendPasswordResetLink">
                 <!-- Email -->
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="email" class="form-label">Adresse email</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                        <input type="email" wire:model="email" id="email" class="form-control @error('email') is-invalid @enderror" placeholder="exemple@email.com" autofocus>
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input
+                            type="email"
+                            wire:model="email"
+                            id="email"
+                            class="form-control @error('email') is-invalid @enderror"
+                            placeholder="nom@entreprise.com"
+                            autocomplete="email"
+                            autofocus
+                        >
                     </div>
-                    @error('email') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('email')
+                        <span class="form-text-error">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <!-- Submit -->
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="sendPasswordResetLink">
-                            <i class="bi bi-send me-1"></i> Envoyer le lien
-                        </span>
-                        <span wire:loading wire:target="sendPasswordResetLink">
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span> Envoi...
-                        </span>
-                    </button>
-                </div>
+                <button type="submit" class="btn-submit" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="sendPasswordResetLink">
+                        <i class="bi bi-send"></i>
+                        Envoyer le lien
+                    </span>
+                    <span wire:loading wire:target="sendPasswordResetLink">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        Envoi en cours...
+                    </span>
+                </button>
             </form>
         </div>
 
         <div class="auth-footer">
-            <a href="{{ route('login') }}" class="small text-decoration-none">
-                <i class="bi bi-arrow-left me-1"></i> Retour &agrave; la connexion
+            <a href="{{ route('login') }}" class="auth-footer-link">
+                <i class="bi bi-arrow-left"></i> Retour à la connexion
             </a>
         </div>
     </div>

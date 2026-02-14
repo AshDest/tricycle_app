@@ -2,8 +2,10 @@
 <div class="app-sidebar">
     <div class="sidebar-brand">
         <a href="{{ route('dashboard') }}">
-            <i class="fas fa-motorcycle"></i>
-            <span>Tricycle App</span>
+            <span class="brand-icon">
+                <i class="fas fa-motorcycle"></i>
+            </span>
+            <span class="brand-text">Tricycle<span class="text-primary">App</span></span>
         </a>
     </div>
 
@@ -13,7 +15,7 @@
             <li class="sidebar-heading">Menu Principal</li>
             <li class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <a href="{{ route('dashboard') }}">
-                    <i class="bi bi-speedometer2"></i>
+                    <i class="bi bi-grid-1x2-fill"></i>
                     <span>Tableau de bord</span>
                 </a>
             </li>

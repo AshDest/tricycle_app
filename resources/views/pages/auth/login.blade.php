@@ -37,63 +37,92 @@ new #[Layout('layouts.auth')] class extends Component
 
     <div class="auth-card">
         <div class="auth-header">
-            <div class="auth-logo">
-                <i class="bi bi-bicycle"></i>
-            </div>
-            <h4>Bienvenue</h4>
-            <p>Connectez-vous pour acc&eacute;der &agrave; votre espace</p>
+            <h4>Bon retour ! 👋</h4>
+            <p>Entrez vos identifiants pour accéder à votre espace</p>
         </div>
 
         <div class="auth-body">
+            @if (session('status'))
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    <span>{{ session('status') }}</span>
+                </div>
+            @endif
+
             <form wire:submit="login">
                 <!-- Email -->
-                <div class="mb-3">
+                <div class="form-group">
                     <label for="email" class="form-label">Adresse email</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                        <input type="email" wire:model="email" id="email" class="form-control @error('email') is-invalid @enderror" placeholder="exemple@email.com" autofocus>
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input
+                            type="email"
+                            wire:model="email"
+                            id="email"
+                            class="form-control @error('email') is-invalid @enderror"
+                            placeholder="nom@entreprise.com"
+                            autocomplete="email"
+                            autofocus
+                        >
                     </div>
-                    @error('email') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('email')
+                        <span class="form-text-error">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <!-- Password -->
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <label for="password" class="form-label">Mot de passe</label>
-                        <a href="{{ route('password.request') }}" class="small text-decoration-none">Mot de passe oubli&eacute; ?</a>
-                    </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Mot de passe</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input type="password" wire:model="password" id="password" class="form-control @error('password') is-invalid @enderror" placeholder="Votre mot de passe">
+                        <i class="bi bi-lock input-icon"></i>
+                        <input
+                            type="password"
+                            wire:model="password"
+                            id="password"
+                            class="form-control @error('password') is-invalid @enderror"
+                            placeholder="••••••••"
+                            autocomplete="current-password"
+                        >
+                        <button type="button" class="toggle-password" tabindex="-1">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
-                    @error('password') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    @error('password')
+                        <span class="form-text-error">{{ $message }}</span>
+                    @enderror
                 </div>
 
-                <!-- Remember Me -->
-                <div class="mb-3">
+                <!-- Remember & Forgot -->
+                <div class="form-options">
                     <div class="form-check">
-                        <input type="checkbox" wire:model="remember" class="form-check-input" id="remember">
-                        <label class="form-check-label small" for="remember">Se souvenir de moi</label>
+                        <input
+                            type="checkbox"
+                            wire:model="remember"
+                            class="form-check-input"
+                            id="remember"
+                        >
+                        <label class="form-check-label" for="remember">Se souvenir de moi</label>
                     </div>
+                    <a href="{{ route('password.request') }}" class="forgot-link">Mot de passe oublié ?</a>
                 </div>
 
                 <!-- Submit -->
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-                        <span wire:loading.remove wire:target="login">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
-                        </span>
-                        <span wire:loading wire:target="login">
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span> Connexion...
-                        </span>
-                    </button>
-                </div>
+                <button type="submit" class="btn-submit" wire:loading.attr="disabled">
+                    <span wire:loading.remove wire:target="login">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Se connecter
+                    </span>
+                    <span wire:loading wire:target="login">
+                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                        Connexion en cours...
+                    </span>
+                </button>
             </form>
         </div>
 
         <div class="auth-footer">
-            <span class="small text-muted">Pas encore de compte ?</span>
-            <a href="{{ route('register') }}" class="small fw-medium text-decoration-none ms-1">Cr&eacute;er un compte</a>
+            <span class="auth-footer-text">Pas encore de compte ?</span>
+            <a href="{{ route('register') }}" class="auth-footer-link">Créer un compte</a>
         </div>
     </div>
 </div>

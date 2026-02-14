@@ -25,6 +25,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Custom App CSS -->
+    @vite(['resources/css/app.css'])
+
     <style>
         /* ========================================
            TRICYCLE APP - PROFESSIONAL DASHBOARD
@@ -348,6 +351,13 @@
             border-radius: 0.375rem;
         }
 
+        .badge-soft-primary { background: rgba(79, 70, 229, 0.1); color: #4f46e5; }
+        .badge-soft-success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge-soft-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .badge-soft-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .badge-soft-info { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .badge-soft-secondary { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+
         /* Buttons */
         .btn {
             font-weight: 500;
@@ -379,12 +389,24 @@
             font-size: 0.875rem;
         }
 
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .avatar-sm { width: 32px; height: 32px; font-size: 0.75rem; }
+
         /* Page Header */
         .page-header {
             margin-bottom: 1.75rem;
         }
 
-        .page-header h4 {
+        .page-header h4, .page-header .page-title {
             font-weight: 700;
             font-size: 1.5rem;
             margin-bottom: 0.25rem;
@@ -464,135 +486,6 @@
             70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-    </style>
-
-    @stack('styles')
-
-    <!-- Livewire Styles -->
-    @livewireStyles
-</head>
-            z-index: 1030;
-            display: flex;
-            align-items: center;
-            padding: 0 1.5rem;
-            transition: left 0.3s ease;
-        }
-
-        /* Content */
-        .app-content {
-            margin-left: var(--sidebar-width);
-            margin-top: var(--header-height);
-            padding: 1.5rem;
-            min-height: calc(100vh - var(--header-height));
-            transition: margin-left 0.3s ease;
-        }
-
-        /* Footer */
-        .app-footer {
-            margin-left: var(--sidebar-width);
-            padding: 1rem 1.5rem;
-            background: #fff;
-            border-top: 1px solid #e2e8f0;
-            transition: margin-left 0.3s ease;
-        }
-
-        /* Backdrop */
-        .sidebar-backdrop {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1035;
-        }
-
-        /* Responsive */
-        @media (max-width: 991.98px) {
-            .app-sidebar { transform: translateX(-100%); }
-            .app-sidebar.show { transform: translateX(0); }
-            .app-header { left: 0; }
-            .app-content { margin-left: 0; }
-            .app-footer { margin-left: 0; }
-            .sidebar-backdrop.show { display: block; }
-        }
-
-        /* Cards */
-        .card {
-            border: none;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        }
-
-        .card-header {
-            background: transparent;
-            border-bottom: 1px solid #f1f5f9;
-            padding: 1rem 1.25rem;
-        }
-
-        /* Stats Cards */
-        .stat-card {
-            border-radius: 0.75rem;
-            padding: 1.25rem;
-            border: none;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        }
-
-        .stat-card .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 0.625rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-        }
-
-        /* Tables */
-        .table > :not(caption) > * > * { padding: 0.875rem 1rem; vertical-align: middle; }
-        .table > thead > tr > th {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            border-bottom-width: 1px;
-        }
-
-        /* Badge */
-        .badge { font-weight: 500; font-size: 0.75rem; }
-
-        /* Buttons */
-        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
-        .btn-primary:hover { background-color: var(--primary-hover); border-color: var(--primary-hover); }
-
-        /* User avatar */
-        .user-avatar-sm {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.875rem;
-        }
-
-        /* Page header */
-        .page-header {
-            margin-bottom: 1.5rem;
-        }
-
-        .page-header h4 {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        /* Form styling */
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
-        }
-
-        .form-label { font-weight: 500; font-size: 0.875rem; color: #374151; }
     </style>
 
     @stack('styles')
