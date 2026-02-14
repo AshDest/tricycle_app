@@ -25,7 +25,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Collecté Aujourd'hui</p>
                         <h3 class="fw-bold text-success mb-1">{{ number_format($totalVersementsAujourdhui ?? 0) }}</h3>
-                        <small class="text-muted">FCFA</small>
+                        <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="bi bi-cash-stack"></i>
@@ -53,7 +53,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Solde en Caisse</p>
                         <h3 class="fw-bold text-warning mb-1">{{ number_format($soldeActuel ?? 0) }}</h3>
-                        <small class="text-muted">FCFA (non collecté)</small>
+                        <small class="text-muted">FC (non collecté)</small>
                     </div>
                     <div class="stat-icon bg-warning bg-opacity-10 text-warning">
                         <i class="bi bi-wallet2"></i>
@@ -148,7 +148,7 @@
                                     {{ $versement->moto->plaque_immatriculation ?? 'N/A' }}
                                 </span>
                             </td>
-                            <td class="fw-semibold text-success">{{ number_format($versement->montant ?? 0) }} FCFA</td>
+                            <td class="fw-semibold text-success">{{ number_format($versement->montant ?? 0) }} FC</td>
                             <td class="pe-4">
                                 @if($versement->statut === 'payé')
                                 <span class="badge badge-soft-success">

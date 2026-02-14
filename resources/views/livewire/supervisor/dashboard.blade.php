@@ -25,7 +25,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Versements Aujourd'hui</p>
                         <h3 class="fw-bold text-success mb-1">{{ number_format($versementsAujourdhui ?? 0) }}</h3>
-                        <small class="text-muted">FCFA collectés</small>
+                        <small class="text-muted">FC collectés</small>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="bi bi-cash-stack"></i>
@@ -139,7 +139,7 @@
                                 <tr>
                                     <td class="ps-4">{{ $activite->motard->user->name ?? 'N/A' }}</td>
                                     <td>{{ $activite->type ?? 'Versement' }}</td>
-                                    <td>{{ number_format($activite->montant ?? 0) }} FCFA</td>
+                                    <td>{{ number_format($activite->montant ?? 0) }} FC</td>
                                     <td class="pe-4 text-muted small">{{ $activite->created_at?->diffForHumans() }}</td>
                                 </tr>
                                 @empty

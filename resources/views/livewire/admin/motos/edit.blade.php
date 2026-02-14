@@ -71,7 +71,7 @@
                         <label class="form-label">Montant Journalier Attendu <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <input type="number" wire:model="montant_journalier_attendu" class="form-control @error('montant_journalier_attendu') is-invalid @enderror">
-                            <span class="input-group-text">FCFA</span>
+                            <span class="input-group-text">FC</span>
                         </div>
                         @error('montant_journalier_attendu') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                     </div>

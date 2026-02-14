@@ -25,7 +25,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Encaissé Aujourd'hui</p>
                         <h3 class="fw-bold text-success mb-1">{{ number_format($totalEncaisse ?? 0) }}</h3>
-                        <small class="text-muted">FCFA</small>
+                        <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="bi bi-cash-stack"></i>
@@ -167,7 +167,7 @@
                                             <span class="fw-medium">{{ $collecte->caissier->nom_point_collecte ?? 'N/A' }}</span>
                                         </div>
                                     </td>
-                                    <td class="fw-semibold text-success">{{ number_format($collecte->montant_collecte ?? 0) }} FCFA</td>
+                                    <td class="fw-semibold text-success">{{ number_format($collecte->montant_collecte ?? 0) }} FC</td>
                                     <td class="pe-4">
                                         <span class="badge badge-soft-{{ $collecte->statut === 'reussie' ? 'success' : 'warning' }}">
                                             {{ ucfirst($collecte->statut ?? 'N/A') }}

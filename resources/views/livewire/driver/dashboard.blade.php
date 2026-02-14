@@ -35,7 +35,7 @@
                         <h3 class="fw-bold {{ ($versementAujourdhui ?? 0) > 0 ? 'text-success' : 'text-danger' }} mb-1">
                             {{ number_format($versementAujourdhui ?? 0) }}
                         </h3>
-                        <small class="text-muted">FCFA sur {{ number_format($montantAttendu ?? 0) }} attendu</small>
+                        <small class="text-muted">FC sur {{ number_format($montantAttendu ?? 0) }} attendu</small>
                     </div>
                     <div class="stat-icon bg-{{ ($versementAujourdhui ?? 0) > 0 ? 'success' : 'danger' }} bg-opacity-10 text-{{ ($versementAujourdhui ?? 0) > 0 ? 'success' : 'danger' }}">
                         <i class="bi bi-cash-stack"></i>
@@ -49,7 +49,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Total ce Mois</p>
                         <h3 class="fw-bold text-primary mb-1">{{ number_format($totalMois ?? 0) }}</h3>
-                        <small class="text-muted">FCFA versés</small>
+                        <small class="text-muted">FC versés</small>
                     </div>
                     <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                         <i class="bi bi-calendar-check"></i>
@@ -79,7 +79,7 @@
                         <h3 class="fw-bold {{ ($arrieres ?? 0) > 0 ? 'text-danger' : 'text-success' }} mb-1">
                             {{ number_format($arrieres ?? 0) }}
                         </h3>
-                        <small class="text-muted">FCFA</small>
+                        <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-{{ ($arrieres ?? 0) > 0 ? 'danger' : 'success' }} bg-opacity-10 text-{{ ($arrieres ?? 0) > 0 ? 'danger' : 'success' }}">
                         <i class="bi bi-{{ ($arrieres ?? 0) > 0 ? 'exclamation-circle' : 'check-circle' }}"></i>
@@ -112,7 +112,7 @@
                         </li>
                         <li class="d-flex justify-content-between py-2 border-bottom">
                             <span class="text-muted">Tarif journalier</span>
-                            <span class="fw-medium">{{ number_format($moto->montant_journalier_attendu ?? 0) }} FCFA</span>
+                            <span class="fw-medium">{{ number_format($moto->montant_journalier_attendu ?? 0) }} FC</span>
                         </li>
                         <li class="d-flex justify-content-between py-2">
                             <span class="text-muted">Statut</span>
@@ -154,9 +154,9 @@
                                         {{ $versement->date_versement?->format('d/m/Y') ?? 'N/A' }}
                                     </td>
                                     <td class="fw-semibold {{ $versement->montant >= $versement->montant_attendu ? 'text-success' : 'text-warning' }}">
-                                        {{ number_format($versement->montant ?? 0) }} FCFA
+                                        {{ number_format($versement->montant ?? 0) }} FC
                                     </td>
-                                    <td class="text-muted">{{ number_format($versement->montant_attendu ?? 0) }} FCFA</td>
+                                    <td class="text-muted">{{ number_format($versement->montant_attendu ?? 0) }} FC</td>
                                     <td class="pe-4">
                                         @php
                                             $statutColors = [

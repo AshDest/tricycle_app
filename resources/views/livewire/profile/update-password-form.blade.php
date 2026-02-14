@@ -2,78 +2,98 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Livewire\Volt\Component;
 
 new class extends Component
 {
- public string $current_password = '';
- public string $password = '';
- public string $password_confirmation = '';
+    public string $current_password = '';
+    public string $password = '';
+    public string $password_confirmation = '';
 
- /**
- * Update the password for the currently authenticated user.
- */
- public function updatePassword(): void
- {
- try {
- $validated = $this->validate([
- 'current_password' => ['required', 'string', 'current_password'],
- 'password' => ['required', 'string', Password::defaults(), 'confirmed'],
- ]);
- } catch (ValidationException $e) {
- $this->reset('current_password', 'password', 'password_confirmation');
+    public function updatePassword(): void
+    {
+        try {
+            $validated = $this->validate([
+                'current_password' => ['required', 'string', 'current_password'],
+                'password' => ['required', 'string', Password::defaults(), 'confirmed'],
+            ]);
+        } catch (ValidationException $e) {
+            $this->reset('current_password', 'password', 'password_confirmation');
+            throw $e;
+        }
 
- throw $e;
- }
+        Auth::user()->update([
+            'password' => Hash::make($validated['password']),
+        ]);
 
- Auth::user()->update([
- 'password' => Hash::make($validated['password']),
- ]);
+        $this->reset('current_password', 'password', 'password_confirmation');
 
- $this->reset('current_password', 'password', 'password_confirmation');
-
- $this->dispatch('password-updated');
- }
+        Session::flash('password-updated', 'Mot de passe mis à jour avec succès.');
+    }
 }; ?>
 
-<section>
- <header>
- <h2 class="text-lg font-medium text-gray-900">
- {{ __('Update Password') }}
- </h2>
+<div>
+    @if (session('password-updated'))
+    <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {{ session('password-updated') }}
+    </div>
+    @endif
 
- <p class="mt-1 text-sm text-gray-600">
- {{ __('Ensure your account is using a long, random password to stay secure.') }}
- </p>
- </header>
+    <form wire:submit="updatePassword">
+        <div class="mb-4">
+            <label for="current_password" class="form-label fw-semibold">Mot de passe actuel</label>
+            <input
+                wire:model="current_password"
+                type="password"
+                class="form-control @error('current_password') is-invalid @enderror"
+                id="current_password"
+                autocomplete="current-password"
+            >
+            @error('current_password')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
 
- <form wire:submit="updatePassword" class="mt-6 space-y-6">
- <div>
- <x-input-label for="update_password_current_password" :value="__('Current Password')" />
- <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
- <x-input-error :messages="$errors->get('current_password')" class="mt-2" />
- </div>
+        <div class="mb-4">
+            <label for="password" class="form-label fw-semibold">Nouveau mot de passe</label>
+            <input
+                wire:model="password"
+                type="password"
+                class="form-control @error('password') is-invalid @enderror"
+                id="password"
+                autocomplete="new-password"
+            >
+            @error('password')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
 
- <div>
- <x-input-label for="update_password_password" :value="__('New Password')" />
- <x-text-input wire:model="password" id="update_password_password" name="password" type="password" class="mt-1 block w-full" autocomplete="new-password" />
- <x-input-error :messages="$errors->get('password')" class="mt-2" />
- </div>
+        <div class="mb-4">
+            <label for="password_confirmation" class="form-label fw-semibold">Confirmer le mot de passe</label>
+            <input
+                wire:model="password_confirmation"
+                type="password"
+                class="form-control @error('password_confirmation') is-invalid @enderror"
+                id="password_confirmation"
+                autocomplete="new-password"
+            >
+            @error('password_confirmation')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
 
- <div>
- <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
- <x-text-input wire:model="password_confirmation" id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
- <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
- </div>
-
- <div class="flex items-center gap-4">
- <x-primary-button>{{ __('Save') }}</x-primary-button>
-
- <x-action-message class="me-3" on="password-updated">
- {{ __('Saved.') }}
- </x-action-message>
- </div>
- </form>
-</section>
+        <button type="submit" class="btn btn-warning" wire:loading.attr="disabled">
+            <span wire:loading.remove>
+                <i class="bi bi-shield-lock me-2"></i>Changer le mot de passe
+            </span>
+            <span wire:loading>
+                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                Modification...
+            </span>
+        </button>
+    </form>
+</div>

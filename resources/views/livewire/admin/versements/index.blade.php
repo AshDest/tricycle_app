@@ -94,8 +94,8 @@
                                     <i class="bi bi-bicycle me-1"></i>{{ $versement->moto->plaque_immatriculation ?? 'N/A' }}
                                 </span>
                             </td>
-                            <td class="fw-semibold text-success">{{ number_format($versement->montant) }} FCFA</td>
-                            <td class="text-muted">{{ number_format($versement->montant_attendu) }} FCFA</td>
+                            <td class="fw-semibold text-success">{{ number_format($versement->montant) }} FC</td>
+                            <td class="text-muted">{{ number_format($versement->montant_attendu) }} FC</td>
                             <td>
                                 <span class="badge bg-light text-dark">
                                     <i class="bi bi-{{ $versement->mode_paiement === 'cash' ? 'cash' : ($versement->mode_paiement === 'mobile_money' ? 'phone' : 'bank') }} me-1"></i>

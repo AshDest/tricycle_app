@@ -22,7 +22,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Revenus ce Mois</p>
                         <h3 class="fw-bold text-success mb-1">{{ number_format($revenusMois ?? 0) }}</h3>
-                        <small class="text-muted">FCFA</small>
+                        <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
                         <i class="bi bi-cash-stack"></i>
@@ -50,7 +50,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Prochain Paiement</p>
                         <h3 class="fw-bold text-info mb-1">{{ number_format($prochainPaiement ?? 0) }}</h3>
-                        <small class="text-muted">FCFA estimé</small>
+                        <small class="text-muted">FC estimé</small>
                     </div>
                     <div class="stat-icon bg-info bg-opacity-10 text-info">
                         <i class="bi bi-wallet2"></i>
@@ -117,7 +117,7 @@
                                 @forelse($derniersPaiements ?? [] as $paiement)
                                 <tr>
                                     <td class="ps-4">{{ $paiement->date_paiement?->format('d/m/Y') ?? 'N/A' }}</td>
-                                    <td class="fw-semibold text-success">{{ number_format($paiement->montant ?? 0) }} FCFA</td>
+                                    <td class="fw-semibold text-success">{{ number_format($paiement->montant ?? 0) }} FC</td>
                                     <td>{{ ucfirst($paiement->mode_paiement ?? 'N/A') }}</td>
                                     <td class="pe-4">
                                         <span class="badge badge-soft-{{ $paiement->statut === 'payé' ? 'success' : 'warning' }}">
@@ -166,7 +166,7 @@
                                 </span>
                             </td>
                             <td>{{ $moto->motard->user->name ?? 'Non assigné' }}</td>
-                            <td>{{ number_format($moto->versements_mois ?? 0) }} FCFA</td>
+                            <td>{{ number_format($moto->versements_mois ?? 0) }} FC</td>
                             <td class="pe-4">
                                 <span class="badge badge-soft-{{ $moto->statut === 'actif' ? 'success' : 'secondary' }}">
                                     {{ ucfirst($moto->statut ?? 'Inactif') }}

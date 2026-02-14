@@ -92,9 +92,9 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Versements Aujourd'hui</p>
                         <h3 class="fw-bold text-success mb-1">{{ number_format($versementsAujourdhui) }}</h3>
-                        <small class="text-muted">FCFA</small>
+                        <small class="text-muted">FC</small>
                         <div class="mt-2">
-                            <small class="text-muted">Attendu: <strong>{{ number_format($versementsAttenduAujourdhui) }}</strong> FCFA</small>
+                            <small class="text-muted">Attendu: <strong>{{ number_format($versementsAttenduAujourdhui) }}</strong> FC</small>
                         </div>
                     </div>
                     <div class="stat-icon bg-success bg-opacity-10 text-success">
@@ -109,7 +109,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Versements ce Mois</p>
                         <h3 class="fw-bold text-primary mb-1">{{ number_format($versementsCeMois) }}</h3>
-                        <small class="text-muted">FCFA</small>
+                        <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                         <i class="bi bi-graph-up-arrow"></i>
@@ -123,7 +123,7 @@
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Arriérés Cumulés</p>
                         <h3 class="fw-bold text-danger mb-1">{{ number_format($arrieresCumules) }}</h3>
-                        <small class="text-muted">FCFA</small>
+                        <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-danger bg-opacity-10 text-danger">
                         <i class="bi bi-exclamation-triangle-fill"></i>
@@ -253,9 +253,9 @@
                                     </td>
                                     <td>
                                         <span class="fw-bold text-success">{{ number_format($versement->montant) }}</span>
-                                        <small class="text-muted">FCFA</small>
+                                        <small class="text-muted">FC</small>
                                     </td>
-                                    <td class="text-muted">{{ number_format($versement->montant_attendu) }} FCFA</td>
+                                    <td class="text-muted">{{ number_format($versement->montant_attendu) }} FC</td>
                                     <td>
                                         @php
                                             $statutConfig = [

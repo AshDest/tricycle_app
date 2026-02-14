@@ -49,7 +49,7 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <span class="text-muted small">Montant/Jour</span>
-                        <span class="fw-semibold text-success">{{ number_format($moto->montant_journalier_attendu) }} FCFA</span>
+                        <span class="fw-semibold text-success">{{ number_format($moto->montant_journalier_attendu) }} FC</span>
                     </li>
                 </ul>
             </div>
@@ -60,13 +60,13 @@
                 <div class="col-sm-4">
                     <div class="card stat-card bg-white">
                         <p class="text-muted small mb-1">Total Vers&eacute;</p>
-                        <h4 class="fw-bold mb-0">{{ number_format($stats['total_verse'] ?? 0) }} <small class="text-muted fw-normal fs-6">FCFA</small></h4>
+                        <h4 class="fw-bold mb-0">{{ number_format($stats['total_verse'] ?? 0) }} <small class="text-muted fw-normal fs-6">FC</small></h4>
                     </div>
                 </div>
                 <div class="col-sm-4">
                     <div class="card stat-card bg-white">
                         <p class="text-muted small mb-1">Total Attendu</p>
-                        <h4 class="fw-bold mb-0">{{ number_format($stats['total_attendu'] ?? 0) }} <small class="text-muted fw-normal fs-6">FCFA</small></h4>
+                        <h4 class="fw-bold mb-0">{{ number_format($stats['total_attendu'] ?? 0) }} <small class="text-muted fw-normal fs-6">FC</small></h4>
                     </div>
                 </div>
                 <div class="col-sm-4">
@@ -97,7 +97,7 @@
                                 <tr>
                                     <td class="small">{{ $v->date_versement?->format('d/m/Y') ?? '-' }}</td>
                                     <td>{{ $v->motard->user->name ?? 'N/A' }}</td>
-                                    <td class="fw-semibold">{{ number_format($v->montant) }} FCFA</td>
+                                    <td class="fw-semibold">{{ number_format($v->montant) }} FC</td>
                                     <td>
                                         @php $colors = ['paye' => 'success', 'payé' => 'success', 'partiel' => 'warning', 'en_retard' => 'danger']; @endphp
                                         <span class="badge bg-{{ $colors[$v->statut] ?? 'secondary' }}">{{ ucfirst(str_replace('_', ' ', $v->statut)) }}</span>

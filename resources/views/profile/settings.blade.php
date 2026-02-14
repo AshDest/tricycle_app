@@ -1,57 +1,42 @@
-@extends('layouts.app')
+<x-dashlite-layout>
+    <!-- Page Header -->
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="bi bi-gear me-2 text-secondary"></i>Paramètres du Profil
+            </h4>
+            <p class="text-muted mb-0">Modifiez vos informations personnelles</p>
+        </div>
+        <div>
+            <a href="{{ route('profile.show') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour au profil
+            </a>
+        </div>
+    </div>
 
-@section('content')
-<div class="container">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Paramètres du Profil</h5>
+    <div class="row g-4">
+        <!-- Update Profile Information -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-person me-2 text-primary"></i>Informations Personnelles</h6>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="#">
-                        @csrf
-                        @method('PUT')
+                    <livewire:profile.update-profile-information-form />
+                </div>
+            </div>
+        </div>
 
-                        <div class="form-group">
-                            <label for="name">Nom</label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ auth()->user()->name }}" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" value="{{ auth()->user()->email }}" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="phone">Téléphone</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ auth()->user()->phone }}">
-                        </div>
-
-                        <hr>
-
-                        <h6>Changer le mot de passe</h6>
-
-                        <div class="form-group">
-                            <label for="current_password">Mot de passe actuel</label>
-                            <input type="password" class="form-control" id="current_password" name="current_password">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="password">Nouveau mot de passe</label>
-                            <input type="password" class="form-control" id="password" name="password">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="password_confirmation">Confirmer le mot de passe</label>
-                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation">
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-                    </form>
+        <!-- Update Password -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-shield-lock me-2 text-warning"></i>Changer le Mot de Passe</h6>
+                </div>
+                <div class="card-body">
+                    <livewire:profile.update-password-form />
                 </div>
             </div>
         </div>
     </div>
-</div>
-@endsection
+</x-dashlite-layout>

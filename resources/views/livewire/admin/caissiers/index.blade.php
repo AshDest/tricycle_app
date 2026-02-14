@@ -26,7 +26,7 @@
                                 <td><strong>{{ $caissier->user->name }}</strong></td>
                                 <td>{{ $caissier->nom_point_collecte }}</td>
                                 <td>{{ $caissier->zone }}</td>
-                                <td>{{ number_format($caissier->solde_actuel, 2) }} FCFA</td>
+                                <td>{{ number_format($caissier->solde_actuel, 2) }} FC</td>
                                 <td>
                                     <span class="badge {{ $caissier->is_active ? 'bg-success' : 'bg-danger' }}" style="cursor: pointer;" wire:click="toggleActive({{ $caissier->id }})">
                                         {{ $caissier->is_active ? 'Actif' : 'Inactif' }}

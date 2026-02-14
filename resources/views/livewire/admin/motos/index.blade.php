@@ -80,7 +80,7 @@
                                     <span class="text-muted small">Non assign&eacute;</span>
                                 @endif
                             </td>
-                            <td>{{ number_format($moto->montant_journalier_attendu) }} FCFA</td>
+                            <td>{{ number_format($moto->montant_journalier_attendu) }} FC</td>
                             <td>
                                 @php
                                     $statutColors = ['actif' => 'success', 'suspendu' => 'warning', 'maintenance' => 'info'];

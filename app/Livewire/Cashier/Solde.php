@@ -31,7 +31,7 @@ class Solde extends Component
                 ->sum('montant');
 
             $this->total_collecte = $this->caissier->collectes()
-                ->sum('montant_total');
+                ->sum('montant_collecte');
         }
     }
 
