@@ -30,11 +30,13 @@ class Index extends Component
 
     public function render()
     {
-        $proprietaire_id = auth()->user()->proprietaire?->id;
+        $proprietaire = auth()->user()->proprietaire;
+        $proprietaire_id = $proprietaire?->id;
 
-        $versements = Versement::with(['motard', 'caissier'])
-            ->whereHas('motard.proprietaire', function ($q) use ($proprietaire_id) {
-                $q->where('id', $proprietaire_id);
+        // Récupérer les versements via les motos du propriétaire
+        $versements = Versement::with(['motard.user', 'moto', 'caissier'])
+            ->whereHas('moto', function ($q) use ($proprietaire_id) {
+                $q->where('proprietaire_id', $proprietaire_id);
             })
             ->when($this->filterStatut, function ($q) {
                 $q->where('statut', $this->filterStatut);

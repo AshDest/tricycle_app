@@ -83,8 +83,8 @@ class Proprietaire extends Model
     public function getTotalDuAttribute(): float
     {
         return $this->versements()
-            ->where('statut', 'payé')
-            ->sum('montant');
+            ->where('versements.statut', 'payé')
+            ->sum('versements.montant');
     }
 
     /**
@@ -94,7 +94,7 @@ class Proprietaire extends Model
     {
         return $this->payments()
             ->where('statut', 'payé')
-            ->sum('total_paye');
+            ->sum('total_paye') ?? 0;
     }
 
     /**
@@ -112,14 +112,14 @@ class Proprietaire extends Model
     {
         return [
             'total_motos' => $this->motos()->count(),
-            'motos_actives' => $this->motos()->actif()->count(),
+            'motos_actives' => $this->motos()->where('motos.statut', 'actif')->count(),
             'total_du' => $this->total_du,
             'total_paye' => $this->total_paye,
             'arrieres' => $this->arrieres,
             'versements_ce_mois' => $this->versements()
-                ->whereMonth('date_versement', now()->month)
-                ->whereYear('date_versement', now()->year)
-                ->sum('montant'),
+                ->whereMonth('versements.date_versement', now()->month)
+                ->whereYear('versements.date_versement', now()->year)
+                ->sum('versements.montant'),
             'cout_maintenance' => $this->maintenances->sum('cout_total'),
             'cout_accidents' => $this->accidents->sum('estimation_cout'),
         ];
