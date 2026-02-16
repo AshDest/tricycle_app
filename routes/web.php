@@ -132,8 +132,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Versements (Visualisation seulement)
         Route::get('/versements', \App\Livewire\Supervisor\Versements\Index::class)->name('versements.index');
 
-        // Validation des versements douteux
-        Route::get('/validation', \App\Livewire\Supervisor\Validation\Index::class)->name('validation.index');
 
         // Propriétaires (Enregistrement et modification)
         Route::get('/proprietaires', \App\Livewire\Supervisor\Proprietaires\Index::class)->name('proprietaires.index');

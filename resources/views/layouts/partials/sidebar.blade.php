@@ -171,15 +171,6 @@
                     <span>Versements</span>
                 </a>
             </li>
-            <li class="{{ request()->is('supervisor/validation*') ? 'active' : '' }}">
-                <a href="{{ route('supervisor.validation.index') }}">
-                    <i class="bi bi-check-circle"></i>
-                    <span>Validations</span>
-                    @if(isset($pendingValidations) && $pendingValidations > 0)
-                    <span class="badge bg-danger rounded-pill ms-auto">{{ $pendingValidations }}</span>
-                    @endif
-                </a>
-            </li>
             <li class="sidebar-heading">Propri&eacute;taires</li>
             <li class="{{ request()->is('supervisor/proprietaires') ? 'active' : '' }}">
                 <a href="{{ route('supervisor.proprietaires.index') }}">

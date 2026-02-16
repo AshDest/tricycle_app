@@ -37,6 +37,10 @@
                                 @error('password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Confirmer le mot de passe <span class="text-danger">*</span></label>
+                                <input type="password" wire:model="password_confirmation" class="form-control" placeholder="••••••••">
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Rôle <span class="text-danger">*</span></label>
                                 <select wire:model="role" class="form-select @error('role') is-invalid @enderror">
                                     <option value="">-- Sélectionner un rôle --</option>

@@ -51,12 +51,12 @@
             <div class="card stat-card h-100">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Cas Litigieux</p>
-                        <h3 class="fw-bold text-warning mb-1">{{ $casLitigieux ?? 0 }}</h3>
-                        <small class="text-muted">en attente de validation</small>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Motos Actives</p>
+                        <h3 class="fw-bold text-info mb-1">{{ $motosActives ?? 0 }}</h3>
+                        <small class="text-muted">sur {{ $totalMotos ?? 0 }} total</small>
                     </div>
-                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                        <i class="bi bi-exclamation-triangle"></i>
+                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-bicycle"></i>
                     </div>
                 </div>
             </div>
@@ -66,10 +66,10 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Taux de Collecte</p>
-                        <h3 class="fw-bold text-info mb-1">{{ $tauxCollecte ?? 0 }}%</h3>
+                        <h3 class="fw-bold text-{{ ($tauxCollecte ?? 0) >= 80 ? 'success' : 'warning' }} mb-1">{{ $tauxCollecte ?? 0 }}%</h3>
                         <small class="text-muted">aujourd'hui</small>
                     </div>
-                    <div class="stat-icon bg-info bg-opacity-10 text-info">
+                    <div class="stat-icon bg-{{ ($tauxCollecte ?? 0) >= 80 ? 'success' : 'warning' }} bg-opacity-10 text-{{ ($tauxCollecte ?? 0) >= 80 ? 'success' : 'warning' }}">
                         <i class="bi bi-graph-up"></i>
                     </div>
                 </div>
@@ -93,12 +93,6 @@
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ route('supervisor.validation.index') }}" class="btn btn-outline-warning w-100 py-3">
-                                <i class="bi bi-check2-square fs-4 d-block mb-2"></i>
-                                Validations
-                            </a>
-                        </div>
-                        <div class="col-md-2">
                             <a href="{{ route('supervisor.motards.index') }}" class="btn btn-outline-primary w-100 py-3">
                                 <i class="bi bi-people fs-4 d-block mb-2"></i>
                                 Motards
@@ -111,9 +105,15 @@
                             </a>
                         </div>
                         <div class="col-md-2">
-                            <a href="{{ route('supervisor.proprietaires.index') }}" class="btn btn-outline-secondary w-100 py-3">
+                            <a href="{{ route('supervisor.proprietaires.index') }}" class="btn btn-outline-warning w-100 py-3">
                                 <i class="bi bi-building fs-4 d-block mb-2"></i>
                                 Propriétaires
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <a href="{{ route('supervisor.payments.index') }}" class="btn btn-outline-secondary w-100 py-3">
+                                <i class="bi bi-wallet2 fs-4 d-block mb-2"></i>
+                                Paiements
                             </a>
                         </div>
                         <div class="col-md-2">
