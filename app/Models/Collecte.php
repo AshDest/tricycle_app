@@ -22,6 +22,9 @@ class Collecte extends Model
         'montant_collecte',
         'ecart',
         'statut',
+        'valide_par_collecteur',
+        'valide_collecteur_at',
+        'notes_collecteur',
         'signature_base64',
         'photo_cash_url',
         'recu_url',
@@ -37,6 +40,8 @@ class Collecte extends Model
         'ecart' => 'decimal:2',
         'heure_arrivee' => 'datetime',
         'heure_depart' => 'datetime',
+        'valide_collecteur_at' => 'datetime',
+        'valide_par_collecteur' => 'boolean',
     ];
 
     /**

@@ -174,6 +174,19 @@
                     @endif
                 </a>
             </li>
+            <li class="sidebar-heading">Paiements Propri&eacute;taires</li>
+            <li class="{{ request()->is('supervisor/payments') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.payments.index') }}">
+                    <i class="bi bi-wallet2"></i>
+                    <span>Gestion Paiements</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('supervisor/payments/create') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.payments.create') }}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Nouvelle Demande</span>
+                </a>
+            </li>
             <li class="has-submenu {{ request()->is('supervisor/reports*') ? 'active' : '' }}">
                 <a href="#" class="toggle-submenu">
                     <i class="bi bi-bar-chart-line"></i>
@@ -261,6 +274,19 @@
                     <span>Mon Solde</span>
                 </a>
             </li>
+            <li class="sidebar-heading">D&eacute;p&ocirc;ts</li>
+            <li class="{{ request()->is('cashier/depot') ? 'active' : '' }}">
+                <a href="{{ route('cashier.depot') }}">
+                    <i class="bi bi-box-arrow-up"></i>
+                    <span>D&eacute;poser au Collecteur</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('cashier/depots/historique*') ? 'active' : '' }}">
+                <a href="{{ route('cashier.depots.historique') }}">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Historique D&eacute;p&ocirc;ts</span>
+                </a>
+            </li>
             @endrole
 
             {{-- Collector Menu --}}
@@ -276,6 +302,25 @@
                 <a href="{{ route('collector.collectes.index') }}">
                     <i class="bi bi-list-check"></i>
                     <span>Mes Collectes</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('collector/depots*') ? 'active' : '' }}">
+                <a href="{{ route('collector.depots.index') }}">
+                    <i class="bi bi-box-arrow-in-down"></i>
+                    <span>D&eacute;p&ocirc;ts Caissiers</span>
+                </a>
+            </li>
+            <li class="sidebar-heading">Paiements</li>
+            <li class="{{ request()->is('collector/payments*') ? 'active' : '' }}">
+                <a href="{{ route('collector.payments.index') }}">
+                    <i class="bi bi-wallet2"></i>
+                    <span>Demandes &agrave; Traiter</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('collector/proprietaires*') ? 'active' : '' }}">
+                <a href="{{ route('collector.proprietaires.index') }}">
+                    <i class="bi bi-people"></i>
+                    <span>Solde Propri&eacute;taires</span>
                 </a>
             </li>
             <li class="{{ request()->is('collector/historique*') ? 'active' : '' }}">

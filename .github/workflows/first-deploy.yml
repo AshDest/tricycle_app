@@ -1,0 +1,65 @@
+name: First Deploy (avec Seeds)
+on:
+  workflow_dispatch:
+    inputs:
+      run_seeders:
+        description: 'Exécuter les seeders'
+        required: true
+        default: true
+        type: boolean
+      fresh_migrate:
+        description: 'Fresh migration (SUPPRIME TOUTES LES TABLES)'
+        required: true
+        default: false
+        type: boolean
+jobs:
+  first-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Premier Déploiement
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            echo "🚀 Premier déploiement Tricycle App..."
+            APP_DIR="/var/www/tricycle_app"
+            cd $APP_DIR
+            # Dépendances
+            echo "📦 Installation des dépendances..."
+            composer install --no-dev --optimize-autoloader --no-interaction
+            npm ci
+            npm run build
+            # Générer la clé si nécessaire
+            php artisan key:generate --force || true
+            # Storage link
+            php artisan storage:link || true
+            # Migrations
+            echo "🗄️ Migrations..."
+            if [ "${{ github.event.inputs.fresh_migrate }}" = "true" ]; then
+              php artisan migrate:fresh --force
+            else
+              php artisan migrate --force
+            fi
+            # Seeders
+            if [ "${{ github.event.inputs.run_seeders }}" = "true" ]; then
+              echo "🌱 Exécution des seeders..."
+              php artisan db:seed --force
+            fi
+            # Permissions
+            echo "🔐 Permissions..."
+            sudo chown -R www-data:www-data $APP_DIR/storage
+            sudo chown -R www-data:www-data $APP_DIR/bootstrap/cache
+            sudo chmod -R 775 $APP_DIR/storage
+            sudo chmod -R 775 $APP_DIR/bootstrap/cache
+            # Cache
+            echo "⚡ Optimisation..."
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan optimize
+            # Redémarrer PHP-FPM
+            sudo systemctl reload php8.2-fpm || true
+            echo "✅ Premier déploiement terminé!"

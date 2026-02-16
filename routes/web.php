@@ -121,6 +121,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/motards', \App\Livewire\Supervisor\Motards\Index::class)->name('motards.index');
         Route::get('/versements', \App\Livewire\Supervisor\Versements\Index::class)->name('versements.index');
         Route::get('/validation', \App\Livewire\Supervisor\Validation\Index::class)->name('validation.index');
+
+        // Paiements Propriétaires (demandes et validations)
+        Route::get('/payments', \App\Livewire\Supervisor\Payments\Index::class)->name('payments.index');
+        Route::get('/payments/create', \App\Livewire\Supervisor\Payments\Create::class)->name('payments.create');
+
         Route::get('/reports/daily', \App\Livewire\Supervisor\Reports\Daily::class)->name('reports.daily');
         Route::get('/reports/weekly', \App\Livewire\Supervisor\Reports\Weekly::class)->name('reports.weekly');
         Route::get('/reports/monthly', \App\Livewire\Supervisor\Reports\Monthly::class)->name('reports.monthly');
@@ -158,6 +163,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/versements', \App\Livewire\Cashier\Versements\Index::class)->name('versements.index');
         Route::get('/versements/create', \App\Livewire\Cashier\Versements\Create::class)->name('versements.create');
         Route::get('/solde', \App\Livewire\Cashier\Solde::class)->name('solde');
+        Route::get('/depot', \App\Livewire\Cashier\Depot::class)->name('depot');
+        Route::get('/depots/historique', \App\Livewire\Cashier\Depots\Historique::class)->name('depots.historique');
     });
 
     /*
@@ -169,6 +176,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/tournee', \App\Livewire\Collector\Tournee\Index::class)->name('tournee.index');
         Route::get('/collectes', \App\Livewire\Collector\Collectes\Index::class)->name('collectes.index');
         Route::get('/historique', \App\Livewire\Collector\Historique::class)->name('historique');
+
+        // Demandes de paiement à traiter
+        Route::get('/payments', \App\Livewire\Collector\Payments\Index::class)->name('payments.index');
+
+        // Dépôts reçus des caissiers
+        Route::get('/depots', \App\Livewire\Collector\Depots\Index::class)->name('depots.index');
+
+        // Solde des propriétaires
+        Route::get('/proprietaires', \App\Livewire\Collector\Proprietaires\Index::class)->name('proprietaires.index');
     });
 });
 

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Payment = Paiement vers le propriétaire (reversement des recettes).
+ * Workflow: OKAMI soumet une demande → Collecteur traite → OKAMI valide → Propriétaire visualise
  * Modes supportés: M-PESA, Airtel Money, Orange Money, Virement bancaire
  */
 class Payment extends Model
@@ -19,16 +20,22 @@ class Payment extends Model
         'total_du',
         'total_paye',
         'mode_paiement',
-        'statut',
+        'statut', // demande, en_cours, paye, valide, rejete
         'date_demande',
         'date_paiement',
         'reference_paiement',
-        'numero_compte', // Numéro de téléphone ou compte bancaire
-        'periode_debut', // Début de la période couverte
-        'periode_fin',   // Fin de la période couverte
+        'numero_envoi',
+        'numero_compte',
+        'periode_debut',
+        'periode_fin',
         'notes',
-        'recu_url',      // URL du reçu PDF généré
-        'traite_par',    // ID de l'admin qui a traité
+        'notes_validation',
+        'recu_url',
+        'demande_par',    // OKAMI qui a fait la demande
+        'demande_at',
+        'traite_par',     // Collecteur/Admin qui a traité
+        'valide_par',     // OKAMI qui a validé après paiement
+        'valide_at',
     ];
 
     protected $casts = [
@@ -38,6 +45,8 @@ class Payment extends Model
         'date_paiement' => 'date',
         'periode_debut' => 'date',
         'periode_fin' => 'date',
+        'demande_at' => 'datetime',
+        'valide_at' => 'datetime',
     ];
 
     /**
@@ -49,11 +58,27 @@ class Payment extends Model
     }
 
     /**
-     * L'admin qui a traité le paiement
+     * OKAMI qui a soumis la demande
+     */
+    public function demandePar(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'demande_par');
+    }
+
+    /**
+     * Collecteur/Admin qui a traité le paiement
      */
     public function traitePar(): BelongsTo
     {
         return $this->belongsTo(User::class, 'traite_par');
+    }
+
+    /**
+     * OKAMI qui a validé le paiement
+     */
+    public function validePar(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'valide_par');
     }
 
     /**
@@ -73,47 +98,49 @@ class Payment extends Model
     }
 
     /**
-     * Vérifier si le paiement est en attente
+     * Vérifier si le paiement est en attente de validation OKAMI
      */
-    public function getIsEnAttenteAttribute(): bool
+    public function getIsEnAttenteValidationAttribute(): bool
     {
-        return $this->statut === 'en_attente';
+        return $this->statut === 'paye';
     }
 
     /**
-     * Marquer comme payé
-     */
-    public function marquerCommePaye(string $reference = null): void
-    {
-        $this->update([
-            'statut' => 'payé',
-            'date_paiement' => now(),
-            'reference_paiement' => $reference,
-        ]);
-    }
-
-    /**
-     * Scope pour les paiements en attente
+     * Scope pour les demandes en attente
      */
     public function scopeEnAttente($query)
     {
-        return $query->where('statut', 'en_attente');
+        return $query->where('statut', 'demande');
     }
 
     /**
-     * Scope pour les paiements effectués
+     * Scope pour les paiements effectués mais non validés
      */
-    public function scopePayes($query)
+    public function scopeEnAttenteValidation($query)
     {
-        return $query->where('statut', 'payé');
+        return $query->where('statut', 'paye');
     }
 
     /**
-     * Scope pour un propriétaire
+     * Scope pour les paiements validés
      */
-    public function scopeDeProprietaire($query, int $proprietaireId)
+    public function scopeValides($query)
     {
-        return $query->where('proprietaire_id', $proprietaireId);
+        return $query->where('statut', 'valide');
+    }
+
+    /**
+     * Les statuts possibles
+     */
+    public static function getStatuts(): array
+    {
+        return [
+            'demande' => 'Demande soumise',
+            'en_cours' => 'En cours de traitement',
+            'paye' => 'Payé (en attente validation)',
+            'valide' => 'Validé',
+            'rejete' => 'Rejeté',
+        ];
     }
 
     /**

@@ -110,8 +110,8 @@
                         @forelse($accidents ?? [] as $accident)
                         <tr>
                             <td class="ps-4">
-                                <span class="fw-medium">{{ $accident->date_accident?->format('d/m/Y') }}</span>
-                                <small class="text-muted d-block">{{ $accident->date_accident?->format('H:i') }}</small>
+                                <span class="fw-medium">{{ $accident->date_heure?->format('d/m/Y') }}</span>
+                                <small class="text-muted d-block">{{ $accident->date_heure?->format('H:i') }}</small>
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark">

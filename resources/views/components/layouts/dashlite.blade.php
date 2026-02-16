@@ -484,6 +484,63 @@
             70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+
+        /* ===== PAGINATION STYLES ===== */
+        .pagination {
+            margin: 0;
+            gap: 2px;
+        }
+
+        .pagination .page-link {
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            background: #fff;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            min-width: 32px;
+            text-align: center;
+        }
+
+        .pagination .page-link:hover {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            color: var(--primary-color);
+            z-index: 2;
+        }
+
+        .pagination .page-link:focus {
+            box-shadow: 0 0 0 3px var(--primary-light);
+            z-index: 3;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+            color: #cbd5e1;
+        }
+
+        .pagination-sm .page-link {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            min-width: 28px;
+        }
+
+        .card-footer .pagination {
+            justify-content: flex-end;
+        }
+
+        .card-footer nav {
+            width: 100%;
+        }
     </style>
 
     @stack('styles')

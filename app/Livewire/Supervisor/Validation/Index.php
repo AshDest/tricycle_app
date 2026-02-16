@@ -5,7 +5,7 @@ namespace App\Livewire\Supervisor\Validation;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
-use App\Models\Tournee;
+use App\Models\Versement;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -13,48 +13,68 @@ class Index extends Component
     use WithPagination;
 
     public $search = '';
-    public $filterZone = '';
+    public $filterType = '';
+    public $filterStatut = '';
     public $perPage = 15;
 
-    protected $queryString = ['search', 'filterZone'];
+    // Stats
+    public $versementsEnAttente = 0;
 
-    public function updatingSearch()
+    protected $queryString = ['search', 'filterType', 'filterStatut'];
+
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingFilterType() { $this->resetPage(); }
+    public function updatingFilterStatut() { $this->resetPage(); }
+
+    public function resetFilters()
     {
+        $this->reset(['search', 'filterType', 'filterStatut']);
         $this->resetPage();
     }
 
-    public function updatingFilterZone()
+    public function validerVersement($versementId)
     {
-        $this->resetPage();
+        $versement = Versement::findOrFail($versementId);
+        $versement->update([
+            'statut' => 'payé',
+            'valide_par' => auth()->id(),
+            'valide_at' => now(),
+            'notes_validation' => 'Validé par OKAMI',
+        ]);
+        session()->flash('success', 'Versement validé avec succès.');
     }
 
-    public function validateTournee(Tournee $tournee)
+    public function invaliderVersement($versementId)
     {
-        if (auth()->id()) {
-            $tournee->update([
-                'valide_par_nth_id' => auth()->id(),
-                'valide_par_nth_at' => now(),
-                'statut' => 'validee',
-            ]);
-            session()->flash('success', 'Tournee validee avec succes.');
-        }
+        $versement = Versement::findOrFail($versementId);
+        $versement->update([
+            'statut' => 'invalide',
+            'valide_par' => auth()->id(),
+            'valide_at' => now(),
+            'notes_validation' => 'Invalidé par OKAMI',
+        ]);
+        session()->flash('success', 'Versement invalidé.');
     }
 
     public function render()
     {
-        $tournees = Tournee::with(['collecteur'])
-            ->where('statut', '!=', 'validee')
+        // Versements douteux : non confirmés, montants incorrects, litigieux
+        $query = Versement::with(['motard.user', 'moto', 'caissier'])
+            ->where(function($q) {
+                $q->whereIn('statut', ['en_attente_validation', 'litigieux', 'partiellement_payé'])
+                  ->orWhereRaw('montant != montant_attendu');
+            })
             ->when($this->search, function ($q) {
-                $q->where('zone', 'like', '%' . $this->search . '%');
+                $q->whereHas('motard.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'))
+                  ->orWhereHas('moto', fn($q2) => $q2->where('plaque_immatriculation', 'like', '%'.$this->search.'%'));
             })
-            ->when($this->filterZone, function ($q) {
-                $q->where('zone', $this->filterZone);
-            })
-            ->orderBy('date', 'desc')
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut));
+
+        $this->versementsEnAttente = (clone $query)->count();
+
+        $versements = $query->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 
-        $zones = Tournee::distinct()->pluck('zone')->filter();
-
-        return view('livewire.supervisor.validation.index', compact('tournees', 'zones'));
+        return view('livewire.supervisor.validation.index', compact('versements'));
     }
 }

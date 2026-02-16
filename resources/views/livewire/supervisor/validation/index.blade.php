@@ -132,7 +132,7 @@
                 </table>
             </div>
         </div>
-        @if(($versements ?? collect())->hasPages())
+        @if($versements->hasPages())
         <div class="card-footer bg-light">
             {{ $versements->links() }}
         </div>
