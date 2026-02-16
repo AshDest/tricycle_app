@@ -122,6 +122,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/versements', \App\Livewire\Supervisor\Versements\Index::class)->name('versements.index');
         Route::get('/validation', \App\Livewire\Supervisor\Validation\Index::class)->name('validation.index');
 
+        // Propriétaires (Enregistrement et modification)
+        Route::get('/proprietaires', \App\Livewire\Supervisor\Proprietaires\Index::class)->name('proprietaires.index');
+        Route::get('/proprietaires/create', \App\Livewire\Supervisor\Proprietaires\Create::class)->name('proprietaires.create');
+        Route::get('/proprietaires/{proprietaire}/edit', \App\Livewire\Supervisor\Proprietaires\Edit::class)->name('proprietaires.edit');
+
         // Paiements Propriétaires (demandes et validations)
         Route::get('/payments', \App\Livewire\Supervisor\Payments\Index::class)->name('payments.index');
         Route::get('/payments/create', \App\Livewire\Supervisor\Payments\Create::class)->name('payments.create');

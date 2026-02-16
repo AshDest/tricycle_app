@@ -27,6 +27,7 @@ class Proprietaire extends Model
         'numero_compte_orange',
         'numero_compte_bancaire',
         'banque_nom',
+        'is_active',
     ];
 
     /**

@@ -174,6 +174,19 @@
                     @endif
                 </a>
             </li>
+            <li class="sidebar-heading">Propri&eacute;taires</li>
+            <li class="{{ request()->is('supervisor/proprietaires') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.proprietaires.index') }}">
+                    <i class="bi bi-building"></i>
+                    <span>Liste Propri&eacute;taires</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('supervisor/proprietaires/create') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.proprietaires.create') }}">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Nouveau Propri&eacute;taire</span>
+                </a>
+            </li>
             <li class="sidebar-heading">Paiements Propri&eacute;taires</li>
             <li class="{{ request()->is('supervisor/payments') ? 'active' : '' }}">
                 <a href="{{ route('supervisor.payments.index') }}">
