@@ -48,6 +48,14 @@ class Moto extends Model
     }
 
     /**
+     * Alias pour le motard actuellement assigné (pour compatibilité)
+     */
+    public function motardActuel(): BelongsTo
+    {
+        return $this->belongsTo(Motard::class, 'motard_id');
+    }
+
+    /**
      * Tous les versements liés à cette moto
      */
     public function versements(): HasMany

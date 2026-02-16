@@ -53,7 +53,41 @@ class Dashboard extends Component
 
     public function render()
     {
-        return view('livewire.supervisor.dashboard');
+        $totalMotards = Motard::count();
+        $motardsActifs = Motard::where('is_active', true)->count();
+        $casLitigieux = $this->versementsAValider;
+
+        // Taux de collecte
+        $tauxCollecte = $this->versementsAttenduAujourdhui > 0
+            ? round(($this->versementsAujourdhui / $this->versementsAttenduAujourdhui) * 100, 1)
+            : 0;
+
+        // Dernières activités (versements récents)
+        $dernieresActivites = Versement::with(['motard.user'])
+            ->whereDate('created_at', Carbon::today())
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Alertes
+        $alertes = collect();
+        if ($casLitigieux > 0) {
+            $alertes->push((object)[
+                'message' => "{$casLitigieux} versement(s) en attente de validation",
+                'color' => 'warning',
+                'icon' => 'exclamation-triangle',
+                'created_at' => now()
+            ]);
+        }
+
+        return view('livewire.supervisor.dashboard', [
+            'totalMotards' => $totalMotards,
+            'motardsActifs' => $motardsActifs,
+            'casLitigieux' => $casLitigieux,
+            'tauxCollecte' => $tauxCollecte,
+            'dernieresActivites' => $dernieresActivites,
+            'alertes' => $alertes,
+        ]);
     }
 }
 

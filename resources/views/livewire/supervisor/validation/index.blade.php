@@ -99,22 +99,17 @@
                             <td class="text-muted small">{{ $versement->date_versement?->format('d/m/Y') }}</td>
                             <td class="text-end pe-4">
                                 <div class="btn-group">
-                                    <button wire:click="valider({{ $versement->id }})"
+                                    <button wire:click="validerVersement({{ $versement->id }})"
                                             class="btn btn-sm btn-success"
                                             title="Valider"
                                             wire:confirm="Êtes-vous sûr de vouloir valider ce versement ?">
                                         <i class="bi bi-check-lg"></i>
                                     </button>
-                                    <button wire:click="rejeter({{ $versement->id }})"
+                                    <button wire:click="invaliderVersement({{ $versement->id }})"
                                             class="btn btn-sm btn-danger"
                                             title="Rejeter"
                                             wire:confirm="Êtes-vous sûr de vouloir rejeter ce versement ?">
                                         <i class="bi bi-x-lg"></i>
-                                    </button>
-                                    <button wire:click="voirDetails({{ $versement->id }})"
-                                            class="btn btn-sm btn-outline-primary"
-                                            title="Détails">
-                                        <i class="bi bi-eye"></i>
                                     </button>
                                 </div>
                             </td>

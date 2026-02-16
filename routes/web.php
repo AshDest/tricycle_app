@@ -118,8 +118,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {
+        // Motards (CRUD complet)
         Route::get('/motards', \App\Livewire\Supervisor\Motards\Index::class)->name('motards.index');
+        Route::get('/motards/create', \App\Livewire\Supervisor\Motards\Create::class)->name('motards.create');
+        Route::get('/motards/{motard}', \App\Livewire\Supervisor\Motards\Show::class)->name('motards.show');
+        Route::get('/motards/{motard}/edit', \App\Livewire\Supervisor\Motards\Edit::class)->name('motards.edit');
+
+        // Motos (CRUD complet)
+        Route::get('/motos', \App\Livewire\Supervisor\Motos\Index::class)->name('motos.index');
+        Route::get('/motos/create', \App\Livewire\Supervisor\Motos\Create::class)->name('motos.create');
+        Route::get('/motos/{moto}/edit', \App\Livewire\Supervisor\Motos\Edit::class)->name('motos.edit');
+
+        // Versements (Visualisation seulement)
         Route::get('/versements', \App\Livewire\Supervisor\Versements\Index::class)->name('versements.index');
+
+        // Validation des versements douteux
         Route::get('/validation', \App\Livewire\Supervisor\Validation\Index::class)->name('validation.index');
 
         // Propriétaires (Enregistrement et modification)
@@ -131,6 +144,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/payments', \App\Livewire\Supervisor\Payments\Index::class)->name('payments.index');
         Route::get('/payments/create', \App\Livewire\Supervisor\Payments\Create::class)->name('payments.create');
 
+        // Rapports
         Route::get('/reports/daily', \App\Livewire\Supervisor\Reports\Daily::class)->name('reports.daily');
         Route::get('/reports/weekly', \App\Livewire\Supervisor\Reports\Weekly::class)->name('reports.weekly');
         Route::get('/reports/monthly', \App\Livewire\Supervisor\Reports\Monthly::class)->name('reports.monthly');

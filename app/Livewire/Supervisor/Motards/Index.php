@@ -6,17 +6,28 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Motard;
+use App\Models\Zone;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;
 
-    public $search = '';
-    public $filterZone = '';
-    public $perPage = 15;
+    public string $search = '';
+    public string $filterZone = '';
+    public string $filterStatut = '';
+    public string $dateDebut = '';
+    public string $dateFin = '';
+    public int $perPage = 15;
 
-    protected $queryString = ['search', 'filterZone'];
+    // Pour la confirmation de suppression
+    public ?int $confirmingDelete = null;
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filterZone' => ['except' => ''],
+        'filterStatut' => ['except' => ''],
+    ];
 
     public function updatingSearch()
     {
@@ -28,22 +39,140 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function render()
+    public function updatingFilterStatut()
     {
-        $motards = Motard::with(['user', 'motoActuelle'])
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterZone', 'filterStatut', 'dateDebut', 'dateFin']);
+        $this->resetPage();
+    }
+
+    public function toggleActive(int $id)
+    {
+        $motard = Motard::findOrFail($id);
+        $motard->update(['is_active' => !$motard->is_active]);
+        session()->flash('success', 'Statut du motard mis à jour.');
+    }
+
+    public function confirmDelete(int $id)
+    {
+        $this->confirmingDelete = $id;
+    }
+
+    public function cancelDelete()
+    {
+        $this->confirmingDelete = null;
+    }
+
+    public function delete(int $id)
+    {
+        $motard = Motard::findOrFail($id);
+
+        // Vérifier s'il a des versements en cours
+        if ($motard->versements()->where('statut', 'en_attente')->exists()) {
+            session()->flash('error', 'Impossible de supprimer ce motard car il a des versements en attente.');
+            $this->confirmingDelete = null;
+            return;
+        }
+
+        $motard->delete();
+        session()->flash('success', 'Motard supprimé avec succès.');
+        $this->confirmingDelete = null;
+    }
+
+    public function export(string $format = 'xlsx')
+    {
+        $filename = 'motards_' . now()->format('Y-m-d_His');
+
+        $query = $this->getFilteredQuery();
+
+        if ($format === 'csv') {
+            return response()->streamDownload(function () use ($query) {
+                $this->exportCsv($query->get());
+            }, $filename . '.csv');
+        }
+
+        // Export Excel via Maatwebsite si disponible, sinon CSV
+        return response()->streamDownload(function () use ($query) {
+            $this->exportCsv($query->get());
+        }, $filename . '.csv');
+    }
+
+    protected function exportCsv($motards)
+    {
+        $handle = fopen('php://output', 'w');
+
+        // En-têtes
+        fputcsv($handle, [
+            'ID', 'Nom', 'Email', 'Téléphone', 'Numéro Identifiant',
+            'Zone', 'Moto Assignée', 'Statut', 'Date Création'
+        ]);
+
+        foreach ($motards as $motard) {
+            fputcsv($handle, [
+                $motard->id,
+                $motard->user->name ?? 'N/A',
+                $motard->user->email ?? 'N/A',
+                $motard->telephone ?? 'N/A',
+                $motard->numero_identifiant ?? 'N/A',
+                $motard->zone_affectation ?? 'N/A',
+                $motard->motoActuelle->plaque_immatriculation ?? 'Aucune',
+                $motard->is_active ? 'Actif' : 'Inactif',
+                $motard->created_at->format('d/m/Y H:i'),
+            ]);
+        }
+
+        fclose($handle);
+    }
+
+    protected function getFilteredQuery()
+    {
+        return Motard::with(['user', 'motoActuelle'])
             ->when($this->search, function ($q) {
-                $q->whereHas('user', function ($q2) {
-                    $q2->where('name', 'like', '%' . $this->search . '%');
-                })->orWhere('numero_identifiant', 'like', '%' . $this->search . '%');
+                $q->where(function ($query) {
+                    $query->whereHas('user', function ($q2) {
+                        $q2->where('name', 'like', '%' . $this->search . '%')
+                           ->orWhere('email', 'like', '%' . $this->search . '%');
+                    })->orWhere('numero_identifiant', 'like', '%' . $this->search . '%')
+                      ->orWhere('telephone', 'like', '%' . $this->search . '%');
+                });
             })
             ->when($this->filterZone, function ($q) {
                 $q->where('zone_affectation', $this->filterZone);
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->when($this->filterStatut !== '', function ($q) {
+                if ($this->filterStatut === 'actif') {
+                    $q->where('is_active', true);
+                } elseif ($this->filterStatut === 'inactif') {
+                    $q->where('is_active', false);
+                }
+            })
+            ->when($this->dateDebut, function ($q) {
+                $q->whereDate('created_at', '>=', $this->dateDebut);
+            })
+            ->when($this->dateFin, function ($q) {
+                $q->whereDate('created_at', '<=', $this->dateFin);
+            })
+            ->orderBy('created_at', 'desc');
+    }
 
-        $zones = Motard::distinct()->pluck('zone_affectation')->filter();
+    public function render()
+    {
+        $motards = $this->getFilteredQuery()->paginate($this->perPage);
+        $zones = Zone::orderBy('nom')->pluck('nom', 'id');
+        $zonesAffectation = Motard::distinct()->whereNotNull('zone_affectation')->pluck('zone_affectation');
 
-        return view('livewire.supervisor.motards.index', compact('motards', 'zones'));
+        // Statistiques
+        $stats = [
+            'total' => Motard::count(),
+            'actifs' => Motard::where('is_active', true)->count(),
+            'inactifs' => Motard::where('is_active', false)->count(),
+            'avecMoto' => Motard::whereHas('motoActuelle')->count(),
+        ];
+
+        return view('livewire.supervisor.motards.index', compact('motards', 'zones', 'zonesAffectation', 'stats'));
     }
 }

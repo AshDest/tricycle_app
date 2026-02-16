@@ -159,6 +159,12 @@
                     <span>Motards</span>
                 </a>
             </li>
+            <li class="{{ request()->is('supervisor/motos*') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.motos.index') }}">
+                    <i class="bi bi-bicycle"></i>
+                    <span>Motos</span>
+                </a>
+            </li>
             <li class="{{ request()->is('supervisor/versements*') ? 'active' : '' }}">
                 <a href="{{ route('supervisor.versements.index') }}">
                     <i class="bi bi-cash-stack"></i>
