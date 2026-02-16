@@ -48,7 +48,7 @@ class Index extends Component
     {
         $payment = Payment::findOrFail($paymentId);
 
-        if ($payment->statut !== 'paye') {
+        if ($payment->statut !== 'pay') {
             session()->flash('error', 'Ce paiement ne peut pas être validé.');
             return;
         }
@@ -77,9 +77,9 @@ class Index extends Component
         $paymentService = new PaymentService();
 
         // Calculer les stats
-        $this->demandesEnAttente = Payment::whereIn('statut', ['demande', 'en_cours'])->count();
-        $this->paiementsAValider = Payment::where('statut', 'paye')->count();
-        $this->totalPaye = Payment::where('statut', 'valide')->sum('total_paye');
+        $this->demandesEnAttente = Payment::where('statut', 'en_attente')->count();
+        $this->paiementsAValider = Payment::where('statut', 'pay')->count();
+        $this->totalPaye = Payment::where('statut', 'approuve')->sum('total_paye');
 
         // Liste des paiements
         $payments = Payment::with(['proprietaire.user', 'demandePar', 'traitePar', 'validePar'])
@@ -88,7 +88,7 @@ class Index extends Component
             })
             ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
             ->when($this->filterProprietaire, fn($q) => $q->where('proprietaire_id', $this->filterProprietaire))
-            ->orderByRaw("FIELD(statut, 'paye', 'demande', 'en_cours', 'valide', 'rejete')")
+            ->orderByRaw("FIELD(statut, 'pay', 'en_attente', 'approuve', 'rejet')")
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 

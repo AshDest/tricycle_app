@@ -87,7 +87,7 @@ class PaymentService
 
         // Total des paiements déjà validés pour ce propriétaire
         $totalPaiementsValides = Payment::where('proprietaire_id', $proprietaire->id)
-            ->whereIn('statut', ['paye', 'valide'])
+            ->whereIn('statut', ['pay', 'approuve'])
             ->sum('total_paye');
 
         return max(0, $totalVersements - $totalPaiementsValides);
@@ -109,11 +109,11 @@ class PaymentService
 
         // Paiements
         $paiementsValides = Payment::where('proprietaire_id', $proprietaire->id)
-            ->whereIn('statut', ['paye', 'valide'])
+            ->whereIn('statut', ['pay', 'approuve'])
             ->sum('total_paye');
 
         $paiementsEnAttente = Payment::where('proprietaire_id', $proprietaire->id)
-            ->whereIn('statut', ['demande', 'en_cours'])
+            ->where('statut', 'en_attente')
             ->sum('total_du');
 
         return [
@@ -172,7 +172,7 @@ class PaymentService
             'total_paye' => 0,
             'mode_paiement' => $data['mode_paiement'],
             'numero_compte' => $proprietaire->getNumeroCompte($data['mode_paiement']) ?? $data['numero_compte'] ?? null,
-            'statut' => 'demande',
+            'statut' => 'en_attente',
             'date_demande' => now(),
             'demande_par' => $okamUserId,
             'demande_at' => now(),
@@ -192,7 +192,7 @@ class PaymentService
             'numero_envoi' => $data['numero_envoi'],
             'reference_paiement' => $data['reference_paiement'] ?? null,
             'date_paiement' => now(),
-            'statut' => 'paye',
+            'statut' => 'pay',
             'traite_par' => $collecteurUserId,
             'notes' => $data['notes'] ?? $payment->notes,
         ]);
@@ -206,7 +206,7 @@ class PaymentService
     public function validerPaiement(Payment $payment, int $okamUserId, ?string $notes = null): Payment
     {
         $payment->update([
-            'statut' => 'valide',
+            'statut' => 'approuve',
             'valide_par' => $okamUserId,
             'valide_at' => now(),
             'notes_validation' => $notes,
@@ -221,7 +221,7 @@ class PaymentService
     public function rejeterPaiement(Payment $payment, int $userId, string $motif): Payment
     {
         $payment->update([
-            'statut' => 'rejete',
+            'statut' => 'rejet',
             'notes' => $motif,
             'traite_par' => $userId,
         ]);

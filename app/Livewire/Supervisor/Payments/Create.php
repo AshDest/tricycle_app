@@ -27,7 +27,7 @@ class Create extends Component
     protected $rules = [
         'proprietaire_id' => 'required|exists:proprietaires,id',
         'montant' => 'required|numeric|min:1',
-        'mode_paiement' => 'required|in:mpesa,airtel_money,orange_money,virement_bancaire',
+        'mode_paiement' => 'required|in:cash,mpesa,airtel_money,orange_money,virement_bancaire',
         'numero_compte' => 'nullable|string|max:50',
         'notes' => 'nullable|string|max:500',
     ];

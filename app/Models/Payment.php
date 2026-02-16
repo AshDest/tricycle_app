@@ -149,6 +149,7 @@ class Payment extends Model
     public static function getModesPaiement(): array
     {
         return [
+            'cash' => 'Cash',
             'mpesa' => 'M-PESA',
             'airtel_money' => 'Airtel Money',
             'orange_money' => 'Orange Money',
