@@ -171,6 +171,19 @@
                     <span>Versements</span>
                 </a>
             </li>
+            <li class="sidebar-heading">Maintenance &amp; Accidents</li>
+            <li class="{{ request()->is('supervisor/maintenances*') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.maintenances.index') }}">
+                    <i class="bi bi-tools"></i>
+                    <span>Maintenances</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('supervisor/accidents*') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.accidents.index') }}">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <span>Accidents</span>
+                </a>
+            </li>
             <li class="sidebar-heading">Propri&eacute;taires</li>
             <li class="{{ request()->is('supervisor/proprietaires') ? 'active' : '' }}">
                 <a href="{{ route('supervisor.proprietaires.index') }}">

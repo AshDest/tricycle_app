@@ -86,38 +86,50 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-2">
+                        <div class="col-6 col-md-3 col-lg">
                             <a href="{{ route('supervisor.versements.index') }}" class="btn btn-outline-success w-100 py-3">
                                 <i class="bi bi-cash-coin fs-4 d-block mb-2"></i>
                                 Versements
                             </a>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-6 col-md-3 col-lg">
                             <a href="{{ route('supervisor.motards.index') }}" class="btn btn-outline-primary w-100 py-3">
                                 <i class="bi bi-people fs-4 d-block mb-2"></i>
                                 Motards
                             </a>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-6 col-md-3 col-lg">
                             <a href="{{ route('supervisor.motos.index') }}" class="btn btn-outline-info w-100 py-3">
                                 <i class="bi bi-bicycle fs-4 d-block mb-2"></i>
                                 Motos
                             </a>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-6 col-md-3 col-lg">
+                            <a href="{{ route('supervisor.maintenances.index') }}" class="btn btn-outline-secondary w-100 py-3">
+                                <i class="bi bi-tools fs-4 d-block mb-2"></i>
+                                Maintenances
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg">
+                            <a href="{{ route('supervisor.accidents.index') }}" class="btn btn-outline-danger w-100 py-3">
+                                <i class="bi bi-exclamation-triangle fs-4 d-block mb-2"></i>
+                                Accidents
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3 col-lg">
                             <a href="{{ route('supervisor.proprietaires.index') }}" class="btn btn-outline-warning w-100 py-3">
                                 <i class="bi bi-building fs-4 d-block mb-2"></i>
                                 Propriétaires
                             </a>
                         </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('supervisor.payments.index') }}" class="btn btn-outline-secondary w-100 py-3">
+                        <div class="col-6 col-md-3 col-lg">
+                            <a href="{{ route('supervisor.payments.index') }}" class="btn btn-outline-dark w-100 py-3">
                                 <i class="bi bi-wallet2 fs-4 d-block mb-2"></i>
                                 Paiements
                             </a>
                         </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('supervisor.reports.daily') }}" class="btn btn-outline-dark w-100 py-3">
+                        <div class="col-6 col-md-3 col-lg">
+                            <a href="{{ route('supervisor.reports.daily') }}" class="btn btn-outline-primary w-100 py-3">
                                 <i class="bi bi-file-earmark-bar-graph fs-4 d-block mb-2"></i>
                                 Rapports
                             </a>
