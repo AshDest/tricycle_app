@@ -174,19 +174,24 @@ class Motard extends Model
     }
 
     /**
-     * Obtenir le statut d'arriéré
+     * Obtenir le statut d'arriéré (utilise les seuils des paramètres système)
      */
     public function getStatutArriereAttribute(): string
     {
         $arrieres = $this->getTotalArrieres();
 
+        // Récupérer les seuils depuis les paramètres système
+        $seuilFaible = SystemSetting::get('seuil_arriere_faible', 25000);
+        $seuilMoyen = SystemSetting::get('seuil_arriere_moyen', 50000);
+        $seuilCritique = SystemSetting::get('seuil_arriere_critique', 100000);
+
         if ($arrieres <= 0) {
             return 'ok';
-        } elseif ($arrieres < 25000) {
+        } elseif ($arrieres < $seuilFaible) {
             return 'faible';
-        } elseif ($arrieres < 50000) {
+        } elseif ($arrieres < $seuilMoyen) {
             return 'moyen';
-        } elseif ($arrieres < 100000) {
+        } elseif ($arrieres < $seuilCritique) {
             return 'eleve';
         } else {
             return 'critique';
@@ -212,9 +217,10 @@ class Motard extends Model
     /**
      * Vérifier si le motard a des arriérés critiques
      */
-    public function hasArrieresCritiques(float $seuil = 50000): bool
+    public function hasArrieresCritiques(?float $seuil = null): bool
     {
-        return $this->getTotalArrieres() >= $seuil;
+        $seuilCritique = $seuil ?? SystemSetting::get('seuil_arriere_critique', 100000);
+        return $this->getTotalArrieres() >= $seuilCritique;
     }
 
     /**
@@ -256,10 +262,11 @@ class Motard extends Model
     /**
      * Scope pour les motards avec arriérés critiques
      */
-    public function scopeArrieresCritiques($query, float $seuil = 50000)
+    public function scopeArrieresCritiques($query, ?float $seuil = null)
     {
-        return $query->get()->filter(function ($motard) use ($seuil) {
-            return $motard->getTotalArrieres() >= $seuil;
+        $seuilCritique = $seuil ?? SystemSetting::get('seuil_arriere_critique', 100000);
+        return $query->get()->filter(function ($motard) use ($seuilCritique) {
+            return $motard->getTotalArrieres() >= $seuilCritique;
         });
     }
 }

@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Motard;
 use App\Models\Versement;
+use App\Models\SystemSetting;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -32,8 +33,8 @@ class Statut extends Component
             $today = Carbon::today();
             $startOfMonth = Carbon::now()->startOfMonth();
 
-            // Montant attendu (du moto ou par défaut)
-            $this->montantAttendu = $this->moto->montant_journalier_attendu ?? 5000;
+            // Montant attendu (du moto ou par défaut depuis les paramètres système)
+            $this->montantAttendu = $this->moto->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
 
             // Versement du jour
             $versementJour = Versement::where('motard_id', $this->motard->id)

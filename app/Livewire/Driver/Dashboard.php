@@ -5,6 +5,7 @@ namespace App\Livewire\Driver;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Versement;
+use App\Models\SystemSetting;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -40,7 +41,7 @@ class Dashboard extends Component
 
             // Moto actuelle
             $this->moto = $this->motard->moto;
-            $this->montantAttendu = $this->moto->montant_journalier_attendu ?? 5000;
+            $this->montantAttendu = $this->moto->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
 
             // Versement aujourd'hui
             $versementJour = Versement::where('motard_id', $this->motard->id)

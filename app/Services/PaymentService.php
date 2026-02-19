@@ -8,6 +8,7 @@ use App\Models\Caissier;
 use App\Models\Proprietaire;
 use App\Models\Payment;
 use App\Models\Moto;
+use App\Models\SystemSetting;
 use Carbon\Carbon;
 
 /**
@@ -15,15 +16,21 @@ use Carbon\Carbon;
  * Gère le flux: Motard → Caissier → Collecteur → OKAMI → Propriétaire
  *
  * RÈGLES MÉTIER:
- * - Montant journalier attendu par moto: 20$ (équivalent FC)
- * - Montant hebdomadaire: 100$ (5 jours)
+ * - Montant journalier attendu par moto: configurable dans les paramètres système
+ * - Montant hebdomadaire: montant journalier × 5 jours
  * - Le propriétaire ne peut recevoir que ce qui a été collecté (pas plus)
  */
 class PaymentService
 {
-    // Montant journalier attendu en FC (équivalent ~20$)
-    const MONTANT_JOURNALIER_DEFAULT = 50000; // 50,000 FC ≈ 20$
     const JOURS_PAR_SEMAINE = 5;
+
+    /**
+     * Obtenir le montant journalier par défaut depuis les paramètres système
+     */
+    public static function getMontantJournalierDefault(): float
+    {
+        return SystemSetting::getMontantJournalierDefaut();
+    }
 
     /**
      * Calculer le statut du versement automatiquement
@@ -31,13 +38,13 @@ class PaymentService
     public function calculateStatus(Versement $versement): string
     {
         if ($versement->montant >= $versement->montant_attendu) {
-            return 'payé';
+            return 'paye';
         } elseif ($versement->montant > 0) {
-            return 'partiellement_payé';
+            return 'partiel';
         } elseif (Carbon::parse($versement->date_versement)->isPast()) {
             return 'en_retard';
         }
-        return 'non_effectué';
+        return 'non_effectue';
     }
 
     /**
@@ -52,11 +59,14 @@ class PaymentService
             throw new \Exception('Ce motard n\'a pas de moto assignée.');
         }
 
+        $montantAttendu = $moto->montant_journalier_attendu ?? self::getMontantJournalierDefault();
+
         $versement = Versement::create([
             'motard_id' => $motard->id,
             'moto_id' => $moto->id,
             'montant' => $data['montant'],
-            'montant_attendu' => $moto->montant_journalier_attendu ?? self::MONTANT_JOURNALIER_DEFAULT,
+            'montant_attendu' => $montantAttendu,
+            'arrieres' => max(0, $montantAttendu - $data['montant']),
             'date_versement' => $data['date_versement'] ?? now()->toDateString(),
             'heure_versement' => $data['heure_versement'] ?? now()->toTimeString(),
             'mode_paiement' => $data['mode_paiement'] ?? 'cash',

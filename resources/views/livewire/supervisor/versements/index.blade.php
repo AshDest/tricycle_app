@@ -127,6 +127,7 @@
                             <th>Moto</th>
                             <th class="text-end">Attendu</th>
                             <th class="text-end">Versé</th>
+                            <th class="text-end">Écart</th>
                             <th>Mode</th>
                             <th>Statut</th>
                             <th>Caissier</th>
@@ -134,7 +135,10 @@
                     </thead>
                     <tbody>
                         @forelse($versements as $versement)
-                        <tr>
+                        @php
+                            $ecart = ($versement->montant ?? 0) - ($versement->montant_attendu ?? 0);
+                        @endphp
+                        <tr class="{{ $ecart < 0 ? 'table-warning' : '' }}">
                             <td class="ps-4">
                                 <span class="fw-medium">{{ $versement->date_versement?->format('d/m/Y') }}</span>
                                 <small class="text-muted d-block">{{ $versement->created_at->format('H:i') }}</small>
@@ -159,9 +163,16 @@
                                 <span class="text-muted">{{ number_format($versement->montant_attendu ?? 0) }} FC</span>
                             </td>
                             <td class="text-end">
-                                <span class="fw-semibold {{ $versement->montant >= ($versement->montant_attendu ?? 0) ? 'text-success' : 'text-danger' }}">
+                                <span class="fw-semibold {{ $ecart >= 0 ? 'text-success' : 'text-warning' }}">
                                     {{ number_format($versement->montant ?? 0) }} FC
                                 </span>
+                            </td>
+                            <td class="text-end">
+                                @if($ecart >= 0)
+                                <span class="text-success"><i class="bi bi-check-circle"></i></span>
+                                @else
+                                <span class="text-danger fw-bold">{{ number_format($ecart) }} FC</span>
+                                @endif
                             </td>
                             <td>
                                 @php
@@ -180,9 +191,13 @@
                                 @php
                                     $statutColors = [
                                         'paye' => 'success',
-                                        'en_attente' => 'warning',
+                                        'payé' => 'success',
+                                        'partiel' => 'warning',
+                                        'partiellement_payé' => 'warning',
+                                        'en_attente' => 'info',
                                         'en_retard' => 'danger',
-                                        'partiel' => 'info',
+                                        'non_effectue' => 'secondary',
+                                        'non_effectué' => 'secondary',
                                     ];
                                 @endphp
                                 <span class="badge badge-soft-{{ $statutColors[$versement->statut] ?? 'secondary' }}">
@@ -195,7 +210,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-cash-stack fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucun versement trouvé pour cette période</p>
                             </td>

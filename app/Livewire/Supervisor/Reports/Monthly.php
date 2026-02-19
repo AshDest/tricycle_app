@@ -136,7 +136,7 @@ class Monthly extends Component
         $this->stats['paiementsProprietaires'] = [
             'totalPaye' => Payment::whereBetween('created_at', [$startOfMonth, $endOfMonth])
                 ->where('statut', 'paye')
-                ->sum('montant'),
+                ->sum('total_paye'),
             'nombrePaiements' => Payment::whereBetween('created_at', [$startOfMonth, $endOfMonth])
                 ->where('statut', 'paye')
                 ->count(),

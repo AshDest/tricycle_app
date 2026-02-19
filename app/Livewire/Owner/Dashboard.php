@@ -34,7 +34,11 @@ class Dashboard extends Component
             // Versements totaux
             $versements = Versement::whereIn('moto_id', $motoIds)->get();
             $this->totalVersements = $versements->sum('montant');
-            $this->totalArrieres = $versements->sum('montant_attendu') - $versements->sum('montant');
+
+            // Arriérés = somme des écarts positifs (montant_attendu - montant)
+            $this->totalArrieres = $versements->sum(function($v) {
+                return max(0, ($v->montant_attendu ?? 0) - ($v->montant ?? 0));
+            });
 
             // Versements ce mois
             $this->versementsCeMois = Versement::whereIn('moto_id', $motoIds)
@@ -43,8 +47,8 @@ class Dashboard extends Component
                 ->sum('montant');
 
             // Paiements reçus
-            $this->totalPaye = $this->proprietaire->payments()->where('statut', 'payé')->sum('total_paye');
-            $this->paiementsEnAttente = $this->proprietaire->payments()->where('statut', 'en_attente')->count();
+            $this->totalPaye = $this->proprietaire->payments()->whereIn('statut', ['paye', 'payé', 'valide'])->sum('total_paye');
+            $this->paiementsEnAttente = $this->proprietaire->payments()->whereIn('statut', ['en_attente', 'demande'])->count();
 
             // Derniers versements
             $this->derniersVersements = Versement::whereIn('moto_id', $motoIds)

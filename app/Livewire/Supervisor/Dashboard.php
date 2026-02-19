@@ -23,9 +23,9 @@ class Dashboard extends Component
     {
         $today = Carbon::today();
 
-        // Motards en retard
+        // Motards en retard ou avec arriérés
         $this->motardsEnRetard = Motard::whereHas('versements', function($q) {
-            $q->where('statut', 'en_retard');
+            $q->whereIn('statut', ['en_retard', 'non_effectue', 'partiel']);
         })->with('user')->take(10)->get();
 
         // Versements aujourd'hui
@@ -33,9 +33,8 @@ class Dashboard extends Component
         $this->versementsAujourdhui = $versementsToday->sum('montant');
         $this->versementsAttenduAujourdhui = $versementsToday->sum('montant_attendu');
 
-        // Arriérés cumulés
-        $this->arrieresCumules = Versement::where('statut', '!=', 'paye')
-            ->selectRaw('COALESCE(SUM(GREATEST(0, montant_attendu - montant)), 0) as total')
+        // Arriérés cumulés (total de tous les arriérés)
+        $this->arrieresCumules = Versement::selectRaw('COALESCE(SUM(GREATEST(0, COALESCE(montant_attendu, 0) - COALESCE(montant, 0))), 0) as total')
             ->value('total') ?? 0;
 
         // Tournées du jour

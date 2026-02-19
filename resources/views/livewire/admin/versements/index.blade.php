@@ -26,10 +26,10 @@
                     <label class="form-label small fw-semibold">Statut</label>
                     <select wire:model.live="filterStatut" class="form-select">
                         <option value="">Tous</option>
-                        <option value="payé">Payé</option>
-                        <option value="partiellement_payé">Partiel</option>
+                        <option value="paye">Payé</option>
+                        <option value="partiel">Partiel</option>
                         <option value="en_retard">En retard</option>
-                        <option value="non_effectué">Non effectué</option>
+                        <option value="non_effectue">Non effectué</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -69,6 +69,7 @@
                             <th>Moto</th>
                             <th>Montant</th>
                             <th>Attendu</th>
+                            <th>Écart</th>
                             <th>Mode</th>
                             <th>Statut</th>
                             <th>Date</th>
@@ -77,7 +78,10 @@
                     </thead>
                     <tbody>
                         @forelse($versements as $versement)
-                        <tr>
+                        @php
+                            $ecart = ($versement->montant ?? 0) - ($versement->montant_attendu ?? 0);
+                        @endphp
+                        <tr class="{{ $ecart < 0 ? 'table-warning' : '' }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="avatar avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle">
@@ -94,8 +98,15 @@
                                     <i class="bi bi-bicycle me-1"></i>{{ $versement->moto->plaque_immatriculation ?? 'N/A' }}
                                 </span>
                             </td>
-                            <td class="fw-semibold text-success">{{ number_format($versement->montant) }} FC</td>
+                            <td class="fw-semibold {{ $ecart >= 0 ? 'text-success' : 'text-warning' }}">{{ number_format($versement->montant) }} FC</td>
                             <td class="text-muted">{{ number_format($versement->montant_attendu) }} FC</td>
+                            <td>
+                                @if($ecart >= 0)
+                                <span class="text-success"><i class="bi bi-check-circle"></i> OK</span>
+                                @else
+                                <span class="text-danger fw-bold">{{ number_format($ecart) }} FC</span>
+                                @endif
+                            </td>
                             <td>
                                 <span class="badge bg-light text-dark">
                                     <i class="bi bi-{{ $versement->mode_paiement === 'cash' ? 'cash' : ($versement->mode_paiement === 'mobile_money' ? 'phone' : 'bank') }} me-1"></i>
@@ -105,9 +116,12 @@
                             <td>
                                 @php
                                     $colors = [
+                                        'paye' => 'success',
                                         'payé' => 'success',
+                                        'partiel' => 'warning',
                                         'partiellement_payé' => 'warning',
                                         'en_retard' => 'danger',
+                                        'non_effectue' => 'secondary',
                                         'non_effectué' => 'secondary'
                                     ];
                                 @endphp
@@ -126,7 +140,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucun versement trouvé</p>
                                 <small>Modifiez vos filtres ou revenez plus tard</small>

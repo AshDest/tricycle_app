@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Versement;
 use App\Models\Motard;
+use App\Models\SystemSetting;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -46,7 +47,7 @@ class Create extends Component
     {
         if ($value) {
             $this->motardSelectionne = Motard::with(['user', 'moto'])->find($value);
-            $this->montantAttendu = $this->motardSelectionne?->moto?->montant_journalier_attendu ?? 5000;
+            $this->montantAttendu = $this->motardSelectionne?->moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
             $this->arrieresCumules = $this->motardSelectionne?->getTotalArrieres() ?? 0;
             $this->tauxPaiement = $this->motardSelectionne?->taux_paiement ?? 100;
         } else {
@@ -65,8 +66,8 @@ class Create extends Component
         $motard = Motard::with('moto')->find($this->motard_id);
         $moto = $motard->moto;
 
-        // Montant attendu depuis la moto
-        $montantAttendu = $moto?->montant_journalier_attendu ?? 5000;
+        // Montant attendu depuis la moto ou paramètre système
+        $montantAttendu = $moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
 
         // Le statut sera déterminé automatiquement dans le modèle Versement
         // via la méthode boot(), mais on le définit aussi ici pour la clarté

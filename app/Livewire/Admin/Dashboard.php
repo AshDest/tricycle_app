@@ -66,9 +66,8 @@ class Dashboard extends Component
         // Finances ce mois
         $this->versementsCeMois = Versement::whereDate('date_versement', '>=', $startOfMonth)->sum('montant');
 
-        // Arriérés cumulés
-        $this->arrieresCumules = Versement::where('statut', '!=', 'payé')
-            ->selectRaw('COALESCE(SUM(montant_attendu - montant), 0) as total')
+        // Arriérés cumulés (total de tous les arriérés)
+        $this->arrieresCumules = Versement::selectRaw('COALESCE(SUM(GREATEST(0, COALESCE(montant_attendu, 0) - COALESCE(montant, 0))), 0) as total')
             ->value('total') ?? 0;
 
         // Tournées
@@ -79,7 +78,7 @@ class Dashboard extends Component
 
         // Alertes
         $this->motardsEnRetard = Motard::whereHas('versements', function($q) {
-            $q->where('statut', 'en_retard');
+            $q->whereIn('statut', ['en_retard', 'non_effectue']);
         })->count();
         $this->maintenancesEnAttente = Maintenance::where('statut', 'en_attente')->count();
         $this->accidentsNonResolus = Accident::whereNull('reparation_terminee_at')->count();
