@@ -97,8 +97,8 @@
                             <label class="form-label">Statut <span class="text-danger">*</span></label>
                             <select wire:model="statut" class="form-select @error('statut') is-invalid @enderror">
                                 <option value="actif">Actif</option>
-                                <option value="inactif">Inactif</option>
-                                <option value="en_maintenance">En maintenance</option>
+                                <option value="suspendu">Suspendu</option>
+                                <option value="maintenance">En maintenance</option>
                             </select>
                             @error('statut') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>

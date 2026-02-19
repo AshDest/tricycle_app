@@ -62,7 +62,7 @@ class Edit extends Component
             'couleur' => 'nullable|string|max:50',
             'proprietaire_id' => 'required|exists:proprietaires,id',
             'motard_id' => 'nullable|exists:motards,id',
-            'statut' => 'required|in:actif,inactif,en_maintenance',
+            'statut' => 'required|in:actif,suspendu,maintenance',
             'contrat_debut' => 'nullable|date',
             'contrat_fin' => 'nullable|date|after_or_equal:contrat_debut',
             'contrat_numero' => 'nullable|string|max:100',

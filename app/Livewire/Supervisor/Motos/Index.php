@@ -58,7 +58,8 @@ class Index extends Component
             return;
         }
 
-        $newStatut = $moto->statut === 'actif' ? 'inactif' : 'actif';
+        // Les statuts valides sont: actif, suspendu, maintenance
+        $newStatut = $moto->statut === 'actif' ? 'suspendu' : 'actif';
         $moto->update(['statut' => $newStatut]);
         session()->flash('success', 'Statut de la moto mis à jour.');
     }

@@ -92,7 +92,8 @@
                     <select wire:model.live="filterStatut" class="form-select">
                         <option value="">Tous</option>
                         <option value="actif">Actives</option>
-                        <option value="inactif">Inactives</option>
+                        <option value="suspendu">Suspendues</option>
+                        <option value="maintenance">En maintenance</option>
                     </select>
                 </div>
                 <div class="col-md-2">
