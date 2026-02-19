@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 
 /**
  * Moto = Moto-tricycle.
  * Appartient à un propriétaire et est assignée à un motard.
+ * Le contrat détermine si la moto peut être active dans le système.
  */
 class Moto extends Model
 {
@@ -25,10 +27,20 @@ class Moto extends Model
         'document_administratif_url',
         'statut',
         'montant_journalier_attendu',
+        'contrat_debut',
+        'contrat_fin',
+        'contrat_numero',
+        'contrat_notes',
+        'marque',
+        'modele',
+        'annee_fabrication',
+        'couleur',
     ];
 
     protected $casts = [
         'montant_journalier_attendu' => 'decimal:2',
+        'contrat_debut' => 'date',
+        'contrat_fin' => 'date',
     ];
 
     /**
@@ -86,6 +98,145 @@ class Moto extends Model
     {
         return !is_null($this->motard_id);
     }
+
+    // ==================== GESTION DU CONTRAT ====================
+
+    /**
+     * Vérifier si le contrat est actif (date actuelle entre début et fin)
+     */
+    public function getContratActifAttribute(): bool
+    {
+        if (!$this->contrat_debut || !$this->contrat_fin) {
+            return false;
+        }
+
+        $today = Carbon::today();
+        return $today->gte($this->contrat_debut) && $today->lte($this->contrat_fin);
+    }
+
+    /**
+     * Vérifier si le contrat a expiré
+     */
+    public function getContratExpireAttribute(): bool
+    {
+        if (!$this->contrat_fin) {
+            return false;
+        }
+
+        return Carbon::today()->gt($this->contrat_fin);
+    }
+
+    /**
+     * Vérifier si le contrat n'a pas encore commencé
+     */
+    public function getContratPasCommenceAttribute(): bool
+    {
+        if (!$this->contrat_debut) {
+            return true;
+        }
+
+        return Carbon::today()->lt($this->contrat_debut);
+    }
+
+    /**
+     * Obtenir le nombre de jours restants du contrat
+     */
+    public function getJoursRestantsContratAttribute(): ?int
+    {
+        if (!$this->contrat_fin || $this->contrat_expire) {
+            return null;
+        }
+
+        return Carbon::today()->diffInDays($this->contrat_fin, false);
+    }
+
+    /**
+     * Obtenir le statut du contrat
+     */
+    public function getStatutContratAttribute(): string
+    {
+        if (!$this->contrat_debut || !$this->contrat_fin) {
+            return 'non_defini';
+        }
+
+        if ($this->contrat_pas_commence) {
+            return 'pas_commence';
+        }
+
+        if ($this->contrat_expire) {
+            return 'expire';
+        }
+
+        $joursRestants = $this->jours_restants_contrat;
+        if ($joursRestants !== null && $joursRestants <= 30) {
+            return 'bientot_expire';
+        }
+
+        return 'actif';
+    }
+
+    /**
+     * Vérifier si la moto peut être opérationnelle (contrat actif + statut actif)
+     */
+    public function getEstOperationnelleAttribute(): bool
+    {
+        return $this->statut === 'actif' && $this->contrat_actif;
+    }
+
+    /**
+     * Renouveler le contrat
+     */
+    public function renouvelerContrat(Carbon $nouvelleDebut, Carbon $nouvelleFin, ?string $notes = null): void
+    {
+        $this->update([
+            'contrat_debut' => $nouvelleDebut,
+            'contrat_fin' => $nouvelleFin,
+            'contrat_notes' => $notes ?? $this->contrat_notes,
+        ]);
+    }
+
+    /**
+     * Scope pour les motos avec contrat actif
+     */
+    public function scopeContratActif($query)
+    {
+        $today = Carbon::today();
+        return $query->whereNotNull('contrat_debut')
+                     ->whereNotNull('contrat_fin')
+                     ->where('contrat_debut', '<=', $today)
+                     ->where('contrat_fin', '>=', $today);
+    }
+
+    /**
+     * Scope pour les motos avec contrat expiré
+     */
+    public function scopeContratExpire($query)
+    {
+        return $query->whereNotNull('contrat_fin')
+                     ->where('contrat_fin', '<', Carbon::today());
+    }
+
+    /**
+     * Scope pour les motos avec contrat bientôt expiré (30 jours)
+     */
+    public function scopeContratBientotExpire($query, int $jours = 30)
+    {
+        $today = Carbon::today();
+        return $query->whereNotNull('contrat_fin')
+                     ->where('contrat_fin', '>=', $today)
+                     ->where('contrat_fin', '<=', $today->copy()->addDays($jours));
+    }
+
+    /**
+     * Scope pour les motos sans contrat défini
+     */
+    public function scopeSansContrat($query)
+    {
+        return $query->whereNull('contrat_debut')
+                     ->orWhereNull('contrat_fin');
+    }
+
+    // ==================== FIN GESTION DU CONTRAT ====================
 
     /**
      * Calculer le coût total de maintenance

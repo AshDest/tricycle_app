@@ -106,6 +106,64 @@
                 </div>
             </div>
 
+            <!-- Contrat -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header py-3 bg-success bg-opacity-10">
+                        <h6 class="mb-0 fw-bold text-success"><i class="bi bi-file-earmark-text me-2"></i>Informations du Contrat</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Numéro de contrat</label>
+                                <input type="text" wire:model="contrat_numero" class="form-control @error('contrat_numero') is-invalid @enderror" placeholder="CTR-001">
+                                @error('contrat_numero') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date de début <span class="text-danger">*</span></label>
+                                <input type="date" wire:model="contrat_debut" class="form-control @error('contrat_debut') is-invalid @enderror">
+                                @error('contrat_debut') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date de fin <span class="text-danger">*</span></label>
+                                <input type="date" wire:model="contrat_fin" class="form-control @error('contrat_fin') is-invalid @enderror">
+                                @error('contrat_fin') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Statut du contrat</label>
+                                @php
+                                    $statutContrat = $moto->statut_contrat;
+                                    $contratColors = ['actif'=>'success','bientot_expire'=>'warning','expire'=>'danger','pas_commence'=>'info','non_defini'=>'secondary'];
+                                    $contratLabels = ['actif'=>'Actif','bientot_expire'=>'Expire bientôt','expire'=>'Expiré','pas_commence'=>'Pas commencé','non_defini'=>'Non défini'];
+                                @endphp
+                                <div class="form-control bg-light">
+                                    <span class="badge badge-soft-{{ $contratColors[$statutContrat] ?? 'secondary' }}">
+                                        {{ $contratLabels[$statutContrat] ?? 'N/A' }}
+                                    </span>
+                                    @if($moto->jours_restants_contrat !== null && $moto->jours_restants_contrat > 0)
+                                    <small class="ms-2 text-{{ $moto->jours_restants_contrat <= 30 ? 'warning' : 'muted' }}">
+                                        ({{ $moto->jours_restants_contrat }} jours restants)
+                                    </small>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes du contrat</label>
+                                <textarea wire:model="contrat_notes" class="form-control" rows="2" placeholder="Notes sur le contrat..."></textarea>
+                            </div>
+                        </div>
+
+                        @if(!$moto->contrat_actif && $moto->statut === 'actif')
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Attention :</strong> Cette moto est marquée comme "active" mais son contrat n'est pas valide.
+                            Elle ne sera pas opérationnelle tant que le contrat n'est pas actif.
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             <!-- Actions -->
             <div class="col-12">
                 <div class="card">

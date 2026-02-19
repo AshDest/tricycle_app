@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Moto;
 use App\Models\Proprietaire;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -16,16 +17,24 @@ class Index extends Component
     public string $search = '';
     public string $filterStatut = '';
     public string $filterProprietaire = '';
+    public string $filterContrat = '';
     public string $dateDebut = '';
     public string $dateFin = '';
     public int $perPage = 15;
 
     public ?int $confirmingDelete = null;
 
+    // Pour le renouvellement de contrat
+    public ?int $renewingContrat = null;
+    public string $newContratDebut = '';
+    public string $newContratFin = '';
+    public string $newContratNotes = '';
+
     protected $queryString = [
         'search' => ['except' => ''],
         'filterStatut' => ['except' => ''],
         'filterProprietaire' => ['except' => ''],
+        'filterContrat' => ['except' => ''],
     ];
 
     public function updatingSearch()
@@ -35,17 +44,73 @@ class Index extends Component
 
     public function resetFilters()
     {
-        $this->reset(['search', 'filterStatut', 'filterProprietaire', 'dateDebut', 'dateFin']);
+        $this->reset(['search', 'filterStatut', 'filterProprietaire', 'filterContrat', 'dateDebut', 'dateFin']);
         $this->resetPage();
     }
 
     public function toggleStatut(int $id)
     {
         $moto = Moto::findOrFail($id);
+
+        // Vérifier si le contrat est actif avant de permettre l'activation
+        if ($moto->statut !== 'actif' && !$moto->contrat_actif) {
+            session()->flash('error', 'Impossible d\'activer cette moto : le contrat n\'est pas actif ou n\'est pas défini.');
+            return;
+        }
+
         $newStatut = $moto->statut === 'actif' ? 'inactif' : 'actif';
         $moto->update(['statut' => $newStatut]);
         session()->flash('success', 'Statut de la moto mis à jour.');
     }
+
+    // ========== RENOUVELLEMENT DE CONTRAT ==========
+
+    public function openRenewContrat(int $id)
+    {
+        $moto = Moto::findOrFail($id);
+        $this->renewingContrat = $id;
+
+        // Pré-remplir avec les dates suivantes logiques
+        if ($moto->contrat_fin) {
+            $this->newContratDebut = $moto->contrat_fin->addDay()->format('Y-m-d');
+        } else {
+            $this->newContratDebut = Carbon::today()->format('Y-m-d');
+        }
+        $this->newContratFin = Carbon::parse($this->newContratDebut)->addYear()->format('Y-m-d');
+        $this->newContratNotes = '';
+    }
+
+    public function cancelRenewContrat()
+    {
+        $this->renewingContrat = null;
+        $this->newContratDebut = '';
+        $this->newContratFin = '';
+        $this->newContratNotes = '';
+    }
+
+    public function renewContrat()
+    {
+        $this->validate([
+            'newContratDebut' => 'required|date',
+            'newContratFin' => 'required|date|after:newContratDebut',
+        ], [
+            'newContratDebut.required' => 'La date de début est obligatoire.',
+            'newContratFin.required' => 'La date de fin est obligatoire.',
+            'newContratFin.after' => 'La date de fin doit être après la date de début.',
+        ]);
+
+        $moto = Moto::findOrFail($this->renewingContrat);
+        $moto->renouvelerContrat(
+            Carbon::parse($this->newContratDebut),
+            Carbon::parse($this->newContratFin),
+            $this->newContratNotes ?: null
+        );
+
+        session()->flash('success', 'Contrat renouvelé avec succès.');
+        $this->cancelRenewContrat();
+    }
+
+    // ========== FIN RENOUVELLEMENT ==========
 
     public function confirmDelete(int $id)
     {
@@ -86,20 +151,21 @@ class Index extends Component
         $handle = fopen('php://output', 'w');
 
         fputcsv($handle, [
-            'ID', 'Plaque', 'Marque', 'Modèle', 'Châssis',
-            'Propriétaire', 'Motard Assigné', 'Statut', 'Date Création'
+            'ID', 'Plaque', 'Châssis', 'Propriétaire', 'Motard Assigné',
+            'Statut', 'Contrat Début', 'Contrat Fin', 'Statut Contrat', 'Date Création'
         ]);
 
         foreach ($motos as $moto) {
             fputcsv($handle, [
                 $moto->id,
                 $moto->plaque_immatriculation ?? 'N/A',
-                $moto->marque ?? 'N/A',
-                $moto->modele ?? 'N/A',
                 $moto->numero_chassis ?? 'N/A',
                 $moto->proprietaire->user->name ?? 'N/A',
                 $moto->motardActuel->user->name ?? 'Aucun',
                 $moto->statut ?? 'N/A',
+                $moto->contrat_debut?->format('d/m/Y') ?? 'N/A',
+                $moto->contrat_fin?->format('d/m/Y') ?? 'N/A',
+                $moto->statut_contrat ?? 'N/A',
                 $moto->created_at->format('d/m/Y H:i'),
             ]);
         }
@@ -114,7 +180,7 @@ class Index extends Component
                 $q->where(function ($query) {
                     $query->where('plaque_immatriculation', 'like', '%' . $this->search . '%')
                           ->orWhere('numero_chassis', 'like', '%' . $this->search . '%')
-                          ->orWhere('marque', 'like', '%' . $this->search . '%')
+                          ->orWhere('contrat_numero', 'like', '%' . $this->search . '%')
                           ->orWhereHas('proprietaire.user', function ($q2) {
                               $q2->where('name', 'like', '%' . $this->search . '%');
                           });
@@ -125,6 +191,22 @@ class Index extends Component
             })
             ->when($this->filterProprietaire, function ($q) {
                 $q->where('proprietaire_id', $this->filterProprietaire);
+            })
+            ->when($this->filterContrat, function ($q) {
+                switch ($this->filterContrat) {
+                    case 'actif':
+                        $q->contratActif();
+                        break;
+                    case 'expire':
+                        $q->contratExpire();
+                        break;
+                    case 'bientot_expire':
+                        $q->contratBientotExpire(30);
+                        break;
+                    case 'sans_contrat':
+                        $q->sansContrat();
+                        break;
+                }
             })
             ->when($this->dateDebut, function ($q) {
                 $q->whereDate('created_at', '>=', $this->dateDebut);
@@ -143,8 +225,10 @@ class Index extends Component
         $stats = [
             'total' => Moto::count(),
             'actives' => Moto::where('statut', 'actif')->count(),
-            'inactives' => Moto::where('statut', 'inactif')->count(),
-            'assignees' => Moto::whereHas('motardActuel')->count(),
+            'contratsActifs' => Moto::contratActif()->count(),
+            'contratsExpires' => Moto::contratExpire()->count(),
+            'contratsBientotExpires' => Moto::contratBientotExpire(30)->count(),
+            'sansContrat' => Moto::sansContrat()->count(),
         ];
 
         return view('livewire.supervisor.motos.index', compact('motos', 'proprietaires', 'stats'));

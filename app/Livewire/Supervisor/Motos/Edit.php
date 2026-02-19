@@ -24,9 +24,15 @@ class Edit extends Component
     public string $motard_id = '';
     public string $statut = 'actif';
 
+    // Champs de contrat
+    public string $contrat_debut = '';
+    public string $contrat_fin = '';
+    public string $contrat_numero = '';
+    public string $contrat_notes = '';
+
     public function mount(Moto $moto): void
     {
-        $this->moto = $moto->load(['proprietaire', 'motardActuel']);
+        $this->moto = $moto->load(['proprietaire', 'motard']);
 
         $this->plaque_immatriculation = $moto->plaque_immatriculation ?? '';
         $this->numero_chassis = $moto->numero_chassis ?? '';
@@ -35,8 +41,14 @@ class Edit extends Component
         $this->annee = $moto->annee_fabrication ?? '';
         $this->couleur = $moto->couleur ?? '';
         $this->proprietaire_id = (string) $moto->proprietaire_id;
-        $this->motard_id = (string) ($moto->motardActuel?->id ?? '');
+        $this->motard_id = (string) ($moto->motard_id ?? '');
         $this->statut = $moto->statut ?? 'actif';
+
+        // Champs de contrat
+        $this->contrat_debut = $moto->contrat_debut?->format('Y-m-d') ?? '';
+        $this->contrat_fin = $moto->contrat_fin?->format('Y-m-d') ?? '';
+        $this->contrat_numero = $moto->contrat_numero ?? '';
+        $this->contrat_notes = $moto->contrat_notes ?? '';
     }
 
     protected function rules(): array
@@ -51,6 +63,10 @@ class Edit extends Component
             'proprietaire_id' => 'required|exists:proprietaires,id',
             'motard_id' => 'nullable|exists:motards,id',
             'statut' => 'required|in:actif,inactif,en_maintenance',
+            'contrat_debut' => 'nullable|date',
+            'contrat_fin' => 'nullable|date|after_or_equal:contrat_debut',
+            'contrat_numero' => 'nullable|string|max:100',
+            'contrat_notes' => 'nullable|string|max:500',
         ];
     }
 
@@ -69,22 +85,14 @@ class Edit extends Component
                 'annee_fabrication' => $this->annee ?: null,
                 'couleur' => $this->couleur ?: null,
                 'proprietaire_id' => $this->proprietaire_id,
+                'motard_id' => $this->motard_id ?: null,
                 'statut' => $this->statut,
+                'contrat_debut' => $this->contrat_debut ?: null,
+                'contrat_fin' => $this->contrat_fin ?: null,
+                'contrat_numero' => $this->contrat_numero ?: null,
+                'contrat_notes' => $this->contrat_notes ?: null,
             ]);
 
-            // Gérer l'affectation du motard
-            $ancienMotard = Motard::where('moto_id', $this->moto->id)->first();
-
-            if ($ancienMotard && $ancienMotard->id != $this->motard_id) {
-                $ancienMotard->update(['moto_id' => null]);
-            }
-
-            if ($this->motard_id) {
-                $nouveauMotard = Motard::find($this->motard_id);
-                if ($nouveauMotard) {
-                    $nouveauMotard->update(['moto_id' => $this->moto->id]);
-                }
-            }
 
             DB::commit();
 
@@ -100,12 +108,18 @@ class Edit extends Component
     public function render()
     {
         $proprietaires = Proprietaire::with('user')->get();
+
+        // Récupérer les motards disponibles (sans moto assignée) ou celui déjà assigné à cette moto
         $motards = Motard::with('user')
-            ->where(function ($q) {
-                $q->whereDoesntHave('motoActuelle')
-                  ->orWhere('moto_id', $this->moto->id);
-            })
             ->where('is_active', true)
+            ->where(function ($q) {
+                // Motards sans moto assignée
+                $q->whereDoesntHave('moto')
+                  // Ou le motard actuellement assigné à cette moto
+                  ->orWhereHas('moto', function($q2) {
+                      $q2->where('motos.id', $this->moto->id);
+                  });
+            })
             ->get();
 
         return view('livewire.supervisor.motos.edit', compact('proprietaires', 'motards'));
