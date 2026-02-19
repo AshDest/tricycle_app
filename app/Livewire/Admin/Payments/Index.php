@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Models\Proprietaire;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -35,10 +36,37 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function approuver(int $id)
+    {
+        $payment = Payment::findOrFail($id);
+
+        $payment->update([
+            'statut' => 'paye',
+            'date_paiement' => Carbon::now(),
+            'valide_par' => auth()->id(),
+            'valide_at' => Carbon::now(),
+        ]);
+
+        session()->flash('success', 'Paiement approuvé avec succès.');
+    }
+
+    public function rejeter(int $id)
+    {
+        $payment = Payment::findOrFail($id);
+
+        $payment->update([
+            'statut' => 'rejete',
+            'valide_par' => auth()->id(),
+            'valide_at' => Carbon::now(),
+        ]);
+
+        session()->flash('success', 'Paiement rejeté.');
+    }
+
     public function delete(Payment $payment)
     {
         $payment->delete();
-        session()->flash('success', 'Paiement supprime avec succes.');
+        session()->flash('success', 'Paiement supprimé avec succès.');
     }
 
     public function render()
@@ -58,8 +86,8 @@ class Index extends Component
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 
-        $totalEnAttente = Payment::where('statut', 'en_attente')->count();
-        $totalPaye = Payment::where('statut', 'payé')->sum('total_paye');
+        $totalEnAttente = Payment::whereIn('statut', ['en_attente', 'demande'])->count();
+        $totalPaye = Payment::where('statut', 'paye')->sum('total_paye');
 
         return view('livewire.admin.payments.index', compact('payments', 'totalEnAttente', 'totalPaye'));
     }

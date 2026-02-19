@@ -157,9 +157,12 @@
                                     <a href="{{ route('admin.payments.show', $payment) }}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    @if($payment->statut === 'en_attente')
+                                    @if(in_array($payment->statut, ['en_attente', 'demande']))
                                     <button wire:click="approuver({{ $payment->id }})" class="btn btn-sm btn-outline-success" title="Approuver">
                                         <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <button wire:click="rejeter({{ $payment->id }})" class="btn btn-sm btn-outline-danger" title="Rejeter">
+                                        <i class="bi bi-x-lg"></i>
                                     </button>
                                     @endif
                                 </div>
