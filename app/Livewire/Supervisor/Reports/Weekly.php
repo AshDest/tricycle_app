@@ -7,6 +7,8 @@ use Livewire\Attributes\Layout;
 use App\Models\Versement;
 use App\Models\Motard;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Weekly extends Component
@@ -45,7 +47,18 @@ class Weekly extends Component
             'tauxRecouvrement' => $versements->sum('montant_attendu') > 0
                 ? round(($versements->sum('montant') / $versements->sum('montant_attendu')) * 100, 1)
                 : 0,
+            'joursAvecVersements' => Versement::whereBetween('date_versement', [$startOfWeek, $endOfWeek])
+                ->selectRaw('DATE(date_versement) as date')
+                ->groupBy('date')
+                ->get()
+                ->count(),
+            'moyenneJournaliere' => 0,
         ];
+
+        // Calculer moyenne journalière
+        if ($this->stats['joursAvecVersements'] > 0) {
+            $this->stats['moyenneJournaliere'] = $this->stats['totalCollecte'] / $this->stats['joursAvecVersements'];
+        }
 
         // Stats par jour de la semaine
         $parJour = [];
@@ -61,11 +74,27 @@ class Weekly extends Component
             ];
         }
         $this->stats['parJour'] = $parJour;
+
+        // Versements par jour pour PDF
+        $this->stats['versementsParJour'] = Versement::whereBetween('date_versement', [$startOfWeek, $endOfWeek])
+            ->selectRaw('DATE(date_versement) as date, SUM(montant) as total, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        // Top motards
+        $this->stats['topMotards'] = Versement::whereBetween('date_versement', [$startOfWeek, $endOfWeek])
+            ->with('motard.user')
+            ->selectRaw('motard_id, SUM(montant) as total, COUNT(*) as count')
+            ->groupBy('motard_id')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
     }
 
     public function export()
     {
-        $filename = 'rapport_hebdomadaire_' . $this->stats['debutSemaine'] . '_' . $this->stats['finSemaine'] . '.csv';
+        $filename = 'rapport_hebdomadaire_' . str_replace('/', '-', $this->stats['debutSemaine']) . '.csv';
 
         return response()->streamDownload(function() {
             $handle = fopen('php://output', 'w');
@@ -90,6 +119,23 @@ class Weekly extends Component
 
             fclose($handle);
         }, $filename);
+    }
+
+    public function exportPdf()
+    {
+        $this->loadStats();
+
+        $pdf = Pdf::loadView('pdf.reports.weekly', [
+            'title' => 'Rapport Hebdomadaire',
+            'subtitle' => 'Semaine du ' . $this->stats['debutSemaine'] . ' au ' . $this->stats['finSemaine'],
+            'stats' => $this->stats,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'rapport_hebdomadaire_' . str_replace('/', '-', $this->stats['debutSemaine']) . '.pdf');
     }
 
     public function render()

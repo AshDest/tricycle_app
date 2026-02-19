@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\Motard;
 use App\Models\Tournee;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('components.dashlite-layout')]
 class Weekly extends Component
@@ -86,6 +87,72 @@ class Weekly extends Component
         } else {
             $this->comparaisonSemainePrecedente = 0;
         }
+    }
+
+    public function export()
+    {
+        $filename = 'rapport_hebdomadaire_admin_' . $this->startOfWeek->format('Y-m-d') . '.csv';
+
+        return response()->streamDownload(function() {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Rapport Hebdomadaire Admin - ' . $this->startOfWeek->format('d/m/Y') . ' au ' . $this->endOfWeek->format('d/m/Y')]);
+            fputcsv($handle, []);
+            fputcsv($handle, ['Total Versements', number_format($this->totalVersements) . ' FC']);
+            fputcsv($handle, ['Total Attendu', number_format($this->totalAttendu) . ' FC']);
+            fputcsv($handle, ['Total Collecte', number_format($this->totalCollecte) . ' FC']);
+            fputcsv($handle, ['Motards en retard', $this->motardsEnRetard]);
+            fputcsv($handle, []);
+            fputcsv($handle, ['Jour', 'Date', 'Montant', 'Attendu']);
+            foreach ($this->versementsParJour as $jour) {
+                fputcsv($handle, [$jour['jour'], $jour['date'], $jour['montant'], $jour['attendu']]);
+            }
+
+            fclose($handle);
+        }, $filename);
+    }
+
+    public function exportPdf()
+    {
+        $this->loadStats();
+
+        $joursAvecVersements = collect($this->versementsParJour)->filter(fn($j) => $j['montant'] > 0)->count();
+
+        $stats = [
+            'debutSemaine' => $this->startOfWeek->format('d/m/Y'),
+            'finSemaine' => $this->endOfWeek->format('d/m/Y'),
+            'totalCollecte' => $this->totalVersements,
+            'totalAttendu' => $this->totalAttendu,
+            'nombreVersements' => Versement::whereBetween('date_versement', [$this->startOfWeek, $this->endOfWeek])->count(),
+            'versementsPayes' => Versement::whereBetween('date_versement', [$this->startOfWeek, $this->endOfWeek])->where('statut', 'payé')->count(),
+            'versementsEnRetard' => Versement::whereBetween('date_versement', [$this->startOfWeek, $this->endOfWeek])->where('statut', 'en_retard')->count(),
+            'arrieres' => max(0, $this->totalAttendu - $this->totalVersements),
+            'tauxRecouvrement' => $this->totalAttendu > 0 ? round(($this->totalVersements / $this->totalAttendu) * 100, 1) : 0,
+            'joursAvecVersements' => $joursAvecVersements,
+            'moyenneJournaliere' => $joursAvecVersements > 0 ? $this->totalVersements / $joursAvecVersements : 0,
+            'versementsParJour' => collect($this->versementsParJour)->map(function($j) {
+                return (object)['date' => $j['date'], 'total' => $j['montant'], 'count' => 0];
+            }),
+            'topMotards' => Versement::whereBetween('date_versement', [$this->startOfWeek, $this->endOfWeek])
+                ->with('motard.user')
+                ->selectRaw('motard_id, SUM(montant) as total, COUNT(*) as count')
+                ->groupBy('motard_id')
+                ->orderByDesc('total')
+                ->limit(10)
+                ->get(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.reports.weekly', [
+            'title' => 'Rapport Hebdomadaire - Administration',
+            'subtitle' => 'Semaine du ' . $stats['debutSemaine'] . ' au ' . $stats['finSemaine'],
+            'stats' => $stats,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'rapport_hebdomadaire_admin_' . $this->startOfWeek->format('Y-m-d') . '.pdf');
     }
 
     public function render()

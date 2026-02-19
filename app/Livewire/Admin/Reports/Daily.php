@@ -11,6 +11,7 @@ use App\Models\Motard;
 use App\Models\Moto;
 use App\Models\Tournee;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('components.dashlite-layout')]
 class Daily extends Component
@@ -76,6 +77,62 @@ class Daily extends Component
             ->orderByDesc('total')
             ->take(5)
             ->get();
+    }
+
+    public function export()
+    {
+        $filename = 'rapport_quotidien_admin_' . $this->date . '.csv';
+
+        return response()->streamDownload(function() {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, ['Rapport Quotidien Admin - ' . Carbon::parse($this->date)->format('d/m/Y')]);
+            fputcsv($handle, []);
+            fputcsv($handle, ['Total Versements', number_format($this->totalVersements) . ' FC']);
+            fputcsv($handle, ['Total Attendu', number_format($this->totalAttendu) . ' FC']);
+            fputcsv($handle, ['Total Collecte', number_format($this->totalCollecte) . ' FC']);
+            fputcsv($handle, ['Motards en retard', $this->motardsEnRetard]);
+            fputcsv($handle, ['Tournées du jour', $this->tourneesJour]);
+            fputcsv($handle, ['Tournées terminées', $this->tourneesTerminees]);
+
+            fclose($handle);
+        }, $filename);
+    }
+
+    public function exportPdf()
+    {
+        $this->loadStats();
+
+        $stats = [
+            'totalCollecte' => $this->totalVersements,
+            'totalAttendu' => $this->totalAttendu,
+            'nombreVersements' => array_sum($this->versementsParStatut),
+            'versementsPayes' => $this->versementsParStatut['paye'] ?? 0,
+            'versementsEnRetard' => $this->versementsParStatut['retard'] ?? 0,
+            'versementsPartiels' => $this->versementsParStatut['partiel'] ?? 0,
+            'arrieres' => max(0, $this->totalAttendu - $this->totalVersements),
+            'tauxRecouvrement' => $this->totalAttendu > 0
+                ? round(($this->totalVersements / $this->totalAttendu) * 100, 1)
+                : 0,
+            'motardsEnRetard' => collect([]),
+            'derniersVersements' => Versement::whereDate('date_versement', $this->date)
+                ->with(['motard.user', 'moto'])
+                ->orderBy('created_at', 'desc')
+                ->limit(20)
+                ->get(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.reports.daily', [
+            'title' => 'Rapport Quotidien - Administration',
+            'subtitle' => 'Date: ' . Carbon::parse($this->date)->format('d/m/Y'),
+            'stats' => $stats,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'rapport_quotidien_admin_' . $this->date . '.pdf');
     }
 
     public function render()

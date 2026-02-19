@@ -22,6 +22,23 @@
                 <option value="{{ $y }}">{{ $y }}</option>
                 @endfor
             </select>
+            <div class="dropdown">
+                <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-download me-1"></i>Exporter
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="#" wire:click.prevent="export">
+                            <i class="bi bi-filetype-csv me-2 text-success"></i>Export CSV
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" wire:click.prevent="exportPdf">
+                            <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>Export PDF
+                        </a>
+                    </li>
+                </ul>
+            </div>
             <button wire:click="$refresh" class="btn btn-outline-primary">
                 <i class="bi bi-arrow-clockwise"></i>
             </button>

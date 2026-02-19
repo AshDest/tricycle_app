@@ -8,6 +8,7 @@ use App\Models\Versement;
 use App\Models\Motard;
 use App\Models\Collecte;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('components.dashlite-layout')]
 class Daily extends Component
@@ -88,6 +89,23 @@ class Daily extends Component
 
             fclose($handle);
         }, $filename);
+    }
+
+    public function exportPdf()
+    {
+        $this->loadStats();
+
+        $pdf = Pdf::loadView('pdf.reports.daily', [
+            'title' => 'Rapport Quotidien',
+            'subtitle' => 'Date: ' . Carbon::parse($this->date)->format('d/m/Y'),
+            'stats' => $this->stats,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'rapport_quotidien_' . $this->date . '.pdf');
     }
 
     public function render()

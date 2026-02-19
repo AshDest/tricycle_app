@@ -12,6 +12,8 @@ use App\Models\Moto;
 use App\Models\Maintenance;
 use App\Models\Accident;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Monthly extends Component
@@ -69,7 +71,7 @@ class Monthly extends Component
 
         // Maintenances
         $this->totalMaintenances = Maintenance::whereBetween('date_intervention', [$startOfMonth, $endOfMonth])
-            ->sum(\DB::raw('COALESCE(cout_pieces, 0) + COALESCE(cout_main_oeuvre, 0)'));
+            ->sum(DB::raw('COALESCE(cout_pieces, 0) + COALESCE(cout_main_oeuvre, 0)'));
 
         // Accidents
         $this->totalAccidents = Accident::whereBetween('date_heure', [$startOfMonth, $endOfMonth])->count();
@@ -108,6 +110,88 @@ class Monthly extends Component
             ->orderByDesc('total')
             ->take(10)
             ->get();
+    }
+
+    public function export()
+    {
+        $filename = 'rapport_mensuel_admin_' . $this->month . '_' . $this->year . '.csv';
+
+        return response()->streamDownload(function() {
+            $handle = fopen('php://output', 'w');
+
+            $moisNom = Carbon::create($this->year, $this->month, 1)->translatedFormat('F Y');
+            fputcsv($handle, ['Rapport Mensuel Admin - ' . $moisNom]);
+            fputcsv($handle, []);
+            fputcsv($handle, ['Total Versements', number_format($this->totalVersements) . ' FC']);
+            fputcsv($handle, ['Total Attendu', number_format($this->totalAttendu) . ' FC']);
+            fputcsv($handle, ['Taux Recouvrement', $this->tauxRecouvrement . '%']);
+            fputcsv($handle, ['Total Paiements Propriétaires', number_format($this->totalPaiements) . ' FC']);
+            fputcsv($handle, ['Total Maintenances', number_format($this->totalMaintenances) . ' FC']);
+            fputcsv($handle, ['Nombre Accidents', $this->totalAccidents]);
+
+            fclose($handle);
+        }, $filename);
+    }
+
+    public function exportPdf()
+    {
+        $this->loadStats();
+
+        $startOfMonth = Carbon::create($this->year, $this->month, 1)->startOfMonth();
+        $endOfMonth = Carbon::create($this->year, $this->month, 1)->endOfMonth();
+
+        $stats = [
+            'mois' => Carbon::create($this->year, $this->month, 1)->translatedFormat('F Y'),
+            'totalCollecte' => $this->totalVersements,
+            'totalAttendu' => $this->totalAttendu,
+            'nombreVersements' => Versement::whereBetween('date_versement', [$startOfMonth, $endOfMonth])->count(),
+            'versementsPayes' => Versement::whereBetween('date_versement', [$startOfMonth, $endOfMonth])->where('statut', 'payé')->count(),
+            'versementsEnRetard' => Versement::whereBetween('date_versement', [$startOfMonth, $endOfMonth])->where('statut', 'en_retard')->count(),
+            'versementsPartiels' => Versement::whereBetween('date_versement', [$startOfMonth, $endOfMonth])->whereIn('statut', ['partiel', 'partiellement_payé'])->count(),
+            'arrieres' => max(0, $this->totalAttendu - $this->totalVersements),
+            'tauxRecouvrement' => $this->tauxRecouvrement,
+            'motardsActifs' => $this->motardsActifs,
+            'motosActives' => $this->motosActives,
+            'joursAvecVersements' => Versement::whereBetween('date_versement', [$startOfMonth, $endOfMonth])
+                ->selectRaw('DATE(date_versement) as date')
+                ->groupBy('date')
+                ->get()
+                ->count(),
+            'moyenneJournaliere' => 0,
+            'versementsParSemaine' => collect($this->versementsParSemaine)->map(function($s) {
+                return (object)['semaine' => $s['semaine'], 'total' => $s['montant'], 'count' => 0];
+            }),
+            'topMotards' => $this->topMotards,
+            'paiementsProprietaires' => [
+                'totalPaye' => $this->totalPaiements,
+                'nombrePaiements' => Payment::whereBetween('created_at', [$startOfMonth, $endOfMonth])->whereIn('statut', ['paye', 'valide'])->count(),
+                'enAttente' => Payment::whereBetween('created_at', [$startOfMonth, $endOfMonth])->whereIn('statut', ['en_attente', 'demande'])->count(),
+            ],
+            'maintenance' => [
+                'total' => Maintenance::whereBetween('date_intervention', [$startOfMonth, $endOfMonth])->count(),
+                'cout' => $this->totalMaintenances,
+            ],
+            'accidents' => [
+                'total' => $this->totalAccidents,
+                'cout' => Accident::whereBetween('date_heure', [$startOfMonth, $endOfMonth])->sum('cout_reel') ?? 0,
+            ],
+        ];
+
+        if ($stats['joursAvecVersements'] > 0) {
+            $stats['moyenneJournaliere'] = $stats['totalCollecte'] / $stats['joursAvecVersements'];
+        }
+
+        $pdf = Pdf::loadView('pdf.reports.monthly', [
+            'title' => 'Rapport Mensuel - Administration',
+            'subtitle' => $stats['mois'],
+            'stats' => $stats,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'rapport_mensuel_admin_' . $this->month . '_' . $this->year . '.pdf');
     }
 
     public function render()
