@@ -39,15 +39,44 @@
 
                         @if($motardSelectionne)
                         <!-- Infos du motard sélectionné -->
-                        <div class="alert alert-info mb-4">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <strong>{{ $motardSelectionne->user->name ?? 'N/A' }}</strong>
-                                    <span class="badge bg-light text-dark ms-2">{{ $motardSelectionne->moto->plaque_immatriculation ?? 'N/A' }}</span>
+                        <div class="card mb-4 {{ $arrieresCumules > 0 ? 'border-warning' : 'border-success' }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">{{ $motardSelectionne->user->name ?? 'N/A' }}</h6>
+                                        <span class="badge bg-light text-dark">
+                                            <i class="bi bi-bicycle me-1"></i>{{ $motardSelectionne->moto->plaque_immatriculation ?? 'N/A' }}
+                                        </span>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">Taux de paiement</small>
+                                        <span class="badge badge-soft-{{ $tauxPaiement >= 90 ? 'success' : ($tauxPaiement >= 70 ? 'warning' : 'danger') }} fs-6">
+                                            {{ $tauxPaiement }}%
+                                        </span>
+                                    </div>
                                 </div>
-                                <div>
-                                    Montant attendu: <strong class="text-primary">{{ number_format($montantAttendu) }} FC</strong>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <div class="bg-primary bg-opacity-10 rounded p-3 text-center">
+                                            <small class="text-muted d-block">Montant attendu</small>
+                                            <strong class="text-primary fs-5">{{ number_format($montantAttendu) }} FC</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="bg-{{ $arrieresCumules > 0 ? 'danger' : 'success' }} bg-opacity-10 rounded p-3 text-center">
+                                            <small class="text-muted d-block">Arriérés cumulés</small>
+                                            <strong class="text-{{ $arrieresCumules > 0 ? 'danger' : 'success' }} fs-5">
+                                                {{ number_format($arrieresCumules) }} FC
+                                            </strong>
+                                        </div>
+                                    </div>
                                 </div>
+                                @if($arrieresCumules > 0)
+                                <div class="alert alert-warning mt-3 mb-0 py-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <small>Ce motard a des arriérés en cours. Le versement du jour sera comparé au montant attendu de <strong>{{ number_format($montantAttendu) }} FC</strong>.</small>
+                                </div>
+                                @endif
                             </div>
                         </div>
                         @endif
@@ -56,13 +85,35 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Montant reçu (FC) <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="number" wire:model="montant" class="form-control form-control-lg @error('montant') is-invalid @enderror"
+                                <input type="number" wire:model.live="montant" class="form-control form-control-lg @error('montant') is-invalid @enderror"
                                        placeholder="0" min="0" required>
                                 <span class="input-group-text">FC</span>
                             </div>
                             @error('montant')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
+
+                            @if($motardSelectionne && $montant)
+                            @php
+                                $ecart = $montant - $montantAttendu;
+                            @endphp
+                            <div class="mt-2">
+                                @if($ecart >= 0)
+                                <div class="alert alert-success py-2 mb-0">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    <strong>Versement complet</strong> - Le montant couvre le tarif journalier
+                                    @if($ecart > 0)
+                                    <span class="badge bg-success ms-2">+{{ number_format($ecart) }} FC</span>
+                                    @endif
+                                </div>
+                                @else
+                                <div class="alert alert-warning py-2 mb-0">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Versement partiel</strong> - Arriéré de ce jour: <strong class="text-danger">{{ number_format(abs($ecart)) }} FC</strong>
+                                </div>
+                                @endif
+                            </div>
+                            @endif
                         </div>
 
                         <!-- Mode de paiement -->

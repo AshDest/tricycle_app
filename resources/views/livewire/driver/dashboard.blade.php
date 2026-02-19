@@ -14,13 +14,40 @@
         </div>
     </div>
 
-    <!-- Alert if behind -->
+    <!-- Alert Arriérés -->
+    @if(($arrieres ?? 0) > 0)
+    @php
+        $alertClass = match($statutArriere ?? 'ok') {
+            'critique' => 'danger',
+            'eleve' => 'danger',
+            'moyen' => 'warning',
+            'faible' => 'info',
+            default => 'secondary'
+        };
+        $alertIcon = match($statutArriere ?? 'ok') {
+            'critique' => 'exclamation-octagon-fill',
+            'eleve' => 'exclamation-triangle-fill',
+            'moyen' => 'exclamation-circle-fill',
+            default => 'info-circle-fill'
+        };
+    @endphp
+    <div class="alert alert-{{ $alertClass }} d-flex align-items-center gap-3 mb-4" role="alert">
+        <i class="bi bi-{{ $alertIcon }} fs-4"></i>
+        <div>
+            <strong>Arriérés en cours !</strong> Vous avez un total de <strong>{{ number_format($arrieres ?? 0) }} FC</strong> d'arriérés à régulariser.
+            @if(($arrieresMois ?? 0) > 0)
+            <br><small>Dont {{ number_format($arrieresMois) }} FC ce mois-ci.</small>
+            @endif
+        </div>
+    </div>
+    @endif
+
+    <!-- Alert Retards -->
     @if(($joursEnRetard ?? 0) > 0)
     <div class="alert alert-warning d-flex align-items-center gap-3 mb-4" role="alert">
-        <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+        <i class="bi bi-clock-history fs-4"></i>
         <div>
-            <strong>Attention !</strong> Vous avez {{ $joursEnRetard }} jour(s) de retard de paiement.
-            Veuillez régulariser votre situation.
+            <strong>Attention !</strong> Vous avez {{ $joursEnRetard }} jour(s) sans versement complet ce mois.
         </div>
     </div>
     @endif
@@ -32,12 +59,17 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Versement Aujourd'hui</p>
-                        <h3 class="fw-bold {{ ($versementAujourdhui ?? 0) > 0 ? 'text-success' : 'text-danger' }} mb-1">
-                            {{ number_format($versementAujourdhui ?? 0) }}
+                        <h3 class="fw-bold {{ ($versementAujourdhui ?? 0) >= ($montantAttendu ?? 0) ? 'text-success' : (($versementAujourdhui ?? 0) > 0 ? 'text-warning' : 'text-danger') }} mb-1">
+                            {{ number_format($versementAujourdhui ?? 0) }} FC
                         </h3>
-                        <small class="text-muted">FC sur {{ number_format($montantAttendu ?? 0) }} attendu</small>
+                        <small class="text-muted">
+                            sur {{ number_format($montantAttendu ?? 0) }} FC attendu
+                            @if(($versementAujourdhui ?? 0) < ($montantAttendu ?? 0) && ($versementAujourdhui ?? 0) > 0)
+                            <br><span class="text-danger">(-{{ number_format(($montantAttendu ?? 0) - ($versementAujourdhui ?? 0)) }} FC)</span>
+                            @endif
+                        </small>
                     </div>
-                    <div class="stat-icon bg-{{ ($versementAujourdhui ?? 0) > 0 ? 'success' : 'danger' }} bg-opacity-10 text-{{ ($versementAujourdhui ?? 0) > 0 ? 'success' : 'danger' }}">
+                    <div class="stat-icon bg-{{ ($versementAujourdhui ?? 0) >= ($montantAttendu ?? 0) ? 'success' : 'danger' }} bg-opacity-10 text-{{ ($versementAujourdhui ?? 0) >= ($montantAttendu ?? 0) ? 'success' : 'danger' }}">
                         <i class="bi bi-cash-stack"></i>
                     </div>
                 </div>
@@ -48,8 +80,15 @@
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
                         <p class="text-muted small text-uppercase fw-semibold mb-2">Total ce Mois</p>
-                        <h3 class="fw-bold text-primary mb-1">{{ number_format($totalMois ?? 0) }}</h3>
-                        <small class="text-muted">FC versés</small>
+                        <h3 class="fw-bold text-primary mb-1">{{ number_format($totalMois ?? 0) }} FC</h3>
+                        <small class="text-muted">
+                            sur {{ number_format($totalAttenduMois ?? 0) }} FC attendu
+                            @if(($totalAttenduMois ?? 0) > 0)
+                            <br><span class="text-{{ ($totalMois ?? 0) >= ($totalAttenduMois ?? 0) ? 'success' : 'warning' }}">
+                                ({{ round((($totalMois ?? 0) / ($totalAttenduMois ?? 1)) * 100, 1) }}%)
+                            </span>
+                            @endif
+                        </small>
                     </div>
                     <div class="stat-icon bg-primary bg-opacity-10 text-primary">
                         <i class="bi bi-calendar-check"></i>
@@ -61,9 +100,14 @@
             <div class="card stat-card h-100">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Jours Payés</p>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Performance</p>
                         <h3 class="fw-bold mb-1">{{ $joursPayes ?? 0 }}/{{ $joursTravailles ?? 0 }}</h3>
-                        <small class="text-muted">ce mois</small>
+                        <small class="text-muted">
+                            jours complets
+                            @if(($joursPartiels ?? 0) > 0)
+                            <br><span class="text-warning">+ {{ $joursPartiels }} partiels</span>
+                            @endif
+                        </small>
                     </div>
                     <div class="stat-icon bg-info bg-opacity-10 text-info">
                         <i class="bi bi-check2-square"></i>
@@ -72,14 +116,20 @@
             </div>
         </div>
         <div class="col-sm-6 col-xl-3">
-            <div class="card stat-card h-100">
+            <div class="card stat-card h-100 {{ ($arrieres ?? 0) > 50000 ? 'border-danger' : '' }}">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Arriérés</p>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Arriérés Cumulés</p>
                         <h3 class="fw-bold {{ ($arrieres ?? 0) > 0 ? 'text-danger' : 'text-success' }} mb-1">
-                            {{ number_format($arrieres ?? 0) }}
+                            {{ number_format($arrieres ?? 0) }} FC
                         </h3>
-                        <small class="text-muted">FC</small>
+                        <small class="text-muted">
+                            @if(($arrieres ?? 0) <= 0)
+                            <span class="text-success"><i class="bi bi-check-circle"></i> À jour</span>
+                            @else
+                            <span class="badge badge-soft-{{ $alertClass ?? 'secondary' }}">{{ ucfirst($statutArriere ?? 'N/A') }}</span>
+                            @endif
+                        </small>
                     </div>
                     <div class="stat-icon bg-{{ ($arrieres ?? 0) > 0 ? 'danger' : 'success' }} bg-opacity-10 text-{{ ($arrieres ?? 0) > 0 ? 'danger' : 'success' }}">
                         <i class="bi bi-{{ ($arrieres ?? 0) > 0 ? 'exclamation-circle' : 'check-circle' }}"></i>
@@ -110,14 +160,120 @@
                             <span class="text-muted">Matricule</span>
                             <span class="fw-medium">{{ $moto->numero_matricule ?? 'N/A' }}</span>
                         </li>
-                        <li class="d-flex justify-content-between py-2 border-bottom">
-                            <span class="text-muted">Tarif journalier</span>
-                            <span class="fw-medium">{{ number_format($moto->montant_journalier_attendu ?? 0) }} FC</span>
+                        <li class="d-flex justify-content-between py-2 border-bottom bg-light px-2 rounded">
+                            <span class="text-muted"><strong>Tarif journalier</strong></span>
+                            <span class="fw-bold text-primary">{{ number_format($moto->montant_journalier_attendu ?? 0) }} FC</span>
                         </li>
-                        <li class="d-flex justify-content-between py-2">
-                            <span class="text-muted">Statut</span>
+                        <li class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Statut moto</span>
                             <span class="badge badge-soft-{{ $moto->statut === 'actif' ? 'success' : 'secondary' }}">
                                 {{ ucfirst($moto->statut ?? 'Inactif') }}
+                            </span>
+                        </li>
+                        <li class="d-flex justify-content-between py-2">
+                            <span class="text-muted">Taux de paiement</span>
+                            <span class="fw-medium text-{{ ($tauxPaiement ?? 0) >= 90 ? 'success' : (($tauxPaiement ?? 0) >= 70 ? 'warning' : 'danger') }}">
+                                {{ $tauxPaiement ?? 0 }}%
+                            </span>
+                        </li>
+                    </ul>
+                    @else
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-bicycle fs-1 d-block mb-2"></i>
+                        <p class="mb-0">Aucune moto assignée</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Mes Derniers Versements</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">Date</th>
+                                    <th>Versé</th>
+                                    <th>Attendu</th>
+                                    <th>Écart</th>
+                                    <th class="pe-4">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($derniersVersements ?? [] as $versement)
+                                @php
+                                    $ecart = ($versement->montant ?? 0) - ($versement->montant_attendu ?? 0);
+                                @endphp
+                                <tr class="{{ $ecart < 0 ? 'table-warning' : '' }}">
+                                    <td class="ps-4">
+                                        <i class="bi bi-calendar3 me-1 text-muted"></i>
+                                        {{ $versement->date_versement?->format('d/m/Y') ?? 'N/A' }}
+                                    </td>
+                                    <td class="fw-semibold {{ ($versement->montant ?? 0) >= ($versement->montant_attendu ?? 0) ? 'text-success' : 'text-warning' }}">
+                                        {{ number_format($versement->montant ?? 0) }} FC
+                                    </td>
+                                    <td class="text-muted">{{ number_format($versement->montant_attendu ?? 0) }} FC</td>
+                                    <td>
+                                        @if($ecart >= 0)
+                                        <span class="text-success"><i class="bi bi-check-circle me-1"></i>OK</span>
+                                        @else
+                                        <span class="text-danger fw-bold">{{ number_format($ecart) }} FC</span>
+                                        @endif
+                                    </td>
+                                    <td class="pe-4">
+                                        @php
+                                            $statutColors = [
+                                                'paye' => 'success',
+                                                'payé' => 'success',
+                                                'partiel' => 'warning',
+                                                'partiellement_payé' => 'warning',
+                                                'non_effectue' => 'danger',
+                                                'non_effectué' => 'danger',
+                                                'en_retard' => 'danger',
+                                            ];
+                                        @endphp
+                                        <span class="badge badge-soft-{{ $statutColors[$versement->statut] ?? 'secondary' }}">
+                                            {{ ucfirst(str_replace('_', ' ', $versement->statut ?? 'N/A')) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                        Aucun versement enregistré
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="card bg-light border-0">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-question-circle me-2 text-primary"></i>Besoin d'aide ?</h6>
+                    <p class="text-muted mb-0">Pour toute question concernant vos versements ou signaler un problème, contactez votre caissier ou utilisez la messagerie interne.</p>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="#" class="btn btn-primary">
+                        <i class="bi bi-chat-dots me-2"></i>Contacter le support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                             </span>
                         </li>
                     </ul>

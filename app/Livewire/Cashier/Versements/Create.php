@@ -19,6 +19,8 @@ class Create extends Component
     public $motardSelectionne = null;
     public $montantAttendu = 0;
     public $soldeActuel = 0;
+    public $arrieresCumules = 0;
+    public $tauxPaiement = 0;
 
     protected $rules = [
         'motard_id' => 'required|exists:motards,id',
@@ -45,9 +47,13 @@ class Create extends Component
         if ($value) {
             $this->motardSelectionne = Motard::with(['user', 'moto'])->find($value);
             $this->montantAttendu = $this->motardSelectionne?->moto?->montant_journalier_attendu ?? 5000;
+            $this->arrieresCumules = $this->motardSelectionne?->getTotalArrieres() ?? 0;
+            $this->tauxPaiement = $this->motardSelectionne?->taux_paiement ?? 100;
         } else {
             $this->motardSelectionne = null;
             $this->montantAttendu = 0;
+            $this->arrieresCumules = 0;
+            $this->tauxPaiement = 0;
         }
     }
 
@@ -59,14 +65,20 @@ class Create extends Component
         $motard = Motard::with('moto')->find($this->motard_id);
         $moto = $motard->moto;
 
-        // Déterminer le statut
+        // Montant attendu depuis la moto
         $montantAttendu = $moto?->montant_journalier_attendu ?? 5000;
-        $statut = 'non_effectué';
+
+        // Le statut sera déterminé automatiquement dans le modèle Versement
+        // via la méthode boot(), mais on le définit aussi ici pour la clarté
+        $statut = 'non_effectue';
         if ($this->montant >= $montantAttendu) {
-            $statut = 'payé';
+            $statut = 'paye';
         } elseif ($this->montant > 0) {
-            $statut = 'partiellement_payé';
+            $statut = 'partiel';
         }
+
+        // Calcul des arriérés
+        $arrieres = max(0, $montantAttendu - $this->montant);
 
         Versement::create([
             'motard_id' => $this->motard_id,
@@ -74,16 +86,24 @@ class Create extends Component
             'caissier_id' => $caissier->id,
             'montant' => $this->montant,
             'montant_attendu' => $montantAttendu,
+            'arrieres' => $arrieres,
             'mode_paiement' => $this->mode_paiement,
             'statut' => $statut,
             'date_versement' => Carbon::today(),
+            'validated_by_caissier_at' => Carbon::now(),
             'notes' => $this->notes,
         ]);
 
         // Mettre à jour le solde du caissier
         $caissier->increment('solde_actuel', $this->montant);
 
-        session()->flash('success', 'Versement enregistré avec succès.');
+        // Message personnalisé selon le statut
+        if ($statut === 'paye') {
+            session()->flash('success', 'Versement complet enregistré avec succès.');
+        } else {
+            session()->flash('warning', 'Versement partiel enregistré. Arriérés: ' . number_format($arrieres) . ' FC');
+        }
+
         return redirect()->route('cashier.versements.index');
     }
 

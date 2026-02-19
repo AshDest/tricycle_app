@@ -60,9 +60,10 @@
                     <label class="form-label small fw-semibold">Statut</label>
                     <select wire:model.live="filterStatut" class="form-select">
                         <option value="">Tous</option>
-                        <option value="payé">Payé</option>
-                        <option value="partiellement_payé">Partiel</option>
+                        <option value="paye">Payé (complet)</option>
+                        <option value="partiel">Partiel</option>
                         <option value="en_retard">En retard</option>
+                        <option value="non_effectue">Non effectué</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -95,17 +96,20 @@
                         <tr>
                             <th class="ps-4">Motard</th>
                             <th>Moto</th>
-                            <th>Montant reçu</th>
-                            <th>Montant attendu</th>
+                            <th>Versé</th>
+                            <th>Attendu</th>
+                            <th>Écart</th>
                             <th>Mode</th>
                             <th>Statut</th>
-                            <th>Heure</th>
-                            <th class="text-end pe-4">Actions</th>
+                            <th class="text-end pe-4">Heure</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($versements ?? [] as $versement)
-                        <tr>
+                        @php
+                            $ecart = ($versement->montant ?? 0) - ($versement->montant_attendu ?? 0);
+                        @endphp
+                        <tr class="{{ $ecart < 0 ? 'table-warning' : '' }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="avatar avatar-sm bg-success bg-opacity-10 text-success rounded-circle">
@@ -122,8 +126,15 @@
                                     <i class="bi bi-bicycle me-1"></i>{{ $versement->moto->plaque_immatriculation ?? 'N/A' }}
                                 </span>
                             </td>
-                            <td class="fw-bold text-success">{{ number_format($versement->montant ?? 0) }} FC</td>
+                            <td class="fw-bold {{ $ecart >= 0 ? 'text-success' : 'text-warning' }}">{{ number_format($versement->montant ?? 0) }} FC</td>
                             <td class="text-muted">{{ number_format($versement->montant_attendu ?? 0) }} FC</td>
+                            <td>
+                                @if($ecart >= 0)
+                                <span class="text-success"><i class="bi bi-check-circle"></i> OK</span>
+                                @else
+                                <span class="text-danger fw-bold">{{ number_format($ecart) }} FC</span>
+                                @endif
+                            </td>
                             <td>
                                 @php
                                     $modeIcons = ['cash' => 'cash', 'mobile_money' => 'phone', 'depot' => 'bank'];
@@ -136,9 +147,12 @@
                             <td>
                                 @php
                                     $statutColors = [
+                                        'paye' => 'success',
                                         'payé' => 'success',
+                                        'partiel' => 'warning',
                                         'partiellement_payé' => 'warning',
                                         'en_retard' => 'danger',
+                                        'non_effectue' => 'secondary',
                                         'non_effectué' => 'secondary'
                                     ];
                                 @endphp
@@ -146,13 +160,8 @@
                                     {{ ucfirst(str_replace('_', ' ', $versement->statut ?? 'N/A')) }}
                                 </span>
                             </td>
-                            <td class="text-muted small">
+                            <td class="text-end pe-4 text-muted small">
                                 <i class="bi bi-clock me-1"></i>{{ $versement->created_at?->format('H:i') }}
-                            </td>
-                            <td class="text-end pe-4">
-                                <button wire:click="voirDetails({{ $versement->id }})" class="btn btn-sm btn-outline-primary" title="Détails">
-                                    <i class="bi bi-eye"></i>
-                                </button>
                             </td>
                         </tr>
                         @empty

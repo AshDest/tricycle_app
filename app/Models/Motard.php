@@ -110,24 +110,103 @@ class Motard extends Model
         $versements = $this->versements;
 
         return [
-            'total_jours_payes' => $versements->where('statut', 'payé')->count(),
-            'total_jours_en_retard' => $versements->where('statut', 'en_retard')->count(),
-            'total_jours_partiels' => $versements->where('statut', 'partiellement_payé')->count(),
-            'montant_cumule_arrieres' => $this->getMontantArrieres(),
+            'total_jours_payes' => $versements->whereIn('statut', ['paye', 'payé'])->count(),
+            'total_jours_en_retard' => $versements->whereIn('statut', ['en_retard', 'non_effectue'])->count(),
+            'total_jours_partiels' => $versements->whereIn('statut', ['partiel', 'partiellement_payé'])->count(),
+            'montant_cumule_arrieres' => $this->getTotalArrieres(),
+            'total_verse' => $versements->sum('montant'),
+            'total_attendu' => $versements->sum('montant_attendu'),
         ];
     }
 
     /**
-     * Calculer le montant total des arriérés
+     * Calculer le montant total des arriérés cumulés
+     */
+    public function getTotalArrieres(): float
+    {
+        return $this->versements()
+            ->selectRaw('SUM(GREATEST(0, COALESCE(montant_attendu, 0) - COALESCE(montant, 0))) as total')
+            ->value('total') ?? 0;
+    }
+
+    /**
+     * Alias pour getTotalArrieres (compatibilité)
      */
     public function getMontantArrieres(): float
     {
+        return $this->getTotalArrieres();
+    }
+
+    /**
+     * Obtenir les arriérés du mois en cours
+     */
+    public function getArrieresMoisEnCours(): float
+    {
         return $this->versements()
-            ->where('statut', '!=', 'payé')
-            ->get()
-            ->sum(function ($v) {
-                return $v->montant_attendu - $v->montant;
-            });
+            ->whereMonth('date_versement', now()->month)
+            ->whereYear('date_versement', now()->year)
+            ->selectRaw('SUM(GREATEST(0, COALESCE(montant_attendu, 0) - COALESCE(montant, 0))) as total')
+            ->value('total') ?? 0;
+    }
+
+    /**
+     * Obtenir les arriérés pour une période donnée
+     */
+    public function getArrieresPeriode($dateDebut, $dateFin): float
+    {
+        return $this->versements()
+            ->whereBetween('date_versement', [$dateDebut, $dateFin])
+            ->selectRaw('SUM(GREATEST(0, COALESCE(montant_attendu, 0) - COALESCE(montant, 0))) as total')
+            ->value('total') ?? 0;
+    }
+
+    /**
+     * Obtenir le taux de paiement global (%)
+     */
+    public function getTauxPaiementAttribute(): float
+    {
+        $totalAttendu = $this->versements()->sum('montant_attendu');
+        if ($totalAttendu <= 0) {
+            return 100;
+        }
+        $totalVerse = $this->versements()->sum('montant');
+        return round(($totalVerse / $totalAttendu) * 100, 1);
+    }
+
+    /**
+     * Obtenir le statut d'arriéré
+     */
+    public function getStatutArriereAttribute(): string
+    {
+        $arrieres = $this->getTotalArrieres();
+
+        if ($arrieres <= 0) {
+            return 'ok';
+        } elseif ($arrieres < 25000) {
+            return 'faible';
+        } elseif ($arrieres < 50000) {
+            return 'moyen';
+        } elseif ($arrieres < 100000) {
+            return 'eleve';
+        } else {
+            return 'critique';
+        }
+    }
+
+    /**
+     * Vérifier si le motard a des arriérés
+     */
+    public function getHasArriereAttribute(): bool
+    {
+        return $this->getTotalArrieres() > 0;
+    }
+
+    /**
+     * Attribut pour accéder facilement aux arriérés totaux
+     */
+    public function getTotalArrieresAttribute(): float
+    {
+        return $this->getTotalArrieres();
     }
 
     /**
@@ -135,7 +214,7 @@ class Motard extends Model
      */
     public function hasArrieresCritiques(float $seuil = 50000): bool
     {
-        return $this->getMontantArrieres() >= $seuil;
+        return $this->getTotalArrieres() >= $seuil;
     }
 
     /**
@@ -160,7 +239,17 @@ class Motard extends Model
     public function scopeEnRetard($query)
     {
         return $query->whereHas('versements', function ($q) {
-            $q->where('statut', 'en_retard');
+            $q->whereIn('statut', ['en_retard', 'non_effectue']);
+        });
+    }
+
+    /**
+     * Scope pour les motards avec arriérés
+     */
+    public function scopeAvecArrieres($query)
+    {
+        return $query->whereHas('versements', function ($q) {
+            $q->whereRaw('montant < montant_attendu');
         });
     }
 
@@ -170,7 +259,7 @@ class Motard extends Model
     public function scopeArrieresCritiques($query, float $seuil = 50000)
     {
         return $query->get()->filter(function ($motard) use ($seuil) {
-            return $motard->getMontantArrieres() >= $seuil;
+            return $motard->getTotalArrieres() >= $seuil;
         });
     }
 }

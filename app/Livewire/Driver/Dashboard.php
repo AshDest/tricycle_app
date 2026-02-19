@@ -17,11 +17,16 @@ class Dashboard extends Component
     public $versementAujourdhui = 0;
     public $montantAttendu = 0;
     public $totalMois = 0;
+    public $totalAttenduMois = 0;
     public $joursPayes = 0;
     public $joursTravailles = 0;
     public $joursEnRetard = 0;
+    public $joursPartiels = 0;
     public $arrieres = 0;
-    public $statutDuJour = 'non_effectué';
+    public $arrieresMois = 0;
+    public $tauxPaiement = 0;
+    public $statutDuJour = 'non_effectue';
+    public $statutArriere = 'ok';
     public $derniersVersements = [];
 
     public function mount()
@@ -44,28 +49,37 @@ class Dashboard extends Component
 
             if ($versementJour) {
                 $this->versementAujourdhui = $versementJour->montant ?? 0;
-                $this->statutDuJour = $versementJour->statut ?? 'non_effectué';
+                $this->statutDuJour = $versementJour->statut ?? 'non_effectue';
             }
 
-            // Total du mois
-            $this->totalMois = Versement::where('motard_id', $this->motard->id)
-                ->whereDate('date_versement', '>=', $startOfMonth)
-                ->sum('montant') ?? 0;
-
-            // Jours payés ce mois
+            // Versements du mois
             $versementsMois = Versement::where('motard_id', $this->motard->id)
                 ->whereDate('date_versement', '>=', $startOfMonth)
                 ->get();
 
-            $this->joursPayes = $versementsMois->where('statut', 'payé')->count();
-            $this->joursEnRetard = $versementsMois->whereIn('statut', ['en_retard', 'non_effectué'])->count();
-            $this->joursTravailles = $today->day; // Jours écoulés ce mois
+            // Total du mois (versé vs attendu)
+            $this->totalMois = $versementsMois->sum('montant') ?? 0;
+            $this->totalAttenduMois = $versementsMois->sum('montant_attendu') ?? 0;
 
-            // Arriérés cumulés
-            $this->arrieres = Versement::where('motard_id', $this->motard->id)
-                ->whereIn('statut', ['en_retard', 'partiellement_payé'])
-                ->selectRaw('COALESCE(SUM(montant_attendu - COALESCE(montant, 0)), 0) as total')
-                ->value('total') ?? 0;
+            // Statistiques par statut
+            $this->joursPayes = $versementsMois->whereIn('statut', ['paye', 'payé'])->count();
+            $this->joursPartiels = $versementsMois->whereIn('statut', ['partiel', 'partiellement_payé'])->count();
+            $this->joursEnRetard = $versementsMois->whereIn('statut', ['en_retard', 'non_effectue', 'non_effectué'])->count();
+            $this->joursTravailles = $today->day;
+
+            // Arriérés du mois
+            $this->arrieresMois = $versementsMois->sum(function ($v) {
+                return max(0, ($v->montant_attendu ?? 0) - ($v->montant ?? 0));
+            });
+
+            // Arriérés cumulés totaux
+            $this->arrieres = $this->motard->getTotalArrieres();
+
+            // Statut d'arriéré
+            $this->statutArriere = $this->motard->statut_arriere;
+
+            // Taux de paiement
+            $this->tauxPaiement = $this->motard->taux_paiement;
 
             // Derniers versements (historique)
             $this->derniersVersements = Versement::where('motard_id', $this->motard->id)
