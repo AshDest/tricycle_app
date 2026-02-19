@@ -42,6 +42,7 @@
                 </a>
                 <ul class="submenu">
                     <li><a href="{{ route('admin.motos.index') }}">Liste des motos</a></li>
+                    <li><a href="{{ route('admin.motos.maintenance-list') }}"><i class="bi bi-tools me-1"></i>Maintenances Prévues</a></li>
                     <li><a href="{{ route('admin.motos.create') }}">Ajouter une moto</a></li>
                 </ul>
             </li>
@@ -172,10 +173,16 @@
                 </a>
             </li>
             <li class="sidebar-heading">Maintenance &amp; Accidents</li>
-            <li class="{{ request()->is('supervisor/maintenances*') ? 'active' : '' }}">
+            <li class="{{ request()->is('supervisor/maintenances') && !request()->is('supervisor/maintenances/prochaines') ? 'active' : '' }}">
                 <a href="{{ route('supervisor.maintenances.index') }}">
                     <i class="bi bi-tools"></i>
                     <span>Maintenances</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('supervisor/maintenances/prochaines') ? 'active' : '' }}">
+                <a href="{{ route('supervisor.maintenances.prochaines') }}">
+                    <i class="bi bi-calendar-event text-warning"></i>
+                    <span>Prochaines Maintenances</span>
                 </a>
             </li>
             <li class="{{ request()->is('supervisor/accidents*') ? 'active' : '' }}">

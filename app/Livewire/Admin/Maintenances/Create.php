@@ -21,6 +21,8 @@ class Create extends Component
     public $cout_pieces = '';
     public $cout_main_oeuvre = '';
     public $qui_a_paye = '';
+    public $prochain_entretien = '';
+    public $statut = 'en_attente';
 
     protected $rules = [
         'moto_id' => 'required|exists:motos,id',
@@ -33,7 +35,19 @@ class Create extends Component
         'cout_pieces' => 'nullable|numeric|min:0',
         'cout_main_oeuvre' => 'nullable|numeric|min:0',
         'qui_a_paye' => 'required|in:motard,proprietaire,nth,okami',
+        'prochain_entretien' => 'nullable|date|after:date_intervention',
+        'statut' => 'required|in:en_attente,en_cours,termine',
     ];
+
+    public function mount()
+    {
+        // Récupérer le moto_id depuis l'URL si fourni
+        if (request()->has('moto_id')) {
+            $this->moto_id = request()->get('moto_id');
+        }
+
+        $this->date_intervention = now()->format('Y-m-d');
+    }
 
     public function save()
     {
@@ -50,15 +64,17 @@ class Create extends Component
             'cout_pieces' => $this->cout_pieces ?? 0,
             'cout_main_oeuvre' => $this->cout_main_oeuvre ?? 0,
             'qui_a_paye' => $this->qui_a_paye,
+            'prochain_entretien' => $this->prochain_entretien ?: null,
+            'statut' => $this->statut,
         ]);
 
-        session()->flash('success', 'Maintenance creee avec succes.');
+        session()->flash('success', 'Maintenance créée avec succès.');
         return redirect()->route('admin.maintenances.index');
     }
 
     public function render()
     {
-        $motos = Moto::all();
+        $motos = Moto::with('proprietaire.user')->orderBy('plaque_immatriculation')->get();
         return view('livewire.admin.maintenances.create', compact('motos'));
     }
 }

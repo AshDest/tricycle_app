@@ -27,8 +27,8 @@
                                 <select wire:model="moto_id" class="form-select @error('moto_id') is-invalid @enderror">
                                     <option value="">-- Sélectionner une moto --</option>
                                     @foreach($motos as $moto)
-                                    <option value="{{ $moto->id }}">
-                                        {{ $moto->plaque_immatriculation }} - {{ $moto->marque }} {{ $moto->modele }}
+                                    <option value="{{ $moto->id }}" {{ $moto_id == $moto->id ? 'selected' : '' }}>
+                                        {{ $moto->plaque_immatriculation }} - {{ $moto->proprietaire->user->name ?? 'Sans propriétaire' }}
                                     </option>
                                     @endforeach
                                 </select>
@@ -53,6 +53,24 @@
                                 <label class="form-label fw-semibold">Date de l'intervention <span class="text-danger">*</span></label>
                                 <input type="date" wire:model="date_intervention" class="form-control @error('date_intervention') is-invalid @enderror">
                                 @error('date_intervention')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Statut <span class="text-danger">*</span></label>
+                                <select wire:model="statut" class="form-select @error('statut') is-invalid @enderror">
+                                    <option value="en_attente">En attente</option>
+                                    <option value="en_cours">En cours</option>
+                                    <option value="termine">Terminé</option>
+                                </select>
+                                @error('statut')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-event me-1 text-info"></i>
+                                    Prochain entretien recommandé
+                                </label>
+                                <input type="date" wire:model="prochain_entretien" class="form-control @error('prochain_entretien') is-invalid @enderror">
+                                @error('prochain_entretien')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <small class="text-muted">Date de la prochaine maintenance prévue pour cette moto</small>
                             </div>
                         </div>
                     </div>

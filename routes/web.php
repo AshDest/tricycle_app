@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Motos
         Route::get('/motos', \App\Livewire\Admin\Motos\Index::class)->name('motos.index');
+        Route::get('/motos/maintenance-list', \App\Livewire\Admin\Motos\MaintenanceList::class)->name('motos.maintenance-list');
         Route::get('/motos/create', \App\Livewire\Admin\Motos\Create::class)->name('motos.create');
         Route::get('/motos/{moto}', \App\Livewire\Admin\Motos\Show::class)->name('motos.show');
         Route::get('/motos/{moto}/edit', \App\Livewire\Admin\Motos\Edit::class)->name('motos.edit');
@@ -144,6 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Maintenances (consultation et enregistrement)
         Route::get('/maintenances', \App\Livewire\Supervisor\Maintenances\Index::class)->name('maintenances.index');
+        Route::get('/maintenances/prochaines', \App\Livewire\Supervisor\Maintenances\ProchainesList::class)->name('maintenances.prochaines');
         Route::get('/maintenances/create', \App\Livewire\Supervisor\Maintenances\Create::class)->name('maintenances.create');
         Route::get('/maintenances/{maintenance}', \App\Livewire\Supervisor\Maintenances\Show::class)->name('maintenances.show');
 
