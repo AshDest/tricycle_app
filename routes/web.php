@@ -142,12 +142,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/payments', \App\Livewire\Supervisor\Payments\Index::class)->name('payments.index');
         Route::get('/payments/create', \App\Livewire\Supervisor\Payments\Create::class)->name('payments.create');
 
-        // Maintenances (consultation et suivi)
+        // Maintenances (consultation et enregistrement)
         Route::get('/maintenances', \App\Livewire\Supervisor\Maintenances\Index::class)->name('maintenances.index');
+        Route::get('/maintenances/create', \App\Livewire\Supervisor\Maintenances\Create::class)->name('maintenances.create');
         Route::get('/maintenances/{maintenance}', \App\Livewire\Supervisor\Maintenances\Show::class)->name('maintenances.show');
 
-        // Accidents (consultation et suivi)
+        // Accidents (consultation et enregistrement)
         Route::get('/accidents', \App\Livewire\Supervisor\Accidents\Index::class)->name('accidents.index');
+        Route::get('/accidents/create', \App\Livewire\Supervisor\Accidents\Create::class)->name('accidents.create');
         Route::get('/accidents/{accident}', \App\Livewire\Supervisor\Accidents\Show::class)->name('accidents.show');
 
         // Rapports

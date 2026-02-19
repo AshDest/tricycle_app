@@ -18,6 +18,7 @@ class Maintenance extends Model
     protected $fillable = [
         'moto_id',
         'motard_id',
+        'accident_id',
         'type',
         'description',
         'photo_avant_url',
@@ -59,6 +60,14 @@ class Maintenance extends Model
     public function motard(): BelongsTo
     {
         return $this->belongsTo(Motard::class);
+    }
+
+    /**
+     * L'accident lié (si maintenance suite à accident)
+     */
+    public function accident(): BelongsTo
+    {
+        return $this->belongsTo(Accident::class);
     }
 
     /**

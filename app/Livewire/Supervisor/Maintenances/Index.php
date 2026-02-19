@@ -72,7 +72,7 @@ class Index extends Component
 
     protected function getFilteredQuery()
     {
-        return Maintenance::with(['moto.proprietaire.user', 'motard.user'])
+        return Maintenance::with(['moto.proprietaire.user', 'motard.user', 'accident'])
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
                     $query->where('description', 'like', '%' . $this->search . '%')

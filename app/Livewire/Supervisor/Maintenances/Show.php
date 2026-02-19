@@ -13,7 +13,7 @@ class Show extends Component
 
     public function mount(Maintenance $maintenance)
     {
-        $this->maintenance = $maintenance->load(['moto.proprietaire.user', 'motard.user', 'validePar']);
+        $this->maintenance = $maintenance->load(['moto.proprietaire.user', 'motard.user', 'validePar', 'accident']);
     }
 
     public function render()

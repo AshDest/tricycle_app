@@ -4,6 +4,9 @@
         <div>
             <h4 class="page-title mb-1">
                 <i class="bi bi-tools me-2 text-info"></i>Détails de la Maintenance
+                @if($maintenance->accident_id)
+                <span class="badge bg-danger ms-2">Suite à accident</span>
+                @endif
             </h4>
             <p class="text-muted mb-0">Moto: {{ $maintenance->moto->plaque_immatriculation ?? 'N/A' }}</p>
         </div>
@@ -15,6 +18,43 @@
     <div class="row g-4">
         <!-- Informations principales -->
         <div class="col-lg-8">
+            <!-- Accident lié -->
+            @if($maintenance->accident)
+            <div class="card mb-4 border-danger">
+                <div class="card-header py-3 bg-danger bg-opacity-10">
+                    <h6 class="mb-0 fw-bold text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Accident lié</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Date de l'accident</label>
+                            <p class="fw-medium mb-0">{{ $maintenance->accident->date_heure?->format('d/m/Y H:i') }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Lieu</label>
+                            <p class="fw-medium mb-0">{{ $maintenance->accident->lieu }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small">Gravité</label>
+                            @php
+                                $graviteColors = ['mineur' => 'success', 'modere' => 'warning', 'grave' => 'danger'];
+                            @endphp
+                            <p class="mb-0">
+                                <span class="badge badge-soft-{{ $graviteColors[$maintenance->accident->gravite] ?? 'secondary' }}">
+                                    {{ ucfirst($maintenance->accident->gravite) }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-12">
+                            <a href="{{ route('supervisor.accidents.show', $maintenance->accident) }}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-eye me-1"></i>Voir les détails de l'accident
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="card mb-4">
                 <div class="card-header py-3">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-primary"></i>Informations de l'intervention</h6>

@@ -8,11 +8,21 @@
             <p class="text-muted mb-0">Historique des accidents impliquant les motos-tricycles</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('supervisor.accidents.create') }}" class="btn btn-danger">
+                <i class="bi bi-plus-lg me-1"></i>Déclarer un Accident
+            </a>
             <button class="btn btn-outline-success" wire:click="export">
                 <i class="bi bi-download me-1"></i>Exporter CSV
             </button>
         </div>
     </div>
+
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
 
     <!-- Statistiques -->
     <div class="row g-3 mb-4">
@@ -79,8 +89,9 @@
                     <select wire:model.live="filterStatut" class="form-select">
                         <option value="">Tous</option>
                         <option value="declare">Déclaré</option>
-                        <option value="en_evaluation">En évaluation</option>
-                        <option value="en_reparation">En réparation</option>
+                        <option value="evalue">Évalué</option>
+                        <option value="reparation_programmee">Réparation programmée</option>
+                        <option value="repare">Réparé</option>
                         <option value="cloture">Clôturé</option>
                     </select>
                 </div>
@@ -171,13 +182,21 @@
                                 @php
                                     $statutColors = [
                                         'declare' => 'warning',
-                                        'en_evaluation' => 'info',
-                                        'en_reparation' => 'primary',
-                                        'cloture' => 'success',
+                                        'evalue' => 'info',
+                                        'reparation_programmee' => 'primary',
+                                        'repare' => 'success',
+                                        'cloture' => 'secondary',
+                                    ];
+                                    $statutLabels = [
+                                        'declare' => 'Déclaré',
+                                        'evalue' => 'Évalué',
+                                        'reparation_programmee' => 'Réparation programmée',
+                                        'repare' => 'Réparé',
+                                        'cloture' => 'Clôturé',
                                     ];
                                 @endphp
                                 <span class="badge badge-soft-{{ $statutColors[$accident->statut] ?? 'secondary' }}">
-                                    {{ ucfirst(str_replace('_', ' ', $accident->statut ?? 'N/A')) }}
+                                    {{ $statutLabels[$accident->statut] ?? ucfirst($accident->statut ?? 'N/A') }}
                                 </span>
                             </td>
                             <td class="text-end pe-4">

@@ -127,6 +127,32 @@
                             <p class="fw-medium mb-0">{{ $accident->reparation_terminee_at?->format('d/m/Y') ?? 'En cours' }}</p>
                         </div>
                     </div>
+
+                    <hr class="my-3">
+
+                    @if($accident->maintenance)
+                    <!-- Maintenance liée existante -->
+                    <div class="alert alert-success mb-0">
+                        <h6 class="alert-heading mb-2"><i class="bi bi-check-circle me-2"></i>Maintenance créée</h6>
+                        <p class="mb-2 small">
+                            <strong>Date:</strong> {{ $accident->maintenance->date_intervention?->format('d/m/Y') }}<br>
+                            <strong>Statut:</strong> {{ ucfirst(str_replace('_', ' ', $accident->maintenance->statut)) }}<br>
+                            <strong>Coût:</strong> {{ number_format($accident->maintenance->cout_total) }} FC
+                        </p>
+                        <a href="{{ route('supervisor.maintenances.show', $accident->maintenance) }}" class="btn btn-sm btn-success">
+                            <i class="bi bi-eye me-1"></i>Voir la maintenance
+                        </a>
+                    </div>
+                    @else
+                    <!-- Pas encore de maintenance -->
+                    <div class="alert alert-warning mb-0">
+                        <h6 class="alert-heading mb-2"><i class="bi bi-exclamation-circle me-2"></i>Aucune maintenance liée</h6>
+                        <p class="mb-2 small">Cet accident n'a pas encore de maintenance de réparation associée.</p>
+                        <a href="{{ route('supervisor.maintenances.create') }}?moto_id={{ $accident->moto_id }}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-plus-lg me-1"></i>Créer une maintenance
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -144,9 +170,17 @@
                         ];
                         $statutColors = [
                             'declare' => 'warning',
-                            'en_evaluation' => 'info',
-                            'en_reparation' => 'primary',
-                            'cloture' => 'success',
+                            'evalue' => 'info',
+                            'reparation_programmee' => 'primary',
+                            'repare' => 'success',
+                            'cloture' => 'secondary',
+                        ];
+                        $statutLabels = [
+                            'declare' => 'Déclaré',
+                            'evalue' => 'Évalué',
+                            'reparation_programmee' => 'Réparation programmée',
+                            'repare' => 'Réparé',
+                            'cloture' => 'Clôturé',
                         ];
                     @endphp
                     <div class="mb-3">
@@ -155,7 +189,7 @@
                         </span>
                     </div>
                     <span class="badge badge-soft-{{ $statutColors[$accident->statut] ?? 'secondary' }} fs-6 px-4 py-2">
-                        {{ ucfirst(str_replace('_', ' ', $accident->statut ?? 'N/A')) }}
+                        {{ $statutLabels[$accident->statut] ?? ucfirst($accident->statut ?? 'N/A') }}
                     </span>
                     <hr class="my-3">
                     <small class="text-muted">Déclaré le {{ $accident->created_at?->format('d/m/Y à H:i') }}</small>

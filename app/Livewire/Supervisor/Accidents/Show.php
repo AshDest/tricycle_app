@@ -9,7 +9,7 @@ class Show extends Component
     public Accident $accident;
     public function mount(Accident $accident)
     {
-        $this->accident = $accident->load(['moto.proprietaire.user', 'motard.user', 'validePar']);
+        $this->accident = $accident->load(['moto.proprietaire.user', 'motard.user', 'validePar', 'maintenance']);
     }
     public function render()
     {

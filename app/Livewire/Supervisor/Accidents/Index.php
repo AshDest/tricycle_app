@@ -111,7 +111,7 @@ class Index extends Component
         $stats = [
             'total' => Accident::count(),
             'declares' => Accident::where('statut', 'declare')->count(),
-            'enReparation' => Accident::where('statut', 'en_reparation')->count(),
+            'enReparation' => Accident::whereIn('statut', ['reparation_programmee', 'evalue'])->count(),
             'clotures' => Accident::where('statut', 'cloture')->count(),
             'coutTotal' => Accident::sum('cout_reel'),
             'graves' => Accident::where('gravite', 'grave')->count(),

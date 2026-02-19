@@ -8,11 +8,21 @@
             <p class="text-muted mb-0">Historique des interventions techniques sur les motos</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('supervisor.maintenances.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Nouvelle Maintenance
+            </a>
             <button class="btn btn-outline-success" wire:click="export">
                 <i class="bi bi-download me-1"></i>Exporter CSV
             </button>
         </div>
     </div>
+
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
 
     <!-- Statistiques -->
     <div class="row g-3 mb-4">
@@ -112,10 +122,15 @@
                     </thead>
                     <tbody>
                         @forelse($maintenances as $maintenance)
-                        <tr>
+                        <tr class="{{ $maintenance->accident_id ? 'table-warning' : '' }}">
                             <td class="ps-4">
                                 <span class="fw-medium">{{ $maintenance->date_intervention?->format('d/m/Y') }}</span>
                                 <small class="text-muted d-block">{{ $maintenance->date_intervention?->format('H:i') }}</small>
+                                @if($maintenance->accident_id)
+                                <span class="badge bg-danger mt-1" title="Suite à accident">
+                                    <i class="bi bi-exclamation-triangle"></i> Accident
+                                </span>
+                                @endif
                             </td>
                             <td>
                                 <span class="badge bg-light text-dark">
