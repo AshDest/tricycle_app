@@ -75,9 +75,9 @@
             <div class="card stat-card h-100 border-start border-info border-4">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Historique</p>
-                        <h3 class="fw-bold text-info mb-1">{{ $historiqueRecent->count() }}</h3>
-                        <small class="text-muted">dernières tournées</small>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Solde Caisse</p>
+                        <h3 class="fw-bold text-info mb-1">{{ number_format($soldeCaisse) }} FC</h3>
+                        <small class="text-muted">disponible pour paiements</small>
                     </div>
                     <div class="stat-icon bg-info bg-opacity-10 text-info">
                         <i class="bi bi-clock-history"></i>

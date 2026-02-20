@@ -7,9 +7,14 @@
             </h4>
             <p class="text-muted mb-0">Traiter les demandes de paiement soumises par OKAMI</p>
         </div>
-        <span class="badge bg-warning text-dark px-3 py-2 fs-6">
-            <i class="bi bi-hourglass-split me-1"></i>{{ $demandesEnAttente }} en attente
-        </span>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="bg-info bg-opacity-10 text-info px-3 py-2 rounded fw-bold">
+                <i class="bi bi-safe me-1"></i>Caisse: {{ number_format($soldeCaisse) }} FC
+            </div>
+            <span class="badge bg-warning text-dark px-3 py-2 fs-6">
+                <i class="bi bi-hourglass-split me-1"></i>{{ $demandesEnAttente }} en attente
+            </span>
+        </div>
     </div>
 
     @if(session('success'))
@@ -160,8 +165,17 @@
 
                     @if($isCash)
                     <div class="alert alert-warning mb-3">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <strong>Paiement en Cash</strong> - Un reçu sera généré automatiquement après le traitement.
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Paiement en Cash</strong>
+                            </div>
+                            <div class="text-end">
+                                <small>Votre caisse:</small>
+                                <strong class="ms-1">{{ number_format($soldeCaisse) }} FC</strong>
+                            </div>
+                        </div>
+                        <small class="d-block mt-1">Un reçu sera généré automatiquement après le traitement.</small>
                     </div>
                     @endif
 

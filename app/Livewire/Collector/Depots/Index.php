@@ -46,6 +46,13 @@ class Index extends Component
     public function validerReception($collecteId)
     {
         $collecte = Collecte::findOrFail($collecteId);
+        $collecteur = auth()->user()->collecteur;
+
+        // Vérifier que le dépôt n'est pas déjà validé
+        if ($collecte->valide_par_collecteur) {
+            session()->flash('error', 'Ce dépôt a déjà été validé.');
+            return;
+        }
 
         $collecte->update([
             'valide_par_collecteur' => true,
@@ -53,7 +60,12 @@ class Index extends Component
             'statut' => 'reussie',
         ]);
 
-        session()->flash('success', 'Dépôt validé avec succès.');
+        // Ajouter le montant à la caisse du collecteur
+        if ($collecteur) {
+            $collecteur->increment('solde_caisse', $collecte->montant_collecte);
+        }
+
+        session()->flash('success', 'Dépôt de ' . number_format($collecte->montant_collecte) . ' FC validé et ajouté à votre caisse.');
     }
 
     /**
@@ -94,11 +106,14 @@ class Index extends Component
         $this->totalValide = (clone $query)->where('valide_par_collecteur', true)->count();
         $this->montantTotal = (clone $query)->sum('montant_collecte');
 
+        $soldeCaisse = $collecteur?->solde_caisse ?? 0;
+
         $collectes = $query->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 
         return view('livewire.collector.depots.index', [
             'collectes' => $collectes,
+            'soldeCaisse' => $soldeCaisse,
         ]);
     }
 }

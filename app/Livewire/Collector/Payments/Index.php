@@ -81,6 +81,18 @@ class Index extends Component
             return;
         }
 
+        $collecteur = auth()->user()->collecteur;
+        $isCash = $this->paymentEnCours->mode_paiement === 'cash';
+
+        // Pour les paiements cash, vérifier que le collecteur a assez dans sa caisse
+        if ($isCash && $collecteur) {
+            $soldeCaisse = $collecteur->solde_caisse ?? 0;
+            if ($this->montant_paye > $soldeCaisse) {
+                $this->addError('montant_paye', "Le montant dépasse votre solde de caisse ({$soldeCaisse} FC). Veuillez d'abord collecter auprès des caissiers.");
+                return;
+            }
+        }
+
         // Vérifier que le montant ne dépasse pas le solde disponible du propriétaire
         $paymentService = new PaymentService();
         $soldeDisponible = $paymentService->getSoldeDisponibleProprietaire($this->paymentEnCours->proprietaire);
@@ -92,7 +104,7 @@ class Index extends Component
 
         // Générer un numéro de référence pour les paiements cash
         $numeroEnvoi = $this->numero_envoi;
-        if ($this->paymentEnCours->mode_paiement === 'cash' && empty($numeroEnvoi)) {
+        if ($isCash && empty($numeroEnvoi)) {
             $numeroEnvoi = 'CASH-' . date('YmdHis') . '-' . $this->paymentEnCours->id;
         }
 
@@ -103,8 +115,12 @@ class Index extends Component
             'notes' => $this->notes,
         ], auth()->id());
 
+        // Déduire le montant de la caisse du collecteur pour les paiements cash
+        if ($isCash && $collecteur) {
+            $collecteur->decrement('solde_caisse', $this->montant_paye);
+        }
+
         $paymentId = $this->paymentEnCours->id;
-        $isCash = $this->paymentEnCours->mode_paiement === 'cash';
 
         $this->fermerModal();
 
@@ -150,6 +166,9 @@ class Index extends Component
 
     public function render()
     {
+        $collecteur = auth()->user()->collecteur;
+        $soldeCaisse = $collecteur?->solde_caisse ?? 0;
+
         // Demandes à traiter (statut = en_attente)
         $payments = Payment::with(['proprietaire.user', 'demandePar'])
             ->where('statut', 'en_attente')
@@ -164,6 +183,7 @@ class Index extends Component
         return view('livewire.collector.payments.index', [
             'payments' => $payments,
             'demandesEnAttente' => $demandesEnAttente,
+            'soldeCaisse' => $soldeCaisse,
         ]);
     }
 }

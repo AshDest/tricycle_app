@@ -19,12 +19,14 @@ class Collecteur extends Model
         'user_id',
         'numero_identifiant',
         'zone_affectation',
+        'solde_caisse',
         'telephone',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'solde_caisse' => 'decimal:2',
     ];
 
     /**

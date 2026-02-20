@@ -7,9 +7,14 @@
             </h4>
             <p class="text-muted mb-0">Réception et validation des sommes déposées par les caissiers</p>
         </div>
-        <button wire:click="$refresh" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
-        </button>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="bg-info bg-opacity-10 text-info px-3 py-2 rounded fw-bold">
+                <i class="bi bi-safe me-1"></i>Caisse: {{ number_format($soldeCaisse) }} FC
+            </div>
+            <button wire:click="$refresh" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+            </button>
+        </div>
     </div>
 
     @if(session('success'))
