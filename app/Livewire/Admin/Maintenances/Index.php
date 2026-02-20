@@ -39,7 +39,52 @@ class Index extends Component
     public function delete(Maintenance $maintenance)
     {
         $maintenance->forceDelete();
-        session()->flash('success', 'Maintenance supprimee avec succes.');
+        session()->flash('success', 'Maintenance supprimée avec succès.');
+    }
+
+    /**
+     * Mettre la maintenance en attente
+     */
+    public function mettreEnAttente(int $id)
+    {
+        $maintenance = Maintenance::findOrFail($id);
+        $maintenance->update(['statut' => 'en_attente']);
+        session()->flash('success', 'Maintenance mise en attente.');
+    }
+
+    /**
+     * Mettre la maintenance en cours
+     */
+    public function mettreEnCours(int $id)
+    {
+        $maintenance = Maintenance::findOrFail($id);
+        $maintenance->update(['statut' => 'en_cours']);
+
+        // Mettre la moto en maintenance
+        if ($maintenance->moto) {
+            $maintenance->moto->update(['statut' => 'maintenance']);
+        }
+
+        session()->flash('success', 'Maintenance en cours.');
+    }
+
+    /**
+     * Terminer la maintenance
+     */
+    public function terminer(int $id)
+    {
+        $maintenance = Maintenance::findOrFail($id);
+        $maintenance->update([
+            'statut' => 'termine',
+            'date_fin' => now(),
+        ]);
+
+        // Remettre la moto en service si elle était en maintenance
+        if ($maintenance->moto && $maintenance->moto->statut === 'maintenance') {
+            $maintenance->moto->update(['statut' => 'actif']);
+        }
+
+        session()->flash('success', 'Maintenance marquée comme terminée.');
     }
 
     protected function getBaseQuery()
@@ -64,7 +109,9 @@ class Index extends Component
 
         $stats = [
             'total' => $maintenances->count(),
-            'total_cout' => $maintenances->sum('cout_total'),
+            'total_cout' => $maintenances->sum(function($m) {
+                return ($m->cout_pieces ?? 0) + ($m->cout_main_oeuvre ?? 0);
+            }),
             'terminees' => $maintenances->where('statut', 'termine')->count(),
             'en_cours' => $maintenances->where('statut', 'en_cours')->count(),
         ];
@@ -92,6 +139,25 @@ class Index extends Component
     {
         $maintenances = $this->getBaseQuery()->paginate($this->perPage);
 
-        return view('livewire.admin.maintenances.index', compact('maintenances'));
+        // Statistiques
+        $maintenancesEnCours = Maintenance::where('statut', 'en_cours')->count();
+        $maintenancesPlanifiees = Maintenance::where('statut', 'en_attente')->count();
+        $maintenancesTerminees = Maintenance::where('statut', 'termine')
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->count();
+        $coutTotalMois = Maintenance::where('statut', 'termine')
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->selectRaw('COALESCE(SUM(COALESCE(cout_pieces, 0) + COALESCE(cout_main_oeuvre, 0)), 0) as total')
+            ->value('total');
+
+        return view('livewire.admin.maintenances.index', compact(
+            'maintenances',
+            'maintenancesEnCours',
+            'maintenancesPlanifiees',
+            'maintenancesTerminees',
+            'coutTotalMois'
+        ));
     }
 }

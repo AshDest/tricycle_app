@@ -69,9 +69,9 @@
                     <label class="form-label small fw-semibold">Statut</label>
                     <select wire:model.live="filterStatut" class="form-select">
                         <option value="">Tous</option>
-                        <option value="planifiee">Planifiée</option>
+                        <option value="en_attente">En attente</option>
                         <option value="en_cours">En cours</option>
-                        <option value="terminee">Terminée</option>
+                        <option value="termine">Terminée</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -127,27 +127,55 @@
                                 </span>
                             </td>
                             <td class="text-muted">{{ Str::limit($maintenance->description ?? 'N/A', 40) }}</td>
-                            <td>{{ $maintenance->technicien ?? 'N/A' }}</td>
-                            <td class="fw-semibold">{{ number_format($maintenance->cout_total ?? 0) }} FC</td>
+                            <td>{{ $maintenance->technicien_garage_nom ?? 'N/A' }}</td>
+                            <td class="fw-semibold">{{ number_format(($maintenance->cout_pieces ?? 0) + ($maintenance->cout_main_oeuvre ?? 0)) }} FC</td>
                             <td>
                                 @php
-                                    $statutColors = ['planifiee' => 'info', 'en_cours' => 'warning', 'terminee' => 'success'];
+                                    $statutColors = ['en_attente' => 'secondary', 'en_cours' => 'warning', 'termine' => 'success'];
+                                    $statutLabels = ['en_attente' => 'En attente', 'en_cours' => 'En cours', 'termine' => 'Terminée'];
                                 @endphp
                                 <span class="badge badge-soft-{{ $statutColors[$maintenance->statut] ?? 'secondary' }}">
-                                    {{ ucfirst(str_replace('_', ' ', $maintenance->statut ?? 'N/A')) }}
+                                    {{ $statutLabels[$maintenance->statut] ?? ucfirst(str_replace('_', ' ', $maintenance->statut ?? 'N/A')) }}
                                 </span>
                             </td>
-                            <td class="text-muted small">{{ $maintenance->date_maintenance?->format('d/m/Y') ?? 'N/A' }}</td>
+                            <td class="text-muted small">{{ $maintenance->date_intervention?->format('d/m/Y') ?? 'N/A' }}</td>
                             <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <a href="{{ route('admin.maintenances.show', $maintenance) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    @if($maintenance->statut !== 'terminee')
-                                    <button wire:click="terminer({{ $maintenance->id }})" class="btn btn-sm btn-outline-success" title="Marquer terminée">
-                                        <i class="bi bi-check-lg"></i>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        Actions
                                     </button>
-                                    @endif
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a href="{{ route('admin.maintenances.show', $maintenance) }}" class="dropdown-item">
+                                                <i class="bi bi-eye me-2 text-primary"></i>Voir détails
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+
+                                        @if($maintenance->statut !== 'en_attente')
+                                        <li>
+                                            <button wire:click="mettreEnAttente({{ $maintenance->id }})" class="dropdown-item">
+                                                <i class="bi bi-pause-circle me-2 text-secondary"></i>Mettre en attente
+                                            </button>
+                                        </li>
+                                        @endif
+
+                                        @if($maintenance->statut !== 'en_cours')
+                                        <li>
+                                            <button wire:click="mettreEnCours({{ $maintenance->id }})" class="dropdown-item">
+                                                <i class="bi bi-play-circle me-2 text-warning"></i>Mettre en cours
+                                            </button>
+                                        </li>
+                                        @endif
+
+                                        @if($maintenance->statut !== 'termine')
+                                        <li>
+                                            <button wire:click="terminer({{ $maintenance->id }})" class="dropdown-item">
+                                                <i class="bi bi-check-circle me-2 text-success"></i>Marquer terminée
+                                            </button>
+                                        </li>
+                                        @endif
+                                    </ul>
                                 </div>
                             </td>
                         </tr>
