@@ -23,7 +23,7 @@ class Create extends Component
     protected $rules = [
         'proprietaire_id' => 'required|exists:proprietaires,id',
         'total_paye' => 'required|numeric|min:0',
-        'mode_paiement' => 'required|string|in:mpesa,airtel_money,orange_money,virement_bancaire',
+        'mode_paiement' => 'required|string|in:cash,mpesa,airtel_money,orange_money,virement_bancaire',
         'periode_debut' => 'nullable|date',
         'periode_fin' => 'nullable|date|after_or_equal:periode_debut',
         'notes' => 'nullable|string|max:1000',
@@ -67,13 +67,14 @@ class Create extends Component
             'numero_compte' => $this->numero_compte,
             'statut' => 'en_attente',
             'date_demande' => now(),
+            'demande_par' => auth()->id(),
+            'demande_at' => now(),
             'periode_debut' => $this->periode_debut ?: null,
             'periode_fin' => $this->periode_fin ?: null,
             'notes' => $this->notes ?: null,
-            'traite_par' => auth()->id(),
         ]);
 
-        session()->flash('success', 'Paiement cree avec succes.');
+        session()->flash('success', 'Demande de paiement créée avec succès.');
         return redirect()->route('admin.payments.index');
     }
 

@@ -107,16 +107,16 @@ class Index extends Component
 
     public function render()
     {
-        // Demandes à traiter (statut = demande ou en_cours)
+        // Demandes à traiter (statut = en_attente)
         $payments = Payment::with(['proprietaire.user', 'demandePar'])
-            ->whereIn('statut', ['demande', 'en_cours'])
+            ->where('statut', 'en_attente')
             ->when($this->search, function($q) {
                 $q->whereHas('proprietaire.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'));
             })
             ->orderBy('created_at', 'asc')
             ->paginate($this->perPage);
 
-        $demandesEnAttente = Payment::whereIn('statut', ['demande', 'en_cours'])->count();
+        $demandesEnAttente = Payment::where('statut', 'en_attente')->count();
 
         return view('livewire.collector.payments.index', [
             'payments' => $payments,
