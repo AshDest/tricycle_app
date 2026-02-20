@@ -1,19 +1,15 @@
 @if ($paginator->hasPages())
-    <nav>
-        <ul class="pagination">
-            {{-- Previous Page Link --}}
-            @if ($paginator->onFirstPage())
-                <li class="disabled" aria-disabled="true"><span>@lang('pagination.previous')</span></li>
-            @else
-                <li><a href="{{ $paginator->previousPageUrl() }}" rel="prev">@lang('pagination.previous')</a></li>
-            @endif
+    <nav aria-label="Pagination" class="d-flex justify-content-between align-items-center">
+        @if ($paginator->onFirstPage())
+            <span class="btn btn-sm btn-outline-secondary disabled">&lsaquo; Précédent</span>
+        @else
+            <a href="{{ $paginator->previousPageUrl() }}" class="btn btn-sm btn-outline-primary" rel="prev">&lsaquo; Précédent</a>
+        @endif
 
-            {{-- Next Page Link --}}
-            @if ($paginator->hasMorePages())
-                <li><a href="{{ $paginator->nextPageUrl() }}" rel="next">@lang('pagination.next')</a></li>
-            @else
-                <li class="disabled" aria-disabled="true"><span>@lang('pagination.next')</span></li>
-            @endif
-        </ul>
+        @if ($paginator->hasMorePages())
+            <a href="{{ $paginator->nextPageUrl() }}" class="btn btn-sm btn-outline-primary" rel="next">Suivant &rsaquo;</a>
+        @else
+            <span class="btn btn-sm btn-outline-secondary disabled">Suivant &rsaquo;</span>
+        @endif
     </nav>
 @endif

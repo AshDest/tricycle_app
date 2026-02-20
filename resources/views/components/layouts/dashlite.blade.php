@@ -489,6 +489,7 @@
         .pagination {
             margin: 0;
             gap: 2px;
+            flex-wrap: wrap;
         }
 
         .pagination .page-link {
@@ -501,6 +502,19 @@
             transition: all var(--transition-fast);
             min-width: 32px;
             text-align: center;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pagination .page-link svg {
+            width: 14px !important;
+            height: 14px !important;
+        }
+
+        .pagination .page-link i {
+            font-size: 0.75rem !important;
         }
 
         .pagination .page-link:hover {
@@ -534,12 +548,30 @@
             min-width: 28px;
         }
 
+        .pagination-sm .page-link svg {
+            width: 12px !important;
+            height: 12px !important;
+        }
+
         .card-footer .pagination {
             justify-content: flex-end;
         }
 
         .card-footer nav {
             width: 100%;
+        }
+
+        /* Fix for Livewire pagination arrows */
+        nav[aria-label="Pagination"] svg {
+            width: 14px !important;
+            height: 14px !important;
+            display: inline-block;
+        }
+
+        nav[aria-label="Pagination"] .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 

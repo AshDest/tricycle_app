@@ -1,29 +1,25 @@
 @if ($paginator->hasPages())
-    <nav role="navigation" aria-label="{!! __('Pagination Navigation') !!}">
-        <ul class="pagination">
-            {{-- Previous Page Link --}}
-            @if ($paginator->onFirstPage())
-                <li class="page-item disabled" aria-disabled="true">
-                    <span class="page-link">{!! __('pagination.previous') !!}</span>
-                </li>
-            @else
-                <li class="page-item">
-                    <a class="page-link" href="{{ $paginator->previousPageUrl() }}" rel="prev">
-                        {!! __('pagination.previous') !!}
-                    </a>
-                </li>
-            @endif
+    <nav aria-label="Pagination" class="d-flex justify-content-between align-items-center">
+        {{-- Previous Page Link --}}
+        @if ($paginator->onFirstPage())
+            <span class="btn btn-sm btn-outline-secondary disabled">
+                &lsaquo; Précédent
+            </span>
+        @else
+            <a href="{{ $paginator->previousPageUrl() }}" class="btn btn-sm btn-outline-primary" rel="prev" wire:navigate>
+                &lsaquo; Précédent
+            </a>
+        @endif
 
-            {{-- Next Page Link --}}
-            @if ($paginator->hasMorePages())
-                <li class="page-item">
-                    <a class="page-link" href="{{ $paginator->nextPageUrl() }}" rel="next">{!! __('pagination.next') !!}</a>
-                </li>
-            @else
-                <li class="page-item disabled" aria-disabled="true">
-                    <span class="page-link">{!! __('pagination.next') !!}</span>
-                </li>
-            @endif
-        </ul>
+        {{-- Next Page Link --}}
+        @if ($paginator->hasMorePages())
+            <a href="{{ $paginator->nextPageUrl() }}" class="btn btn-sm btn-outline-primary" rel="next" wire:navigate>
+                Suivant &rsaquo;
+            </a>
+        @else
+            <span class="btn btn-sm btn-outline-secondary disabled">
+                Suivant &rsaquo;
+            </span>
+        @endif
     </nav>
 @endif
