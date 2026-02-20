@@ -1,9 +1,14 @@
 <div>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Liste des Utilisateurs</h2>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Ajouter Utilisateur
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger btn-sm">
+                <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
+            <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Ajouter Utilisateur
+            </a>
+        </div>
     </div>
 
     @if(session('success'))

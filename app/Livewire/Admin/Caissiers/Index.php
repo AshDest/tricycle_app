@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use App\Models\Caissier;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -45,9 +47,9 @@ class Index extends Component
         session()->flash('success', 'Caissier supprime avec succes.');
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $caissiers = Caissier::with(['user'])
+        return Caissier::with(['user'])
             ->when($this->search, function ($q) {
                 $q->whereHas('user', function ($q2) {
                     $q2->where('name', 'like', '%' . $this->search . '%')
@@ -65,9 +67,40 @@ class Index extends Component
                     $q->where('is_active', false);
                 }
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc');
+    }
 
+    public function exportPdf()
+    {
+        $caissiers = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $caissiers->count(),
+            'actifs' => $caissiers->where('is_active', true)->count(),
+            'zones' => $caissiers->pluck('zone')->unique()->filter()->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.caissiers', [
+            'caissiers' => $caissiers,
+            'stats' => $stats,
+            'title' => 'Liste des Caissiers',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'zone' => $this->filterZone,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'caissiers_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $caissiers = $this->getBaseQuery()->paginate($this->perPage);
         $zones = Caissier::distinct()->pluck('zone')->filter();
 
         return view('livewire.admin.caissiers.index', compact('caissiers', 'zones'));

@@ -7,6 +7,9 @@
             </h4>
             <p class="text-muted mb-0">Suivi des accidents impliquant les motos-tricycles</p>
         </div>
+        <button wire:click="exportPdf" class="btn btn-danger">
+            <i class="bi bi-file-pdf me-1"></i> Exporter PDF
+        </button>
     </div>
 
     <!-- Stats -->

@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Zone;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -39,9 +41,9 @@ class Index extends Component
         session()->flash('success', 'Zone supprimee avec succes.');
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $zones = Zone::when($this->search, function ($q) {
+        return Zone::when($this->search, function ($q) {
                 $q->where('nom', 'like', '%' . $this->search . '%')
                   ->orWhere('description', 'like', '%' . $this->search . '%');
             })
@@ -52,8 +54,36 @@ class Index extends Component
                     $q->where('is_active', false);
                 }
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function exportPdf()
+    {
+        $zones = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $zones->count(),
+            'actives' => $zones->where('is_active', true)->count(),
+            'motards' => 0,
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.zones', [
+            'zones' => $zones,
+            'stats' => $stats,
+            'title' => 'Liste des Zones',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'zones_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $zones = $this->getBaseQuery()->paginate($this->perPage);
 
         return view('livewire.admin.zones.index', compact('zones'));
     }

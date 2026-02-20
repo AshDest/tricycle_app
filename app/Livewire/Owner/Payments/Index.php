@@ -7,6 +7,8 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Models\Versement;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -59,6 +61,48 @@ class Index extends Component
     {
         // Logique pour télécharger le reçu PDF
         session()->flash('info', 'Téléchargement du reçu en cours...');
+    }
+
+    protected function getBaseQuery()
+    {
+        $proprietaire = auth()->user()->proprietaire;
+        $proprietaire_id = $proprietaire?->id;
+
+        return Payment::where('proprietaire_id', $proprietaire_id)
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
+            ->when($this->dateFrom, fn($q) => $q->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('created_at', '<=', $this->dateTo))
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function exportPdf()
+    {
+        $payments = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $payments->count(),
+            'total_montant' => $payments->sum('total_du'),
+            'payes' => $payments->where('statut', 'paye')->count(),
+            'en_attente' => $payments->where('statut', 'en_attente')->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.payments', [
+            'payments' => $payments,
+            'stats' => $stats,
+            'title' => 'Mes Paiements - Propriétaire',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'statut' => $this->filterStatut,
+                'date_from' => $this->dateFrom,
+                'date_to' => $this->dateTo,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'mes_paiements_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
     public function render()

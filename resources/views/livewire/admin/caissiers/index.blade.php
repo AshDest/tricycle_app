@@ -1,9 +1,14 @@
 <div>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Caissiers</h2>
-        <a href="{{ route('admin.caissiers.create') }}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus"></i> Ajouter Caissier
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger btn-sm">
+                <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
+            <a href="{{ route('admin.caissiers.create') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Ajouter Caissier
+            </a>
+        </div>
     </div>
 
     <div class="card">

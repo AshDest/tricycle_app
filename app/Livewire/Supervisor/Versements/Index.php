@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Versement;
 use App\Models\Motard;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -54,6 +55,38 @@ class Index extends Component
         return response()->streamDownload(function () {
             $this->exportCsv($this->getFilteredQuery()->get());
         }, $filename . '.csv');
+    }
+
+    public function exportPdf()
+    {
+        $versements = $this->getFilteredQuery()->get();
+
+        $stats = [
+            'total' => $versements->count(),
+            'total_montant' => $versements->sum('montant'),
+            'payes' => $versements->where('statut', 'paye')->count(),
+            'en_retard' => $versements->where('statut', 'en_retard')->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.versements', [
+            'versements' => $versements,
+            'stats' => $stats,
+            'title' => 'Liste des Versements - OKAMI',
+            'subtitle' => 'Période: ' . $this->dateDebut . ' au ' . $this->dateFin,
+            'filtres' => [
+                'search' => $this->search,
+                'statut' => $this->filterStatut,
+                'mode' => $this->filterMode,
+                'date_from' => $this->dateDebut,
+                'date_to' => $this->dateFin,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'versements_okami_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
     protected function exportCsv($versements)

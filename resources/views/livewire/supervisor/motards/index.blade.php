@@ -8,6 +8,9 @@
             <p class="text-muted mb-0">Liste complète des conducteurs de tricycles</p>
         </div>
         <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i>PDF
+            </button>
             <div class="dropdown">
                 <button class="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
                     <i class="bi bi-download me-1"></i>Exporter

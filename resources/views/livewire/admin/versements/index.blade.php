@@ -8,6 +8,9 @@
             <p class="text-muted mb-0">Suivi des versements journaliers des motards</p>
         </div>
         <div class="d-flex align-items-center gap-2">
+            <button wire:click="exportPdf" class="btn btn-sm btn-danger" title="Exporter PDF">
+                <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
             <button wire:click="$refresh" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-arrow-clockwise"></i>
             </button>

@@ -8,6 +8,8 @@ use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Models\Proprietaire;
 use App\Services\PaymentService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 /**
  * Gestion des demandes de paiement par OKAMI
@@ -41,6 +43,18 @@ class Index extends Component
         $this->resetPage();
     }
 
+    protected function getBaseQuery()
+    {
+        return Payment::with(['proprietaire.user', 'demandePar', 'traitePar', 'validePar'])
+            ->when($this->search, function($q) {
+                $q->whereHas('proprietaire.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'));
+            })
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
+            ->when($this->filterProprietaire, fn($q) => $q->where('proprietaire_id', $this->filterProprietaire))
+            ->orderByRaw("FIELD(statut, 'pay', 'en_attente', 'approuve', 'rejet')")
+            ->orderBy('created_at', 'desc');
+    }
+
     /**
      * Valider un paiement effectué
      */
@@ -70,6 +84,35 @@ class Index extends Component
         $paymentService->rejeterPaiement($payment, auth()->id(), $motif);
 
         session()->flash('success', 'Paiement rejeté.');
+    }
+
+    public function exportPdf()
+    {
+        $payments = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $payments->count(),
+            'total_montant' => $payments->sum('total_du'),
+            'payes' => $payments->whereIn('statut', ['paye', 'approuve'])->count(),
+            'en_attente' => $payments->where('statut', 'en_attente')->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.payments', [
+            'payments' => $payments,
+            'stats' => $stats,
+            'title' => 'Liste des Paiements - OKAMI',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'payments_okami_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
     public function render()

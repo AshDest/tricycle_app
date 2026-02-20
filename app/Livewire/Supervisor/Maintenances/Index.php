@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Maintenance;
 use App\Models\Moto;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -68,6 +69,36 @@ class Index extends Component
 
             fclose($handle);
         }, $filename);
+    }
+
+    public function exportPdf()
+    {
+        $maintenances = $this->getFilteredQuery()->get();
+
+        $stats = [
+            'total' => $maintenances->count(),
+            'total_cout' => $maintenances->sum('cout_total'),
+            'terminees' => $maintenances->where('statut', 'termine')->count(),
+            'en_cours' => $maintenances->where('statut', 'en_cours')->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.maintenances', [
+            'maintenances' => $maintenances,
+            'stats' => $stats,
+            'title' => 'Liste des Maintenances - OKAMI',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'type' => $this->filterType,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'maintenances_okami_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
     protected function getFilteredQuery()

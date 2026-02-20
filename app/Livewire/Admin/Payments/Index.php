@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Models\Proprietaire;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -69,9 +70,9 @@ class Index extends Component
         session()->flash('success', 'Paiement supprimé avec succès.');
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $payments = Payment::with('proprietaire.user')
+        return Payment::with('proprietaire.user')
             ->when($this->search, function ($q) {
                 $q->whereHas('proprietaire.user', function ($q2) {
                     $q2->where('name', 'like', '%' . $this->search . '%');
@@ -83,8 +84,41 @@ class Index extends Component
             ->when($this->filterMode, function ($q) {
                 $q->where('mode_paiement', $this->filterMode);
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function exportPdf()
+    {
+        $payments = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $payments->count(),
+            'total_montant' => $payments->sum('total_du'),
+            'payes' => $payments->where('statut', 'paye')->count(),
+            'en_attente' => $payments->whereIn('statut', ['en_attente', 'demande'])->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.payments', [
+            'payments' => $payments,
+            'stats' => $stats,
+            'title' => 'Liste des Paiements Propriétaires',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'payments_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $payments = $this->getBaseQuery()->paginate($this->perPage);
 
         $totalEnAttente = Payment::whereIn('statut', ['en_attente', 'demande'])->count();
         $totalPaye = Payment::where('statut', 'paye')->sum('total_paye');

@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Moto;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -35,9 +37,9 @@ class Index extends Component
         session()->flash('success', 'Moto supprimee avec succes.');
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $motos = Moto::with(['proprietaire.user', 'motard.user'])
+        return Moto::with(['proprietaire.user', 'motard.user'])
             ->when($this->search, function ($q) {
                 $q->where('plaque_immatriculation', 'like', '%' . $this->search . '%')
                   ->orWhere('numero_matricule', 'like', '%' . $this->search . '%')
@@ -53,8 +55,41 @@ class Index extends Component
                     $q->whereNull('motard_id');
                 }
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function exportPdf()
+    {
+        $motos = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $motos->count(),
+            'actives' => $motos->where('statut', 'actif')->count(),
+            'inactives' => $motos->where('statut', 'inactif')->count(),
+            'en_maintenance' => $motos->where('statut', 'en_maintenance')->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.motos', [
+            'motos' => $motos,
+            'stats' => $stats,
+            'title' => 'Liste des Motos',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'motos_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $motos = $this->getBaseQuery()->paginate($this->perPage);
 
         return view('livewire.admin.motos.index', compact('motos'));
     }

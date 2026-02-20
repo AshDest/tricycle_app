@@ -12,9 +12,14 @@
             <h4>Liste des Motos</h4>
             <p class="text-muted small mb-0">G&eacute;rer les motos-tricycles de la flotte</p>
         </div>
-        <a href="{{ route('admin.motos.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> Ajouter une moto
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
+            <a href="{{ route('admin.motos.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Ajouter une moto
+            </a>
+        </div>
     </div>
 
     <div class="card mb-3">

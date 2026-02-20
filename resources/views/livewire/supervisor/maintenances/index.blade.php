@@ -8,11 +8,14 @@
             <p class="text-muted mb-0">Historique des interventions techniques sur les motos</p>
         </div>
         <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i>PDF
+            </button>
             <a href="{{ route('supervisor.maintenances.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>Nouvelle Maintenance
             </a>
             <button class="btn btn-outline-success" wire:click="export">
-                <i class="bi bi-download me-1"></i>Exporter CSV
+                <i class="bi bi-download me-1"></i>CSV
             </button>
         </div>
     </div>

@@ -8,8 +8,11 @@
             <p class="text-muted mb-0">Liste complète des motos-tricycles et leurs contrats</p>
         </div>
         <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i>PDF
+            </button>
             <button class="btn btn-outline-success" wire:click="export('csv')">
-                <i class="bi bi-download me-1"></i>Exporter CSV
+                <i class="bi bi-download me-1"></i>CSV
             </button>
             <a href="{{ route('supervisor.motos.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>Nouvelle Moto

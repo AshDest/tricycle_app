@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Motard;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -45,9 +47,9 @@ class Index extends Component
         session()->flash('success', 'Motard supprime avec succes.');
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $motards = Motard::with(['user', 'motoActuelle'])
+        return Motard::with(['user', 'motoActuelle'])
             ->when($this->search, function ($q) {
                 $q->whereHas('user', function ($q2) {
                     $q2->where('name', 'like', '%' . $this->search . '%')
@@ -64,9 +66,42 @@ class Index extends Component
                     $q->where('is_active', false);
                 }
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc');
+    }
 
+    public function exportPdf()
+    {
+        $motards = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $motards->count(),
+            'actifs' => $motards->where('is_active', true)->count(),
+            'inactifs' => $motards->where('is_active', false)->count(),
+            'zones' => $motards->pluck('zone_affectation')->unique()->filter()->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.motards', [
+            'motards' => $motards,
+            'stats' => $stats,
+            'title' => 'Liste des Motards',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'zone' => $this->filterZone,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'motards_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $motards = $this->getBaseQuery()->paginate($this->perPage);
         $zones = Motard::distinct()->pluck('zone_affectation')->filter();
 
         return view('livewire.admin.motards.index', compact('motards', 'zones'));

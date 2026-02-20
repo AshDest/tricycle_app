@@ -8,11 +8,14 @@
             <p class="text-muted mb-0">Historique des accidents impliquant les motos-tricycles</p>
         </div>
         <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-outline-danger">
+                <i class="bi bi-file-pdf me-1"></i>PDF
+            </button>
             <a href="{{ route('supervisor.accidents.create') }}" class="btn btn-danger">
                 <i class="bi bi-plus-lg me-1"></i>Déclarer un Accident
             </a>
             <button class="btn btn-outline-success" wire:click="export">
-                <i class="bi bi-download me-1"></i>Exporter CSV
+                <i class="bi bi-download me-1"></i>CSV
             </button>
         </div>
     </div>

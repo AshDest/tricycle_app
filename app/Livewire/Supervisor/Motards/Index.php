@@ -7,6 +7,8 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Motard;
 use App\Models\Zone;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -99,6 +101,36 @@ class Index extends Component
         return response()->streamDownload(function () use ($query) {
             $this->exportCsv($query->get());
         }, $filename . '.csv');
+    }
+
+    public function exportPdf()
+    {
+        $motards = $this->getFilteredQuery()->get();
+
+        $stats = [
+            'total' => $motards->count(),
+            'actifs' => $motards->where('is_active', true)->count(),
+            'inactifs' => $motards->where('is_active', false)->count(),
+            'zones' => $motards->pluck('zone_affectation')->unique()->filter()->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.motards', [
+            'motards' => $motards,
+            'stats' => $stats,
+            'title' => 'Liste des Motards - OKAMI',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'zone' => $this->filterZone,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'motards_okami_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
     protected function exportCsv($motards)

@@ -7,9 +7,14 @@
             </h4>
             <p class="text-muted mb-0">Gestion des paiements aux propriétaires de motos</p>
         </div>
-        <a href="{{ route('admin.payments.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Nouveau Paiement
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
+            <a href="{{ route('admin.payments.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Nouveau Paiement
+            </a>
+        </div>
     </div>
 
     <!-- Stats -->

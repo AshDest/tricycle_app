@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Proprietaire;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -79,9 +81,9 @@ class Index extends Component
         $this->confirmingDelete = null;
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $proprietaires = Proprietaire::query()
+        return Proprietaire::query()
             ->with(['user', 'motos'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
@@ -103,8 +105,40 @@ class Index extends Component
             ->when($this->filterStatus === 'motos_actives', function ($query) {
                 $query->whereHas('motos', fn ($q) => $q->where('statut', 'actif'));
             })
-            ->orderBy($this->sortBy, $this->sortDirection)
-            ->paginate($this->perPage);
+            ->orderBy($this->sortBy, $this->sortDirection);
+    }
+
+    public function exportPdf()
+    {
+        $proprietaires = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $proprietaires->count(),
+            'total_motos' => $proprietaires->sum(fn($p) => $p->motos->count()),
+            'total_du' => 0,
+            'total_paye' => 0,
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.proprietaires', [
+            'proprietaires' => $proprietaires,
+            'stats' => $stats,
+            'title' => 'Liste des Propriétaires',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'proprietaires_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $proprietaires = $this->getBaseQuery()->paginate($this->perPage);
 
         return view('livewire.admin.proprietaires.index', [
             'proprietaires' => $proprietaires,

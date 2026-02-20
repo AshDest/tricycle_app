@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Collecteur;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -45,9 +47,9 @@ class Index extends Component
         session()->flash('success', 'Collecteur supprime avec succes.');
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $collecteurs = Collecteur::with(['user'])
+        return Collecteur::with(['user'])
             ->when($this->search, function ($q) {
                 $q->whereHas('user', function ($q2) {
                     $q2->where('name', 'like', '%' . $this->search . '%')
@@ -64,9 +66,40 @@ class Index extends Component
                     $q->where('is_active', false);
                 }
             })
-            ->orderBy('created_at', 'desc')
-            ->paginate($this->perPage);
+            ->orderBy('created_at', 'desc');
+    }
 
+    public function exportPdf()
+    {
+        $collecteurs = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $collecteurs->count(),
+            'actifs' => $collecteurs->where('is_active', true)->count(),
+            'zones' => $collecteurs->pluck('zone_affectation')->unique()->filter()->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.collecteurs', [
+            'collecteurs' => $collecteurs,
+            'stats' => $stats,
+            'title' => 'Liste des Collecteurs',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'zone' => $this->filterZone,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'collecteurs_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $collecteurs = $this->getBaseQuery()->paginate($this->perPage);
         $zones = Collecteur::distinct()->pluck('zone_affectation')->filter();
 
         return view('livewire.admin.collecteurs.index', compact('collecteurs', 'zones'));

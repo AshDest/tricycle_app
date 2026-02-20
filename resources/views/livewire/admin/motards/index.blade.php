@@ -14,9 +14,14 @@
             <h4>Liste des Motards</h4>
             <p class="text-muted small mb-0">G&eacute;rer tous les motards de la flotte</p>
         </div>
-        <a href="{{ route('admin.motards.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> Ajouter un motard
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
+            <a href="{{ route('admin.motards.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Ajouter un motard
+            </a>
+        </div>
     </div>
 
     <!-- Filters -->

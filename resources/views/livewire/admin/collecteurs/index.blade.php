@@ -7,9 +7,14 @@
             </h4>
             <p class="text-muted mb-0">Agents terrain de ramassage des fonds</p>
         </div>
-        <a href="{{ route('admin.collecteurs.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i>Nouveau Collecteur
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i> PDF
+            </button>
+            <a href="{{ route('admin.collecteurs.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Nouveau Collecteur
+            </a>
+        </div>
     </div>
 
     <!-- Filtres -->

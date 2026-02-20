@@ -7,6 +7,9 @@
             </h4>
             <p class="text-muted mb-0">Gestion de votre flotte</p>
         </div>
+        <button wire:click="exportPdf" class="btn btn-danger">
+            <i class="bi bi-file-pdf me-1"></i>Exporter PDF
+        </button>
     </div>
 
     <!-- Stats -->

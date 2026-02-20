@@ -6,6 +6,8 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Proprietaire;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -57,9 +59,9 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function render()
+    protected function getBaseQuery()
     {
-        $proprietaires = Proprietaire::query()
+        return Proprietaire::query()
             ->with(['user', 'motos'])
             ->withCount('motos')
             ->when($this->search, function ($query) {
@@ -79,8 +81,40 @@ class Index extends Component
             ->when($this->filterStatus === '0', function ($query) {
                 $query->where('is_active', false);
             })
-            ->orderBy($this->sortBy, $this->sortDirection)
-            ->paginate($this->perPage);
+            ->orderBy($this->sortBy, $this->sortDirection);
+    }
+
+    public function exportPdf()
+    {
+        $proprietaires = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $proprietaires->count(),
+            'total_motos' => $proprietaires->sum('motos_count'),
+            'total_du' => 0,
+            'total_paye' => 0,
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.proprietaires', [
+            'proprietaires' => $proprietaires,
+            'stats' => $stats,
+            'title' => 'Liste des Propriétaires - OKAMI',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'proprietaires_okami_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function render()
+    {
+        $proprietaires = $this->getBaseQuery()->paginate($this->perPage);
 
         return view('livewire.supervisor.proprietaires.index', [
             'proprietaires' => $proprietaires,

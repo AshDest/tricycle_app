@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Tournee;
 use App\Models\Collecte;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -45,6 +46,49 @@ class Index extends Component
         session()->flash('success', 'Statut mis à jour.');
     }
 
+    protected function getBaseQuery()
+    {
+        return Tournee::with(['collecteur.user'])
+            ->when($this->search, function ($q) {
+                $q->whereHas('collecteur.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'))
+                  ->orWhere('zone', 'like', '%'.$this->search.'%');
+            })
+            ->when($this->filterZone, fn($q) => $q->where('zone', $this->filterZone))
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
+            ->when($this->filterDate, fn($q) => $q->whereDate('date', $this->filterDate))
+            ->orderBy('date', 'desc');
+    }
+
+    public function exportPdf()
+    {
+        $tournees = $this->getBaseQuery()->get();
+
+        $stats = [
+            'total' => $tournees->count(),
+            'terminees' => $tournees->where('statut', 'terminee')->count(),
+            'en_cours' => $tournees->where('statut', 'en_cours')->count(),
+            'planifiees' => $tournees->whereIn('statut', ['planifiee', 'confirmee'])->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.tournees', [
+            'tournees' => $tournees,
+            'stats' => $stats,
+            'title' => 'Liste des Tournées',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'date' => $this->filterDate,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'tournees_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
     public function render()
     {
         $aujourdhui = Carbon::today();
@@ -56,17 +100,7 @@ class Index extends Component
         $this->totalCollecteJour = Collecte::whereHas('tournee', fn($q) => $q->whereDate('date', $aujourdhui))
             ->sum('montant_collecte');
 
-        $tournees = Tournee::with(['collecteur.user'])
-            ->when($this->search, function ($q) {
-                $q->whereHas('collecteur.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'))
-                  ->orWhere('zone', 'like', '%'.$this->search.'%');
-            })
-            ->when($this->filterZone, fn($q) => $q->where('zone', $this->filterZone))
-            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
-            ->when($this->filterDate, fn($q) => $q->whereDate('date', $this->filterDate))
-            ->orderBy('date', 'desc')
-            ->paginate($this->perPage);
-
+        $tournees = $this->getBaseQuery()->paginate($this->perPage);
         $zones = Tournee::distinct()->pluck('zone')->filter();
 
         return view('livewire.admin.tournees.index', compact('tournees', 'zones'));

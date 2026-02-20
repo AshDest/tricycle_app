@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Accident;
 use App\Models\Moto;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -68,6 +69,35 @@ class Index extends Component
 
             fclose($handle);
         }, $filename);
+    }
+
+    public function exportPdf()
+    {
+        $accidents = $this->getFilteredQuery()->get();
+
+        $stats = [
+            'total' => $accidents->count(),
+            'total_cout' => $accidents->sum('cout_estime'),
+            'repares' => $accidents->where('statut', 'repare')->count(),
+            'en_attente' => $accidents->whereIn('statut', ['declare', 'en_attente'])->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.lists.accidents', [
+            'accidents' => $accidents,
+            'stats' => $stats,
+            'title' => 'Liste des Accidents - OKAMI',
+            'subtitle' => 'Exporté le ' . Carbon::now()->format('d/m/Y à H:i'),
+            'filtres' => [
+                'search' => $this->search,
+                'statut' => $this->filterStatut,
+            ],
+        ]);
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, 'accidents_okami_' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 
     protected function getFilteredQuery()

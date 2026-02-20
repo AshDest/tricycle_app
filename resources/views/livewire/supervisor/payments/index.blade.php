@@ -7,9 +7,14 @@
             </h4>
             <p class="text-muted mb-0">Demandes de paiement et validations</p>
         </div>
-        <a href="{{ route('supervisor.payments.create') }}" class="btn btn-success">
-            <i class="bi bi-plus-lg me-1"></i>Nouvelle Demande
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exportPdf" class="btn btn-danger">
+                <i class="bi bi-file-pdf me-1"></i>PDF
+            </button>
+            <a href="{{ route('supervisor.payments.create') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg me-1"></i>Nouvelle Demande
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
