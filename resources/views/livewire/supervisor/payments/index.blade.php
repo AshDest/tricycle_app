@@ -171,10 +171,24 @@
                                         <i class="bi bi-x-lg"></i>
                                     </button>
                                 </div>
+                                @elseif($payment->statut === 'en_attente')
+                                <div class="btn-group">
+                                    <button wire:click="ouvrirEdition({{ $payment->id }})"
+                                            class="btn btn-sm btn-outline-primary"
+                                            title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button wire:click="supprimerDemande({{ $payment->id }})"
+                                            class="btn btn-sm btn-outline-danger"
+                                            wire:confirm="Êtes-vous sûr de vouloir supprimer cette demande ?"
+                                            title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                                 @else
-                                <button class="btn btn-sm btn-outline-secondary" disabled>
-                                    <i class="bi bi-eye"></i>
-                                </button>
+                                <span class="badge bg-light text-muted">
+                                    <i class="bi bi-lock"></i> Finalisé
+                                </span>
                                 @endif
                             </td>
                         </tr>
@@ -196,4 +210,82 @@
         </div>
         @endif
     </div>
+
+    <!-- Modal d'édition -->
+    @if($showEditModal && $editPayment)
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil me-2"></i>Modifier la demande de paiement
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="fermerEdition"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Info propriétaire -->
+                    <div class="alert alert-light mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar bg-primary bg-opacity-10 text-primary rounded-circle">
+                                {{ strtoupper(substr($editPayment->proprietaire->user->name ?? 'P', 0, 1)) }}
+                            </div>
+                            <div>
+                                <strong>{{ $editPayment->proprietaire->user->name ?? 'N/A' }}</strong>
+                                <small class="text-muted d-block">{{ $editPayment->proprietaire->telephone ?? '' }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Montant -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Montant demandé <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" wire:model="editMontant"
+                                   class="form-control form-control-lg @error('editMontant') is-invalid @enderror"
+                                   placeholder="0">
+                            <span class="input-group-text">FC</span>
+                        </div>
+                        @error('editMontant') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                    </div>
+
+                    <!-- Mode de paiement -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
+                        <select wire:model="editModePaiement" class="form-select @error('editModePaiement') is-invalid @enderror">
+                            @foreach($modesPaiement as $key => $label)
+                            <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('editModePaiement') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <!-- Numéro de compte -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Numéro de compte</label>
+                        <input type="text" wire:model="editNumeroCompte" class="form-control" placeholder="Numéro de téléphone ou compte">
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <textarea wire:model="editNotes" class="form-control" rows="2" placeholder="Notes additionnelles..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" wire:click="fermerEdition">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </button>
+                    <button type="button" class="btn btn-primary" wire:click="sauvegarderModification">
+                        <span wire:loading.remove wire:target="sauvegarderModification">
+                            <i class="bi bi-check-lg me-1"></i>Enregistrer
+                        </span>
+                        <span wire:loading wire:target="sauvegarderModification">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
