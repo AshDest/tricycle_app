@@ -28,7 +28,8 @@ new #[Layout('layouts.auth')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        // Force full page reload to properly load the dashboard layout
+        $this->redirect(route('dashboard', absolute: false), navigate: false);
     }
 }; ?>
 
