@@ -60,7 +60,7 @@ class Index extends Component
             })
             ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
             ->when($this->filterProprietaire, fn($q) => $q->where('proprietaire_id', $this->filterProprietaire))
-            ->orderByRaw("FIELD(statut, 'pay', 'en_attente', 'approuve', 'rejet')")
+            ->orderByRaw("FIELD(statut, 'paye', 'en_attente', 'approuve', 'rejete')")
             ->orderBy('created_at', 'desc');
     }
 
@@ -157,7 +157,7 @@ class Index extends Component
     {
         $payment = Payment::findOrFail($paymentId);
 
-        if ($payment->statut !== 'pay') {
+        if ($payment->statut !== 'paye') {
             session()->flash('error', 'Ce paiement ne peut pas être validé.');
             return;
         }
@@ -216,7 +216,7 @@ class Index extends Component
 
         // Calculer les stats
         $this->demandesEnAttente = Payment::where('statut', 'en_attente')->count();
-        $this->paiementsAValider = Payment::where('statut', 'pay')->count();
+        $this->paiementsAValider = Payment::where('statut', 'paye')->count();
         $this->totalPaye = Payment::where('statut', 'approuve')->sum('total_paye');
 
         // Liste des paiements

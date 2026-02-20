@@ -139,21 +139,37 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>{{ $paymentEnCours->proprietaire->user->name ?? 'N/A' }}</strong>
-                                <br><small>{{ \App\Models\Payment::getModesPaiement()[$paymentEnCours->mode_paiement] ?? '' }}</small>
+                                <br>
+                                @php
+                                    $modeLabel = \App\Models\Payment::getModesPaiement()[$paymentEnCours->mode_paiement] ?? '';
+                                    $isCash = $paymentEnCours->mode_paiement === 'cash';
+                                @endphp
+                                <span class="badge {{ $isCash ? 'bg-warning text-dark' : 'bg-primary' }}">
+                                    {{ $modeLabel }}
+                                </span>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-primary fs-6">{{ number_format($paymentEnCours->total_du) }} FC</span>
+                                <span class="badge bg-success fs-6">{{ number_format($paymentEnCours->total_du) }} FC</span>
                             </div>
                         </div>
+                        @if(!$isCash && $paymentEnCours->numero_compte)
                         <hr class="my-2">
-                        <small><strong>N° Compte:</strong> {{ $paymentEnCours->numero_compte ?? 'Non renseigné' }}</small>
+                        <small><strong>N° Compte:</strong> {{ $paymentEnCours->numero_compte }}</small>
+                        @endif
                     </div>
+
+                    @if($isCash)
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Paiement en Cash</strong> - Un reçu sera généré automatiquement après le traitement.
+                    </div>
+                    @endif
 
                     <form wire:submit="traiterPaiement">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Montant payé <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="number" wire:model="montant_paye" class="form-control @error('montant_paye') is-invalid @enderror" required>
+                                <input type="number" wire:model="montant_paye" class="form-control form-control-lg @error('montant_paye') is-invalid @enderror" required>
                                 <span class="input-group-text">FC</span>
                             </div>
                             @error('montant_paye')
@@ -161,15 +177,17 @@
                             @enderror
                         </div>
 
+                        @if(!$isCash)
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Numéro d'envoi <span class="text-danger">*</span></label>
                             <input type="text" wire:model="numero_envoi" class="form-control @error('numero_envoi') is-invalid @enderror"
-                                   placeholder="Ex: TXN123456789" required>
+                                   placeholder="Ex: TXN123456789">
                             @error('numero_envoi')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Numéro de transaction du transfert</small>
+                            <small class="text-muted">Numéro de transaction du transfert mobile/bancaire</small>
                         </div>
+                        @endif
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Référence (optionnel)</label>
@@ -185,7 +203,10 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" wire:click="fermerModal">Annuler</button>
                     <button type="button" class="btn btn-success" wire:click="traiterPaiement" wire:loading.attr="disabled">
-                        <span wire:loading.remove><i class="bi bi-check-lg me-1"></i>Confirmer le paiement</span>
+                        <span wire:loading.remove>
+                            <i class="bi bi-check-lg me-1"></i>
+                            {{ $isCash ? 'Confirmer & Imprimer reçu' : 'Confirmer le paiement' }}
+                        </span>
                         <span wire:loading><span class="spinner-border spinner-border-sm me-1"></span>Traitement...</span>
                     </button>
                 </div>

@@ -97,7 +97,7 @@ class PaymentService
 
         // Total des paiements déjà validés pour ce propriétaire
         $totalPaiementsValides = Payment::where('proprietaire_id', $proprietaire->id)
-            ->whereIn('statut', ['pay', 'approuve'])
+            ->whereIn('statut', ['paye', 'approuve'])
             ->sum('total_paye');
 
         return max(0, $totalVersements - $totalPaiementsValides);
@@ -119,7 +119,7 @@ class PaymentService
 
         // Paiements
         $paiementsValides = Payment::where('proprietaire_id', $proprietaire->id)
-            ->whereIn('statut', ['pay', 'approuve'])
+            ->whereIn('statut', ['paye', 'approuve'])
             ->sum('total_paye');
 
         $paiementsEnAttente = Payment::where('proprietaire_id', $proprietaire->id)
@@ -202,7 +202,7 @@ class PaymentService
             'numero_envoi' => $data['numero_envoi'],
             'reference_paiement' => $data['reference_paiement'] ?? null,
             'date_paiement' => now(),
-            'statut' => 'pay',
+            'statut' => 'paye',
             'traite_par' => $collecteurUserId,
             'notes' => $data['notes'] ?? $payment->notes,
         ]);
@@ -231,7 +231,7 @@ class PaymentService
     public function rejeterPaiement(Payment $payment, int $userId, string $motif): Payment
     {
         $payment->update([
-            'statut' => 'rejet',
+            'statut' => 'rejete',
             'notes' => $motif,
             'traite_par' => $userId,
         ]);

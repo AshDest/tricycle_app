@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Services\PaymentService;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * Traitement des demandes de paiement par le Collecteur
@@ -59,13 +60,21 @@ class Index extends Component
      */
     public function traiterPaiement()
     {
-        $this->validate([
+        // Validation de base
+        $rules = [
             'montant_paye' => 'required|numeric|min:1',
-            'numero_envoi' => 'required|string|max:100',
-        ], [
+        ];
+        $messages = [
             'montant_paye.required' => 'Le montant payé est obligatoire.',
-            'numero_envoi.required' => 'Le numéro d\'envoi est obligatoire.',
-        ]);
+        ];
+
+        // Le numéro d'envoi est obligatoire seulement pour les paiements non-cash
+        if ($this->paymentEnCours && $this->paymentEnCours->mode_paiement !== 'cash') {
+            $rules['numero_envoi'] = 'required|string|max:100';
+            $messages['numero_envoi.required'] = 'Le numéro d\'envoi est obligatoire pour ce mode de paiement.';
+        }
+
+        $this->validate($rules, $messages);
 
         if (!$this->paymentEnCours) {
             session()->flash('error', 'Paiement introuvable.');
@@ -81,15 +90,49 @@ class Index extends Component
             return;
         }
 
+        // Générer un numéro de référence pour les paiements cash
+        $numeroEnvoi = $this->numero_envoi;
+        if ($this->paymentEnCours->mode_paiement === 'cash' && empty($numeroEnvoi)) {
+            $numeroEnvoi = 'CASH-' . date('YmdHis') . '-' . $this->paymentEnCours->id;
+        }
+
         $paymentService->traiterPaiement($this->paymentEnCours, [
             'montant_paye' => $this->montant_paye,
-            'numero_envoi' => $this->numero_envoi,
+            'numero_envoi' => $numeroEnvoi,
             'reference_paiement' => $this->reference_paiement,
             'notes' => $this->notes,
         ], auth()->id());
 
+        $paymentId = $this->paymentEnCours->id;
+        $isCash = $this->paymentEnCours->mode_paiement === 'cash';
+
         $this->fermerModal();
+
+        // Si c'est un paiement cash, télécharger le reçu
+        if ($isCash) {
+            return $this->telechargerRecuPaiement($paymentId);
+        }
+
         session()->flash('success', 'Paiement effectué avec succès. En attente de validation OKAMI.');
+    }
+
+    /**
+     * Télécharger le reçu d'un paiement
+     */
+    public function telechargerRecuPaiement($paymentId)
+    {
+        $payment = Payment::with(['proprietaire.user', 'traitePar'])->findOrFail($paymentId);
+
+        $pdf = Pdf::loadView('pdf.recu-paiement', compact('payment'));
+
+        // Dimensions d'un petit reçu (80mm x 200mm)
+        $pdf->setPaper([0, 0, 226.77, 566.93], 'portrait');
+
+        $filename = 'recu_paiement_' . $payment->id . '_' . now()->format('YmdHis') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 
     /**
@@ -124,3 +167,5 @@ class Index extends Component
         ]);
     }
 }
+
+

@@ -135,10 +135,9 @@ class Payment extends Model
     public static function getStatuts(): array
     {
         return [
-            'demande' => 'Demande soumise',
-            'en_cours' => 'En cours de traitement',
-            'paye' => 'Payé (en attente validation)',
-            'valide' => 'Validé',
+            'en_attente' => 'En attente',
+            'paye' => 'Payé (à valider)',
+            'approuve' => 'Approuvé',
             'rejete' => 'Rejeté',
         ];
     }

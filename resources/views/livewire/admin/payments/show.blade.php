@@ -103,10 +103,9 @@
                 <div class="card-body text-center">
                     @php
                         $statutColors = [
-                            'demande' => 'warning',
-                            'en_cours' => 'info',
+                            'en_attente' => 'warning',
                             'paye' => 'primary',
-                            'valide' => 'success',
+                            'approuve' => 'success',
                             'rejete' => 'danger',
                         ];
                     @endphp

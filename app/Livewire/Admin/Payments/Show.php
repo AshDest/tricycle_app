@@ -19,22 +19,22 @@ class Show extends Component
     public function marquerPaye()
     {
         $this->payment->update([
-            'statut' => 'payé',
+            'statut' => 'paye',
             'date_paiement' => now(),
             'traite_par' => auth()->id(),
         ]);
         $this->payment->refresh();
-        session()->flash('success', 'Paiement marque comme paye.');
+        session()->flash('success', 'Paiement marqué comme payé.');
     }
 
     public function marquerRejete()
     {
         $this->payment->update([
-            'statut' => 'rejeté',
+            'statut' => 'rejete',
             'traite_par' => auth()->id(),
         ]);
         $this->payment->refresh();
-        session()->flash('success', 'Paiement rejete.');
+        session()->flash('success', 'Paiement rejeté.');
     }
 
     public function render()

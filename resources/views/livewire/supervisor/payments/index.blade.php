@@ -72,9 +72,9 @@
                     <select wire:model.live="filterStatut" class="form-select">
                         <option value="">Tous</option>
                         <option value="en_attente">En attente</option>
-                        <option value="pay">Payé (à valider)</option>
+                        <option value="paye">Payé (à valider)</option>
                         <option value="approuve">Approuvé</option>
-                        <option value="rejet">Rejeté</option>
+                        <option value="rejete">Rejeté</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -114,7 +114,7 @@
                     </thead>
                     <tbody>
                         @forelse($payments as $payment)
-                        <tr class="{{ $payment->statut === 'pay' ? 'table-info' : '' }}">
+                        <tr class="{{ $payment->statut === 'paye' ? 'table-info' : '' }}">
                             <td class="ps-4">
                                 <span class="fw-medium">{{ $payment->date_demande?->format('d/m/Y') }}</span>
                                 <small class="text-muted d-block">{{ $payment->created_at?->format('H:i') }}</small>
@@ -142,15 +142,15 @@
                                 @php
                                     $statutColors = [
                                         'en_attente' => 'warning',
-                                        'pay' => 'primary',
+                                        'paye' => 'primary',
                                         'approuve' => 'success',
-                                        'rejet' => 'danger',
+                                        'rejete' => 'danger',
                                     ];
                                     $statutLabels = [
                                         'en_attente' => 'En attente',
-                                        'pay' => 'Payé',
+                                        'paye' => 'Payé',
                                         'approuve' => 'Approuvé',
-                                        'rejet' => 'Rejeté',
+                                        'rejete' => 'Rejeté',
                                     ];
                                 @endphp
                                 <span class="badge badge-soft-{{ $statutColors[$payment->statut] ?? 'secondary' }}">
@@ -158,7 +158,7 @@
                                 </span>
                             </td>
                             <td class="text-end pe-4">
-                                @if($payment->statut === 'pay')
+                                @if($payment->statut === 'paye')
                                 <div class="btn-group">
                                     <button wire:click="validerPaiement({{ $payment->id }})"
                                             class="btn btn-sm btn-success"
