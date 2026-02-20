@@ -29,6 +29,18 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
+                            <label class="form-label">Numéro Matricule <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="text" wire:model="numero_matricule" class="form-control bg-light @error('numero_matricule') is-invalid @enderror" readonly>
+                                <button type="button" wire:click="regenerateNumero" class="btn btn-outline-secondary" title="Régénérer le numéro">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Généré automatiquement (TC-Année-Séquence)</small>
+                            @error('numero_matricule') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label">Plaque d'immatriculation <span class="text-danger">*</span></label>
                             <input type="text" wire:model="plaque_immatriculation" class="form-control @error('plaque_immatriculation') is-invalid @enderror" placeholder="ABC-123">
                             @error('plaque_immatriculation') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -91,17 +103,47 @@
                                     <option value="{{ $motard->id }}">{{ $motard->user->name ?? 'N/A' }} ({{ $motard->numero_identifiant }})</option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">Seuls les motards sans moto assignée sont affichés</small>
+                            <small class="text-muted">Motards actifs disponibles</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Montant Journalier Attendu <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" wire:model="montant_journalier_attendu" class="form-control @error('montant_journalier_attendu') is-invalid @enderror" placeholder="0">
+                                <span class="input-group-text">FC</span>
+                            </div>
+                            @error('montant_journalier_attendu') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Statut <span class="text-danger">*</span></label>
                             <select wire:model="statut" class="form-select @error('statut') is-invalid @enderror">
                                 <option value="actif">Actif</option>
-                                <option value="inactif">Inactif</option>
-                                <option value="en_maintenance">En maintenance</option>
+                                <option value="suspendu">Suspendu</option>
+                                <option value="maintenance">En maintenance</option>
                             </select>
                             @error('statut') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        <hr class="my-3">
+                        <h6 class="text-muted mb-3"><i class="bi bi-file-text me-1"></i>Contrat (optionnel)</h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Date début contrat</label>
+                                <input type="date" wire:model="contrat_debut" class="form-control @error('contrat_debut') is-invalid @enderror">
+                                @error('contrat_debut') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Date fin contrat</label>
+                                <input type="date" wire:model="contrat_fin" class="form-control @error('contrat_fin') is-invalid @enderror">
+                                @error('contrat_fin') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label">N° Contrat</label>
+                            <input type="text" wire:model="contrat_numero" class="form-control" placeholder="CTR-XXXX">
                         </div>
                     </div>
                 </div>

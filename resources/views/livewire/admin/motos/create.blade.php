@@ -8,6 +8,13 @@
         <a href="{{ route('admin.motos.index') }}" class="btn btn-light"><i class="bi bi-arrow-left me-1"></i> Retour</a>
     </div>
 
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             <form wire:submit.prevent="save">
@@ -19,8 +26,14 @@
 
                     <div class="col-md-4">
                         <label class="form-label">Num&eacute;ro Matricule <span class="text-danger">*</span></label>
-                        <input type="text" wire:model="numero_matricule" class="form-control @error('numero_matricule') is-invalid @enderror" placeholder="Matricule">
-                        @error('numero_matricule') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="input-group">
+                            <input type="text" wire:model="numero_matricule" class="form-control bg-light @error('numero_matricule') is-invalid @enderror" readonly>
+                            <button type="button" wire:click="regenerateNumero" class="btn btn-outline-secondary" title="Régénérer le numéro">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Généré automatiquement (TC-Année-Séquence)</small>
+                        @error('numero_matricule') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-4">
@@ -84,6 +97,28 @@
                             <option value="maintenance">En maintenance</option>
                         </select>
                         @error('statut') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <h6 class="fw-semibold text-primary mb-0"><i class="bi bi-file-text me-1"></i> Contrat (optionnel)</h6>
+                        <hr class="mt-2">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Date début contrat</label>
+                        <input type="date" wire:model="contrat_debut" class="form-control @error('contrat_debut') is-invalid @enderror">
+                        @error('contrat_debut') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Date fin contrat</label>
+                        <input type="date" wire:model="contrat_fin" class="form-control @error('contrat_fin') is-invalid @enderror">
+                        @error('contrat_fin') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">N° Contrat</label>
+                        <input type="text" wire:model="contrat_numero" class="form-control" placeholder="CTR-XXXX">
                     </div>
 
                     <div class="col-12 mt-4">
