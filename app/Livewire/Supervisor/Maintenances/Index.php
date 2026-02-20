@@ -40,6 +40,51 @@ class Index extends Component
         $this->resetPage();
     }
 
+    /**
+     * Mettre la maintenance en attente
+     */
+    public function mettreEnAttente(int $id)
+    {
+        $maintenance = Maintenance::findOrFail($id);
+        $maintenance->update(['statut' => 'en_attente']);
+        session()->flash('success', 'Maintenance mise en attente.');
+    }
+
+    /**
+     * Mettre la maintenance en cours
+     */
+    public function mettreEnCours(int $id)
+    {
+        $maintenance = Maintenance::findOrFail($id);
+        $maintenance->update(['statut' => 'en_cours']);
+
+        // Mettre la moto en maintenance
+        if ($maintenance->moto) {
+            $maintenance->moto->update(['statut' => 'maintenance']);
+        }
+
+        session()->flash('success', 'Maintenance en cours.');
+    }
+
+    /**
+     * Terminer la maintenance
+     */
+    public function terminer(int $id)
+    {
+        $maintenance = Maintenance::findOrFail($id);
+        $maintenance->update([
+            'statut' => 'termine',
+            'date_fin' => now(),
+        ]);
+
+        // Remettre la moto en service si elle était en maintenance
+        if ($maintenance->moto && $maintenance->moto->statut === 'maintenance') {
+            $maintenance->moto->update(['statut' => 'actif']);
+        }
+
+        session()->flash('success', 'Maintenance marquée comme terminée.');
+    }
+
     public function export()
     {
         $filename = 'maintenances_' . now()->format('Y-m-d_His') . '.csv';
@@ -77,7 +122,9 @@ class Index extends Component
 
         $stats = [
             'total' => $maintenances->count(),
-            'total_cout' => $maintenances->sum('cout_total'),
+            'total_cout' => $maintenances->sum(function($m) {
+                return ($m->cout_pieces ?? 0) + ($m->cout_main_oeuvre ?? 0);
+            }),
             'terminees' => $maintenances->where('statut', 'termine')->count(),
             'en_cours' => $maintenances->where('statut', 'en_cours')->count(),
         ];
