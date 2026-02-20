@@ -91,7 +91,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Maintenances
         Route::get('/maintenances', \App\Livewire\Admin\Maintenances\Index::class)->name('maintenances.index');
-        Route::get('/maintenances/create', \App\Livewire\Admin\Maintenances\Create::class)->name('maintenances.create');
         Route::get('/maintenances/{maintenance}', \App\Livewire\Admin\Maintenances\Show::class)->name('maintenances.show');
 
         // Accidents

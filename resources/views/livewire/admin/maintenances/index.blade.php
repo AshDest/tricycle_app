@@ -7,14 +7,9 @@
             </h4>
             <p class="text-muted mb-0">Suivi technique des motos-tricycles</p>
         </div>
-        <div class="d-flex gap-2">
-            <button wire:click="exportPdf" class="btn btn-danger">
-                <i class="bi bi-file-pdf me-1"></i> PDF
-            </button>
-            <a href="{{ route('admin.maintenances.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>Nouvelle Maintenance
-            </a>
-        </div>
+        <button wire:click="exportPdf" class="btn btn-danger">
+            <i class="bi bi-file-pdf me-1"></i> Exporter PDF
+        </button>
     </div>
 
     <!-- Stats -->
