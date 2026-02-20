@@ -46,6 +46,63 @@ class Index extends Component
         session()->flash('success', 'Statut mis à jour.');
     }
 
+    /**
+     * Démarrer une tournée planifiée
+     */
+    public function demarrer(int $tourneeId)
+    {
+        $tournee = Tournee::findOrFail($tourneeId);
+
+        if ($tournee->statut !== 'planifiee') {
+            session()->flash('error', 'Cette tournée ne peut pas être démarrée.');
+            return;
+        }
+
+        $tournee->update([
+            'statut' => 'en_cours',
+            'heure_debut' => now(),
+        ]);
+
+        session()->flash('success', 'Tournée démarrée avec succès.');
+    }
+
+    /**
+     * Terminer une tournée en cours
+     */
+    public function terminer(int $tourneeId)
+    {
+        $tournee = Tournee::findOrFail($tourneeId);
+
+        if ($tournee->statut !== 'en_cours') {
+            session()->flash('error', 'Cette tournée ne peut pas être terminée.');
+            return;
+        }
+
+        $tournee->update([
+            'statut' => 'terminee',
+            'heure_fin' => now(),
+        ]);
+
+        session()->flash('success', 'Tournée terminée avec succès.');
+    }
+
+    /**
+     * Annuler une tournée
+     */
+    public function annuler(int $tourneeId)
+    {
+        $tournee = Tournee::findOrFail($tourneeId);
+
+        if (in_array($tournee->statut, ['terminee', 'annulee'])) {
+            session()->flash('error', 'Cette tournée ne peut pas être annulée.');
+            return;
+        }
+
+        $tournee->update(['statut' => 'annulee']);
+
+        session()->flash('success', 'Tournée annulée.');
+    }
+
     protected function getBaseQuery()
     {
         return Tournee::with(['collecteur.user'])

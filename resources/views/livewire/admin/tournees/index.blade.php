@@ -152,12 +152,22 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group">
-                                    <a href="{{ route('admin.tournees.show', $tournee) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ route('admin.tournees.show', $tournee) }}" class="btn btn-sm btn-outline-primary" title="Voir">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     @if($tournee->statut === 'planifiee')
                                     <button wire:click="demarrer({{ $tournee->id }})" class="btn btn-sm btn-outline-success" title="Démarrer">
                                         <i class="bi bi-play"></i>
+                                    </button>
+                                    <button wire:click="annuler({{ $tournee->id }})" class="btn btn-sm btn-outline-danger" title="Annuler" wire:confirm="Annuler cette tournée ?">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                    @elseif($tournee->statut === 'en_cours')
+                                    <button wire:click="terminer({{ $tournee->id }})" class="btn btn-sm btn-outline-success" title="Terminer">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <button wire:click="annuler({{ $tournee->id }})" class="btn btn-sm btn-outline-danger" title="Annuler" wire:confirm="Annuler cette tournée ?">
+                                        <i class="bi bi-x-lg"></i>
                                     </button>
                                     @endif
                                 </div>
