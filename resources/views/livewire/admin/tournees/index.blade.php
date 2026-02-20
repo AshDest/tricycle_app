@@ -134,7 +134,7 @@
                                 <span class="fw-semibold">{{ $tournee->collectes_count ?? 0 }}</span>
                                 <small class="text-muted">visités</small>
                             </td>
-                            <td class="fw-semibold text-success">{{ number_format($tournee->total_collecte ?? 0) }} FC</td>
+                            <td class="fw-semibold text-success">{{ number_format($tournee->collectes_sum_montant_collecte ?? 0) }} FC</td>
                             <td>
                                 @php
                                     $statutConfig = [

@@ -49,6 +49,8 @@ class Index extends Component
     protected function getBaseQuery()
     {
         return Tournee::with(['collecteur.user'])
+            ->withCount('collectes')
+            ->withSum('collectes', 'montant_collecte')
             ->when($this->search, function ($q) {
                 $q->whereHas('collecteur.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'))
                   ->orWhere('zone', 'like', '%'.$this->search.'%');
