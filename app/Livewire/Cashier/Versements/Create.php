@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use App\Models\Versement;
 use App\Models\Motard;
 use App\Models\SystemSetting;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -22,6 +23,9 @@ class Create extends Component
     public $soldeActuel = 0;
     public $arrieresCumules = 0;
     public $tauxPaiement = 0;
+
+    // Pour le téléchargement du reçu
+    public $dernierVersementId = null;
 
     protected $rules = [
         'motard_id' => 'required|exists:motards,id',
@@ -69,8 +73,7 @@ class Create extends Component
         // Montant attendu depuis la moto ou paramètre système
         $montantAttendu = $moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
 
-        // Le statut sera déterminé automatiquement dans le modèle Versement
-        // via la méthode boot(), mais on le définit aussi ici pour la clarté
+        // Le statut sera déterminé automatiquement
         $statut = 'non_effectue';
         if ($this->montant >= $montantAttendu) {
             $statut = 'paye';
@@ -81,7 +84,7 @@ class Create extends Component
         // Calcul des arriérés
         $arrieres = max(0, $montantAttendu - $this->montant);
 
-        Versement::create([
+        $versement = Versement::create([
             'motard_id' => $this->motard_id,
             'moto_id' => $moto?->id,
             'caissier_id' => $caissier->id,
@@ -98,14 +101,27 @@ class Create extends Component
         // Mettre à jour le solde du caissier
         $caissier->increment('solde_actuel', $this->montant);
 
-        // Message personnalisé selon le statut
-        if ($statut === 'paye') {
-            session()->flash('success', 'Versement complet enregistré avec succès.');
-        } else {
-            session()->flash('warning', 'Versement partiel enregistré. Arriérés: ' . number_format($arrieres) . ' FC');
-        }
+        // Stocker l'ID pour le téléchargement du reçu
+        $this->dernierVersementId = $versement->id;
 
-        return redirect()->route('cashier.versements.index');
+        // Générer et télécharger le reçu PDF
+        return $this->telechargerRecu($versement->id);
+    }
+
+    public function telechargerRecu($versementId)
+    {
+        $versement = Versement::with(['motard.user', 'moto', 'caissier.user'])->findOrFail($versementId);
+
+        $pdf = Pdf::loadView('pdf.recu-versement', compact('versement'));
+
+        // Dimensions d'un petit reçu (80mm x 200mm environ)
+        $pdf->setPaper([0, 0, 226.77, 566.93], 'portrait'); // 80mm x 200mm en points
+
+        $filename = 'recu_versement_' . $versement->id . '_' . now()->format('YmdHis') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 
     public function render()

@@ -101,7 +101,8 @@
                             <th>Écart</th>
                             <th>Mode</th>
                             <th>Statut</th>
-                            <th class="text-end pe-4">Heure</th>
+                            <th>Heure</th>
+                            <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -160,13 +161,18 @@
                                     {{ ucfirst(str_replace('_', ' ', $versement->statut ?? 'N/A')) }}
                                 </span>
                             </td>
-                            <td class="text-end pe-4 text-muted small">
+                            <td class="text-muted small">
                                 <i class="bi bi-clock me-1"></i>{{ $versement->created_at?->format('H:i') }}
+                            </td>
+                            <td class="text-end pe-4">
+                                <button wire:click="telechargerRecu({{ $versement->id }})" class="btn btn-sm btn-outline-danger" title="Télécharger le reçu">
+                                    <i class="bi bi-receipt"></i>
+                                </button>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucun versement enregistré</p>
                                 <a href="{{ route('cashier.versements.create') }}" class="btn btn-sm btn-success mt-3">

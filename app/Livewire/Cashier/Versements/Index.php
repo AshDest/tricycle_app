@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Versement;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -41,6 +42,25 @@ class Index extends Component
     public function voirDetails($versementId)
     {
         // Peut ouvrir un modal ou rediriger
+    }
+
+    /**
+     * Télécharger le reçu d'un versement
+     */
+    public function telechargerRecu($versementId)
+    {
+        $versement = Versement::with(['motard.user', 'moto', 'caissier.user'])->findOrFail($versementId);
+
+        $pdf = Pdf::loadView('pdf.recu-versement', compact('versement'));
+
+        // Dimensions d'un petit reçu (80mm x 200mm environ)
+        $pdf->setPaper([0, 0, 226.77, 566.93], 'portrait'); // 80mm x 200mm en points
+
+        $filename = 'recu_versement_' . $versement->id . '_' . now()->format('YmdHis') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 
     public function render()
