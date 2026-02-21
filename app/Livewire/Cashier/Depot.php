@@ -95,7 +95,8 @@ class Depot extends Component
         }
 
         // Vérifier que le montant ne dépasse pas le solde
-        if ($this->montant > $this->soldeActuel) {
+        $montant = (float) $this->montant;
+        if ($montant > $this->soldeActuel) {
             $this->addError('montant', "Le montant dépasse votre solde actuel (" . number_format($this->soldeActuel) . " FC).");
             return;
         }
@@ -103,22 +104,22 @@ class Depot extends Component
         try {
             // Mettre à jour la collecte
             $this->collecteEnCours->update([
-                'montant_collecte' => $this->montant,
-                'ecart' => $this->montant - ($this->collecteEnCours->montant_attendu ?? 0),
+                'montant_collecte' => $montant,
+                'ecart' => $montant - ($this->collecteEnCours->montant_attendu ?? 0),
                 'statut' => 'reussie',
                 'heure_depart' => now(),
                 'commentaire_caissier' => $this->notes,
             ]);
 
             // Déduire du solde du caissier
-            $this->caissier->decrement('solde_actuel', $this->montant);
+            $this->caissier->decrement('solde_actuel', $montant);
 
             // Rafraîchir les données
             $this->soldeActuel = $this->caissier->fresh()->solde_actuel;
 
             $this->fermerModal();
 
-            $this->message = "Dépôt de " . number_format($this->montant) . " FC effectué avec succès. En attente de validation par le collecteur.";
+            $this->message = "Dépôt de " . number_format($montant) . " FC effectué avec succès. En attente de validation par le collecteur.";
             $this->messageType = 'success';
 
         } catch (\Exception $e) {
