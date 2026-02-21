@@ -28,14 +28,20 @@
                 <span>Nouveau</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow mt-2" style="min-width: 200px;">
-                @role('admin|supervisor')
+                @role('admin')
                 <li><a class="dropdown-item py-2" href="{{ route('admin.motards.create') }}"><i class="bi bi-person-plus text-primary me-2"></i>Nouveau motard</a></li>
                 <li><a class="dropdown-item py-2" href="{{ route('admin.motos.create') }}"><i class="bi bi-bicycle text-info me-2"></i>Nouvelle moto</a></li>
-                @endrole
-                @role('admin')
                 <li><a class="dropdown-item py-2" href="{{ route('admin.proprietaires.create') }}"><i class="bi bi-building text-warning me-2"></i>Nouveau propriétaire</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item py-2" href="{{ route('admin.tournees.create') }}"><i class="bi bi-calendar-event text-success me-2"></i>Nouvelle tournée</a></li>
+                @endrole
+                @role('supervisor')
+                <li><a class="dropdown-item py-2" href="{{ route('supervisor.motards.create') }}"><i class="bi bi-person-plus text-primary me-2"></i>Nouveau motard</a></li>
+                <li><a class="dropdown-item py-2" href="{{ route('supervisor.motos.create') }}"><i class="bi bi-bicycle text-info me-2"></i>Nouvelle moto</a></li>
+                <li><a class="dropdown-item py-2" href="{{ route('supervisor.proprietaires.create') }}"><i class="bi bi-building text-warning me-2"></i>Nouveau propriétaire</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item py-2" href="{{ route('supervisor.maintenances.create') }}"><i class="bi bi-tools text-success me-2"></i>Nouvelle maintenance</a></li>
+                <li><a class="dropdown-item py-2" href="{{ route('supervisor.accidents.create') }}"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Nouvel accident</a></li>
                 @endrole
             </ul>
         </div>

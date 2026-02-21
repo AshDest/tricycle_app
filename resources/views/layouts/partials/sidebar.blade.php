@@ -154,17 +154,27 @@
             {{-- Supervisor Menu (OKAMI) --}}
             @role('supervisor')
             <li class="sidebar-heading">Supervision OKAMI</li>
-            <li class="{{ request()->is('supervisor/motards*') ? 'active' : '' }}">
-                <a href="{{ route('supervisor.motards.index') }}">
+            <li class="has-submenu {{ request()->is('supervisor/motards*') ? 'active' : '' }}">
+                <a href="#" class="toggle-submenu">
                     <i class="bi bi-people"></i>
                     <span>Motards</span>
+                    <i class="bi bi-chevron-down submenu-icon"></i>
                 </a>
+                <ul class="submenu">
+                    <li><a href="{{ route('supervisor.motards.index') }}">Liste des motards</a></li>
+                    <li><a href="{{ route('supervisor.motards.create') }}">Nouveau motard</a></li>
+                </ul>
             </li>
-            <li class="{{ request()->is('supervisor/motos*') ? 'active' : '' }}">
-                <a href="{{ route('supervisor.motos.index') }}">
+            <li class="has-submenu {{ request()->is('supervisor/motos*') ? 'active' : '' }}">
+                <a href="#" class="toggle-submenu">
                     <i class="bi bi-bicycle"></i>
                     <span>Motos</span>
+                    <i class="bi bi-chevron-down submenu-icon"></i>
                 </a>
+                <ul class="submenu">
+                    <li><a href="{{ route('supervisor.motos.index') }}">Liste des motos</a></li>
+                    <li><a href="{{ route('supervisor.motos.create') }}">Nouvelle moto</a></li>
+                </ul>
             </li>
             <li class="{{ request()->is('supervisor/versements*') ? 'active' : '' }}">
                 <a href="{{ route('supervisor.versements.index') }}">
