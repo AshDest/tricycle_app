@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\User;
 use App\Models\Caissier;
+use App\Models\Zone;
 use Illuminate\Support\Facades\Hash;
 
 #[Layout('components.dashlite-layout')]
@@ -17,7 +18,7 @@ class Create extends Component
     public $password = '';
     public $numero_identifiant = '';
     public $nom_point_collecte = '';
-    public $zone = '';
+    public $zone_id = '';
     public $adresse = '';
     public $telephone = '';
     public $is_active = true;
@@ -29,14 +30,22 @@ class Create extends Component
         'password' => 'required|string|min:6',
         'numero_identifiant' => 'required|string|unique:caissiers,numero_identifiant',
         'nom_point_collecte' => 'required|string|max:255',
-        'zone' => 'required|string|max:255',
+        'zone_id' => 'required|exists:zones,id',
         'adresse' => 'required|string|max:255',
         'telephone' => 'required|string|max:20',
+    ];
+
+    protected $messages = [
+        'zone_id.required' => 'Veuillez sélectionner une zone.',
+        'zone_id.exists' => 'La zone sélectionnée est invalide.',
     ];
 
     public function save()
     {
         $this->validate();
+
+        // Récupérer le nom de la zone
+        $zone = Zone::find($this->zone_id);
 
         $user = User::create([
             'name' => $this->name,
@@ -51,18 +60,20 @@ class Create extends Component
             'user_id' => $user->id,
             'numero_identifiant' => $this->numero_identifiant,
             'nom_point_collecte' => $this->nom_point_collecte,
-            'zone' => $this->zone,
+            'zone' => $zone->nom ?? $zone->name ?? '',
             'adresse' => $this->adresse,
             'telephone' => $this->telephone,
             'is_active' => $this->is_active,
         ]);
 
-        session()->flash('success', 'Caissier cree avec succes.');
+        session()->flash('success', 'Caissier créé avec succès.');
         return redirect()->route('admin.caissiers.index');
     }
 
     public function render()
     {
-        return view('livewire.admin.caissiers.create');
+        $zones = Zone::orderBy('nom')->get();
+
+        return view('livewire.admin.caissiers.create', compact('zones'));
     }
 }
