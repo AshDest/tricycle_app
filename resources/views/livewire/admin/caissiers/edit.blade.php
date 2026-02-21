@@ -62,9 +62,9 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Numéro identifiant <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="numero_identifiant" class="form-control @error('numero_identifiant') is-invalid @enderror" placeholder="CAI-001">
-                            @error('numero_identifiant') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label class="form-label fw-semibold">Numéro identifiant</label>
+                            <input type="text" value="{{ $caissier->numero_identifiant }}" class="form-control bg-light" readonly disabled>
+                            <small class="text-muted">Généré automatiquement, non modifiable</small>
                         </div>
 
                         <div class="mb-3">

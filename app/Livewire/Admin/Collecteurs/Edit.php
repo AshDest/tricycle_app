@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Collecteurs;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Collecteur;
+use App\Models\Zone;
 
 #[Layout('components.dashlite-layout')]
 class Edit extends Component
@@ -13,8 +14,7 @@ class Edit extends Component
     public $name = '';
     public $email = '';
     public $phone = '';
-    public $numero_identifiant = '';
-    public $zone_affectation = '';
+    public $zone_id = '';
     public $telephone = '';
     public $is_active = true;
 
@@ -22,9 +22,12 @@ class Edit extends Component
         'name' => 'required|string|max:255',
         'email' => 'required|email',
         'phone' => 'nullable|string|max:20',
-        'numero_identifiant' => 'required|string',
-        'zone_affectation' => 'required|string|max:255',
+        'zone_id' => 'required|exists:zones,id',
         'telephone' => 'required|string|max:20',
+    ];
+
+    protected $messages = [
+        'zone_id.required' => 'Veuillez sélectionner une zone.',
     ];
 
     public function mount(Collecteur $collecteur)
@@ -33,8 +36,11 @@ class Edit extends Component
         $this->name = $collecteur->user->name;
         $this->email = $collecteur->user->email;
         $this->phone = $collecteur->user->phone;
-        $this->numero_identifiant = $collecteur->numero_identifiant;
-        $this->zone_affectation = $collecteur->zone_affectation;
+
+        // Chercher la zone correspondante
+        $zone = Zone::where('nom', $collecteur->zone_affectation)->first();
+        $this->zone_id = $zone?->id ?? '';
+
         $this->telephone = $collecteur->telephone;
         $this->is_active = $collecteur->is_active;
     }
@@ -43,6 +49,9 @@ class Edit extends Component
     {
         $this->validate();
 
+        // Récupérer le nom de la zone
+        $zone = Zone::find($this->zone_id);
+
         $this->collecteur->user->update([
             'name' => $this->name,
             'email' => $this->email,
@@ -50,18 +59,19 @@ class Edit extends Component
         ]);
 
         $this->collecteur->update([
-            'numero_identifiant' => $this->numero_identifiant,
-            'zone_affectation' => $this->zone_affectation,
+            'zone_affectation' => $zone->nom ?? '',
             'telephone' => $this->telephone,
             'is_active' => $this->is_active,
         ]);
 
-        session()->flash('success', 'Collecteur mise a jour avec succes.');
+        session()->flash('success', 'Collecteur mis à jour avec succès.');
         return redirect()->route('admin.collecteurs.index');
     }
 
     public function render()
     {
-        return view('livewire.admin.collecteurs.edit');
+        $zones = Zone::orderBy('nom')->get();
+
+        return view('livewire.admin.collecteurs.edit', compact('zones'));
     }
 }

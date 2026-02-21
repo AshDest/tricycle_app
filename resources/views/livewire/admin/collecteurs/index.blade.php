@@ -62,7 +62,7 @@
                             <th>Identifiant</th>
                             <th>Zone</th>
                             <th>Téléphone</th>
-                            <th>Tournées ce mois</th>
+                            <th>Solde Caisse</th>
                             <th>Statut</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
@@ -84,27 +84,27 @@
                             <td><code>{{ $collecteur->numero_identifiant ?? 'N/A' }}</code></td>
                             <td><span class="badge bg-light text-dark">{{ $collecteur->zone_affectation ?? 'N/A' }}</span></td>
                             <td>{{ $collecteur->telephone ?? 'N/A' }}</td>
+                            <td class="fw-semibold text-success">{{ number_format($collecteur->solde_caisse ?? 0) }} FC</td>
                             <td>
-                                <span class="fw-semibold">{{ $collecteur->tournees_count ?? 0 }}</span>
-                                <small class="text-muted">tournées</small>
-                            </td>
-                            <td>
-                                <span class="badge badge-soft-{{ $collecteur->is_active ? 'success' : 'danger' }}">
+                                <span class="badge badge-soft-{{ $collecteur->is_active ? 'success' : 'danger' }}"
+                                      style="cursor: pointer;"
+                                      wire:click="toggleActive({{ $collecteur->id }})"
+                                      title="Cliquer pour changer le statut">
                                     {{ $collecteur->is_active ? 'Actif' : 'Inactif' }}
                                 </span>
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group">
-                                    <a href="{{ route('admin.collecteurs.show', $collecteur) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ route('admin.collecteurs.show', $collecteur) }}" class="btn btn-sm btn-outline-primary" title="Voir">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ route('admin.collecteurs.edit', $collecteur) }}" class="btn btn-sm btn-outline-secondary">
+                                    <a href="{{ route('admin.collecteurs.edit', $collecteur) }}" class="btn btn-sm btn-outline-warning" title="Modifier">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <button wire:click="toggleActive({{ $collecteur->id }})"
-                                            class="btn btn-sm btn-outline-{{ $collecteur->is_active ? 'warning' : 'success' }}"
-                                            title="{{ $collecteur->is_active ? 'Désactiver' : 'Activer' }}">
-                                        <i class="bi bi-{{ $collecteur->is_active ? 'pause' : 'play' }}"></i>
+                                    <button wire:click="delete({{ $collecteur->id }})"
+                                            wire:confirm="Êtes-vous sûr de vouloir supprimer ce collecteur ?"
+                                            class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </td>

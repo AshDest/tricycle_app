@@ -67,11 +67,6 @@
                         <h6 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Informations du point de collecte</h6>
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Numéro identifiant <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="numero_identifiant" class="form-control @error('numero_identifiant') is-invalid @enderror" placeholder="CAI-001">
-                            @error('numero_identifiant') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nom du point de collecte <span class="text-danger">*</span></label>

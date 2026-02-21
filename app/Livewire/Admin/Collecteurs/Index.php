@@ -43,8 +43,15 @@ class Index extends Component
 
     public function delete(Collecteur $collecteur)
     {
-        $collecteur->forceDelete();
-        session()->flash('success', 'Collecteur supprime avec succes.');
+        // Soft delete le collecteur
+        $collecteur->delete();
+
+        // Optionnel: désactiver l'utilisateur associé
+        if ($collecteur->user) {
+            $collecteur->user->update(['is_active' => false]);
+        }
+
+        session()->flash('success', 'Collecteur supprimé avec succès.');
     }
 
     protected function getBaseQuery()

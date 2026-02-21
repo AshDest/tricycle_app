@@ -14,7 +14,6 @@ class Edit extends Component
     public $name = '';
     public $email = '';
     public $phone = '';
-    public $numero_identifiant = '';
     public $nom_point_collecte = '';
     public $zone_id = '';
     public $adresse = '';
@@ -25,7 +24,6 @@ class Edit extends Component
         'name' => 'required|string|max:255',
         'email' => 'required|email',
         'phone' => 'nullable|string|max:20',
-        'numero_identifiant' => 'required|string',
         'nom_point_collecte' => 'required|string|max:255',
         'zone_id' => 'required|exists:zones,id',
         'adresse' => 'required|string|max:255',
@@ -43,7 +41,6 @@ class Edit extends Component
         $this->name = $caissier->user->name;
         $this->email = $caissier->user->email;
         $this->phone = $caissier->user->phone;
-        $this->numero_identifiant = $caissier->numero_identifiant;
         $this->nom_point_collecte = $caissier->nom_point_collecte;
 
         // Chercher la zone correspondante
@@ -69,7 +66,6 @@ class Edit extends Component
         ]);
 
         $this->caissier->update([
-            'numero_identifiant' => $this->numero_identifiant,
             'nom_point_collecte' => $this->nom_point_collecte,
             'zone' => $zone->nom ?? '',
             'adresse' => $this->adresse,
