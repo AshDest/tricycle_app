@@ -5,11 +5,11 @@
             <h4 class="page-title mb-1">
                 <i class="bi bi-box-arrow-up me-2 text-primary"></i>Dépôt au Collecteur
             </h4>
-            <p class="text-muted mb-0">Déposer votre solde auprès du collecteur</p>
+            <p class="text-muted mb-0">Déposer votre solde auprès du collecteur lors de sa tournée</p>
         </div>
-        <a href="{{ route('cashier.depots.historique') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-clock-history me-1"></i>Historique
-        </a>
+        <button wire:click="$refresh" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+        </button>
     </div>
 
     <!-- Message Alert -->
@@ -21,147 +21,177 @@
     </div>
     @endif
 
+    <!-- Solde actuel -->
+    <div class="card bg-primary text-white mb-4">
+        <div class="card-body py-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-white-50 mb-1">Votre Solde Actuel</h6>
+                    <h2 class="fw-bold mb-0">{{ number_format($soldeActuel) }} FC</h2>
+                </div>
+                <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                    <i class="bi bi-wallet2 fs-1"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
-        <!-- Formulaire de dépôt -->
+        <!-- Tournées en attente de dépôt -->
         <div class="col-lg-7">
-            <!-- Solde actuel -->
-            <div class="card bg-primary text-white mb-4">
-                <div class="card-body py-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50 mb-1">Votre Solde Actuel</h6>
-                            <h2 class="fw-bold mb-0">{{ number_format($soldeActuel) }} FC</h2>
-                        </div>
-                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
-                            <i class="bi bi-wallet2 fs-1"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Collecteur disponible -->
-            @if($tourneeEnCours && $collecteurDisponible)
-            <div class="alert alert-success mb-4">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="avatar avatar-md bg-success bg-opacity-25 text-success rounded-circle">
-                        <i class="bi bi-person-check fs-4"></i>
-                    </div>
-                    <div>
-                        <strong>Collecteur disponible :</strong> {{ $collecteurDisponible->user->name ?? 'N/A' }}
-                        <br><small class="text-muted">Tournée #{{ $tourneeEnCours->id }} - {{ $tourneeEnCours->zone ?? 'Zone non définie' }}</small>
-                    </div>
-                </div>
-            </div>
-            @else
-            <div class="alert alert-warning mb-4">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                <strong>Aucune tournée en cours</strong><br>
-                <small>Aucun collecteur n'est programmé pour votre zone aujourd'hui. Veuillez attendre ou contacter l'administration.</small>
-            </div>
-            @endif
-
-            <!-- Formulaire -->
             <div class="card">
                 <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-cash-coin me-2 text-success"></i>Effectuer un Dépôt</h6>
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock me-2 text-warning"></i>Tournées en attente de dépôt</h6>
                 </div>
-                <div class="card-body">
-                    <form wire:submit="effectuerDepot">
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Montant à déposer <span class="text-danger">*</span></label>
-                            <div class="input-group input-group-lg">
-                                <input type="number" wire:model="montant"
-                                       class="form-control @error('montant') is-invalid @enderror"
-                                       placeholder="0" min="1" max="{{ $soldeActuel }}"
-                                       @if(!$tourneeEnCours) disabled @endif>
-                                <span class="input-group-text">FC</span>
-                                <button type="button" class="btn btn-outline-primary" wire:click="deposerTout"
-                                        @if(!$tourneeEnCours || $soldeActuel <= 0) disabled @endif>
-                                    Tout déposer
-                                </button>
+                <div class="card-body p-0">
+                    @if($collectesEnAttente->count() > 0)
+                    <div class="list-group list-group-flush">
+                        @foreach($collectesEnAttente as $collecte)
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">
+                                        <i class="bi bi-calendar-event me-2 text-primary"></i>
+                                        {{ $collecte->tournee->date?->format('d/m/Y') }}
+                                        <span class="badge bg-light text-dark ms-2">{{ $collecte->tournee->zone }}</span>
+                                    </h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-person me-1"></i>Collecteur: <strong>{{ $collecte->tournee->collecteur->user->name ?? 'N/A' }}</strong>
+                                    </small>
+                                    <div class="mt-1">
+                                        <span class="badge badge-soft-{{ $collecte->tournee->statut === 'confirmee' ? 'info' : 'primary' }}">
+                                            {{ $collecte->tournee->statut === 'confirmee' ? 'Tournée confirmée' : 'Tournée en cours' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="mb-2">
+                                        <small class="text-muted d-block">Montant attendu</small>
+                                        <strong>{{ number_format($collecte->montant_attendu ?? 0) }} FC</strong>
+                                    </div>
+                                    <button wire:click="ouvrirDepot({{ $collecte->id }})"
+                                            class="btn btn-success btn-sm"
+                                            @if($soldeActuel <= 0) disabled title="Solde insuffisant" @endif>
+                                        <i class="bi bi-cash me-1"></i>Déposer
+                                    </button>
+                                </div>
                             </div>
-                            @error('montant')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                            @if($soldeActuel > 0)
-                            <small class="text-muted">Maximum: {{ number_format($soldeActuel) }} FC</small>
-                            @endif
                         </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">Notes / Commentaires</label>
-                            <textarea wire:model="notes" class="form-control" rows="3"
-                                      placeholder="Ajouter des commentaires si nécessaire..."
-                                      @if(!$tourneeEnCours) disabled @endif></textarea>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg"
-                                    wire:loading.attr="disabled"
-                                    @if(!$tourneeEnCours || $soldeActuel <= 0) disabled @endif>
-                                <span wire:loading.remove>
-                                    <i class="bi bi-box-arrow-up me-2"></i>Confirmer le Dépôt
-                                </span>
-                                <span wire:loading>
-                                    <span class="spinner-border spinner-border-sm me-2"></span>Traitement...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-calendar-x fs-1 d-block mb-3"></i>
+                        <p class="mb-0">Aucune tournée en attente de dépôt</p>
+                        <small>Les tournées confirmées par les collecteurs apparaîtront ici</small>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- Historique récent -->
         <div class="col-lg-5">
-            <!-- Instructions -->
-            <div class="card mb-4">
-                <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-info"></i>Instructions</h6>
-                </div>
-                <div class="card-body">
-                    <ol class="mb-0 ps-3">
-                        <li class="mb-2">Attendez le passage du collecteur dans votre zone</li>
-                        <li class="mb-2">Vérifiez que la tournée est active</li>
-                        <li class="mb-2">Entrez le montant exact à déposer</li>
-                        <li class="mb-2">Confirmez le dépôt</li>
-                        <li>Le collecteur validera la réception</li>
-                    </ol>
-                </div>
-            </div>
-
-            <!-- Dépôts récents -->
             <div class="card">
                 <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-secondary"></i>Dépôts Récents</h6>
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-secondary"></i>Dépôts récents</h6>
                 </div>
                 <div class="card-body p-0">
-                    @if(count($depotsRecents) > 0)
-                    <ul class="list-group list-group-flush">
+                    @if($depotsRecents->count() > 0)
+                    <div class="list-group list-group-flush">
                         @foreach($depotsRecents as $depot)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-medium">{{ number_format($depot->montant_collecte ?? 0) }} FC</span>
-                                <small class="text-muted d-block">{{ $depot->created_at?->format('d/m/Y H:i') }}</small>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="fw-medium">{{ number_format($depot->montant_collecte) }} FC</span>
+                                    <small class="text-muted d-block">{{ $depot->created_at?->format('d/m/Y H:i') }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge badge-soft-{{ $depot->valide_par_collecteur ? 'success' : 'warning' }}">
+                                        {{ $depot->valide_par_collecteur ? 'Validé' : 'En attente' }}
+                                    </span>
+                                    <small class="text-muted d-block">{{ $depot->tournee->collecteur->user->name ?? 'N/A' }}</small>
+                                </div>
                             </div>
-                            <div class="text-end">
-                                @if($depot->valide_par_collecteur)
-                                <span class="badge badge-soft-success"><i class="bi bi-check-circle me-1"></i>Validé</span>
-                                @else
-                                <span class="badge badge-soft-warning">En attente</span>
-                                @endif
-                            </div>
-                        </li>
+                        </div>
                         @endforeach
-                    </ul>
+                    </div>
                     @else
                     <div class="text-center py-4 text-muted">
                         <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                        <p class="mb-0">Aucun dépôt récent</p>
+                        <small>Aucun dépôt récent</small>
                     </div>
                     @endif
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Modal de dépôt -->
+    @if($showModal && $collecteEnCours)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-cash-coin me-2 text-success"></i>Effectuer un dépôt
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="fermerModal"></button>
+                </div>
+                <form wire:submit="effectuerDepot">
+                    <div class="modal-body">
+                        <!-- Info tournée -->
+                        <div class="alert alert-light mb-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Collecteur</small>
+                                    <div class="fw-semibold">{{ $collecteEnCours->tournee->collecteur->user->name ?? 'N/A' }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Date tournée</small>
+                                    <div class="fw-semibold">{{ $collecteEnCours->tournee->date?->format('d/m/Y') }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Votre solde disponible</label>
+                            <div class="h4 text-success">{{ number_format($soldeActuel) }} FC</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Montant à déposer <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" wire:model="montant"
+                                       class="form-control form-control-lg @error('montant') is-invalid @enderror"
+                                       placeholder="0" min="1" max="{{ $soldeActuel }}">
+                                <span class="input-group-text">FC</span>
+                                <button type="button" class="btn btn-outline-primary" wire:click="deposerTout">
+                                    Tout
+                                </button>
+                            </div>
+                            @error('montant') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Notes (optionnel)</label>
+                            <textarea wire:model="notes" class="form-control" rows="2" placeholder="Remarques éventuelles..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" wire:click="fermerModal">Annuler</button>
+                        <button type="submit" class="btn btn-success" wire:loading.attr="disabled">
+                            <span wire:loading.remove>
+                                <i class="bi bi-check-lg me-1"></i>Confirmer le dépôt
+                            </span>
+                            <span wire:loading>
+                                <span class="spinner-border spinner-border-sm me-1"></span>Traitement...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

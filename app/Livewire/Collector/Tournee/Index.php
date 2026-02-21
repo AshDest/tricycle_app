@@ -4,6 +4,7 @@ namespace App\Livewire\Collector\Tournee;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\WithPagination;
 use App\Models\Tournee;
 use App\Models\Caissier;
 use App\Models\Collecte;
@@ -12,80 +13,118 @@ use Carbon\Carbon;
 #[Layout('components.dashlite-layout')]
 class Index extends Component
 {
-    public $tourneeEnCours = null;
-    public $collectesRealisees = 0;
-    public $totalCaissiers = 0;
-    public $totalEncaisse = 0;
-    public $totalAttendu = 0;
-    public $caissierRestants = 0;
+    use WithPagination;
 
-    public function mount()
-    {
-        $this->loadTourneeData();
-    }
+    public $filterStatut = '';
+    public $filterDate = '';
 
-    public function loadTourneeData()
+    // Stats
+    public $tourneesAConfirmer = 0;
+    public $tourneesEnCours = 0;
+    public $tourneesTerminees = 0;
+
+    protected $queryString = ['filterStatut', 'filterDate'];
+
+    public function updatingFilterStatut() { $this->resetPage(); }
+    public function updatingFilterDate() { $this->resetPage(); }
+
+    /**
+     * Confirmer une tournée planifiée
+     */
+    public function confirmerTournee($tourneeId)
     {
         $collecteur = auth()->user()->collecteur;
-        if (!$collecteur) return;
+        $tournee = Tournee::where('id', $tourneeId)
+            ->where('collecteur_id', $collecteur->id)
+            ->where('statut', 'planifiee')
+            ->firstOrFail();
 
-        // Chercher la tournée du jour (en cours ou planifiée)
-        $this->tourneeEnCours = Tournee::where('collecteur_id', $collecteur->id)
-            ->whereDate('date', Carbon::today())
-            ->whereIn('statut', ['planifiee', 'en_cours'])
-            ->with(['collectes.caissier'])
-            ->first();
+        $tournee->update([
+            'statut' => 'confirmee',
+            'presence_confirmee' => true,
+            'presence_confirmee_at' => now(),
+        ]);
 
-        if ($this->tourneeEnCours) {
-            $this->totalCaissiers = $this->tourneeEnCours->collectes->count();
-            $this->collectesRealisees = $this->tourneeEnCours->collectes
-                ->whereIn('statut', ['reussie', 'partielle'])->count();
-            $this->caissierRestants = $this->totalCaissiers - $this->collectesRealisees;
-            $this->totalEncaisse = $this->tourneeEnCours->collectes->sum('montant_collecte') ?? 0;
-            $this->totalAttendu = $this->tourneeEnCours->collectes->sum('montant_attendu') ?? 0;
-        }
+        session()->flash('success', 'Tournée confirmée avec succès. Les caissiers en seront informés.');
     }
 
-    public function effectuerCollecte($caissierId)
+    /**
+     * Démarrer une tournée confirmée
+     */
+    public function demarrerTournee($tourneeId)
     {
-        // Logique pour effectuer une collecte - peut ouvrir un modal
-        $this->dispatch('open-collecte-modal', caissierId: $caissierId);
+        $collecteur = auth()->user()->collecteur;
+        $tournee = Tournee::where('id', $tourneeId)
+            ->where('collecteur_id', $collecteur->id)
+            ->where('statut', 'confirmee')
+            ->firstOrFail();
+
+        $tournee->update([
+            'statut' => 'en_cours',
+            'heure_debut_reelle' => now(),
+        ]);
+
+        session()->flash('success', 'Tournée démarrée. Bonne collecte !');
     }
 
-    public function terminerTournee()
+    /**
+     * Terminer une tournée en cours
+     */
+    public function terminerTournee($tourneeId)
     {
-        if ($this->tourneeEnCours && $this->caissierRestants == 0) {
-            $this->tourneeEnCours->update(['statut' => 'terminee']);
-            session()->flash('success', 'Tournée terminée avec succès!');
-            $this->loadTourneeData();
-        }
-    }
+        $collecteur = auth()->user()->collecteur;
+        $tournee = Tournee::where('id', $tourneeId)
+            ->where('collecteur_id', $collecteur->id)
+            ->where('statut', 'en_cours')
+            ->with('collectes')
+            ->firstOrFail();
 
-    public function signalerProbleme()
-    {
-        // Logique pour signaler un problème
-        $this->dispatch('open-probleme-modal');
+        // Calculer les totaux
+        $totalEncaisse = $tournee->collectes->sum('montant_collecte');
+        $totalAttendu = $tournee->collectes->sum('montant_attendu');
+
+        $tournee->update([
+            'statut' => 'terminee',
+            'heure_fin_reelle' => now(),
+            'total_encaisse' => $totalEncaisse,
+            'total_attendu' => $totalAttendu,
+            'ecart_total' => $totalEncaisse - $totalAttendu,
+        ]);
+
+        session()->flash('success', 'Tournée terminée. Total encaissé: ' . number_format($totalEncaisse) . ' FC');
     }
 
     public function render()
     {
-        $caissiers = collect();
+        $collecteur = auth()->user()->collecteur;
+        $collecteurId = $collecteur?->id;
 
-        if ($this->tourneeEnCours) {
-            // Récupérer les caissiers de la tournée avec leur statut de collecte
-            $caissiers = $this->tourneeEnCours->collectes->map(function ($collecte) {
-                $caissier = $collecte->caissier;
-                if ($caissier) {
-                    $caissier->collecte_faite = in_array($collecte->statut, ['reussie', 'partielle']);
-                    $caissier->collecte_id = $collecte->id;
-                    $caissier->montant_collecte = $collecte->montant_collecte;
-                }
-                return $caissier;
-            })->filter();
-        }
+        // Stats
+        $this->tourneesAConfirmer = Tournee::where('collecteur_id', $collecteurId)
+            ->where('statut', 'planifiee')
+            ->whereDate('date', '>=', Carbon::today())
+            ->count();
 
-        return view('livewire.collector.tournee.index', [
-            'caissiers' => $caissiers
-        ]);
+        $this->tourneesEnCours = Tournee::where('collecteur_id', $collecteurId)
+            ->whereIn('statut', ['confirmee', 'en_cours'])
+            ->count();
+
+        $this->tourneesTerminees = Tournee::where('collecteur_id', $collecteurId)
+            ->where('statut', 'terminee')
+            ->whereMonth('date', Carbon::now()->month)
+            ->count();
+
+        // Query des tournées
+        $tournees = Tournee::where('collecteur_id', $collecteurId)
+            ->withCount('collectes')
+            ->withSum('collectes', 'montant_attendu')
+            ->withSum('collectes', 'montant_collecte')
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
+            ->when($this->filterDate, fn($q) => $q->whereDate('date', $this->filterDate))
+            ->orderByRaw("FIELD(statut, 'en_cours', 'confirmee', 'planifiee', 'terminee', 'annulee')")
+            ->orderBy('date', 'desc')
+            ->paginate(10);
+
+        return view('livewire.collector.tournee.index', compact('tournees'));
     }
 }

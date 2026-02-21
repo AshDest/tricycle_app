@@ -202,6 +202,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::middleware(['role:collector'])->prefix('collector')->name('collector.')->group(function () {
         Route::get('/tournee', \App\Livewire\Collector\Tournee\Index::class)->name('tournee.index');
+        Route::get('/tournee/{tournee}', \App\Livewire\Collector\Tournee\Show::class)->name('tournee.show');
         Route::get('/collectes', \App\Livewire\Collector\Collectes\Index::class)->name('collectes.index');
         Route::get('/historique', \App\Livewire\Collector\Historique::class)->name('historique');
 
