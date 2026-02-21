@@ -2,55 +2,69 @@
 
 @section('content')
     <!-- Statistiques principales -->
-    <div class="stats-grid">
-        <div class="stat-box stat-success">
-            <div class="value">{{ number_format($stats['totalCollecte']) }} FC</div>
-            <div class="label">Total Collecté</div>
-        </div>
-        <div class="stat-box stat-info">
-            <div class="value">{{ number_format($stats['totalAttendu']) }} FC</div>
-            <div class="label">Total Attendu</div>
-        </div>
-        <div class="stat-box stat-warning">
-            <div class="value">{{ number_format($stats['arrieres']) }} FC</div>
-            <div class="label">Arriérés</div>
-        </div>
-        <div class="stat-box">
-            <div class="value">{{ $stats['tauxRecouvrement'] }}%</div>
-            <div class="label">Taux Recouvrement</div>
-        </div>
-    </div>
+    <table class="stats-grid">
+        <tr>
+            <td class="stat-success">
+                <div class="stat-box">
+                    <div class="value">{{ number_format($stats['totalCollecte'] ?? 0) }} FC</div>
+                    <div class="label">Total Collecté</div>
+                </div>
+            </td>
+            <td class="stat-info">
+                <div class="stat-box">
+                    <div class="value">{{ number_format($stats['totalAttendu'] ?? 0) }} FC</div>
+                    <div class="label">Total Attendu</div>
+                </div>
+            </td>
+            <td class="stat-warning">
+                <div class="stat-box">
+                    <div class="value">{{ number_format($stats['arrieres'] ?? 0) }} FC</div>
+                    <div class="label">Arriérés</div>
+                </div>
+            </td>
+            <td>
+                <div class="stat-box">
+                    <div class="value">{{ $stats['tauxRecouvrement'] ?? 0 }}%</div>
+                    <div class="label">Taux Recouvrement</div>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <!-- Résumé mensuel -->
     <div class="section">
         <h3 class="section-title">Résumé du Mois</h3>
         <table>
             <tr>
-                <td><strong>Nombre de jours travaillés</strong></td>
-                <td class="text-right">{{ $stats['joursAvecVersements'] ?? 0 }}</td>
+                <td style="width: 70%;"><strong>Nombre de jours travaillés</strong></td>
+                <td class="text-right">{{ $stats['joursAvecVersements'] ?? 0 }} jour(s)</td>
             </tr>
             <tr>
                 <td><strong>Total des versements</strong></td>
-                <td class="text-right">{{ $stats['nombreVersements'] }}</td>
+                <td class="text-right"><strong>{{ $stats['nombreVersements'] ?? 0 }}</strong></td>
             </tr>
             <tr>
-                <td><strong>Versements payés</strong></td>
-                <td class="text-right"><span class="badge badge-success">{{ $stats['versementsPayes'] }}</span></td>
+                <td>Versements payés</td>
+                <td class="text-right"><span class="badge badge-success">{{ $stats['versementsPayes'] ?? 0 }}</span></td>
             </tr>
             <tr>
-                <td><strong>Versements en retard</strong></td>
-                <td class="text-right"><span class="badge badge-danger">{{ $stats['versementsEnRetard'] }}</span></td>
+                <td>Versements partiels</td>
+                <td class="text-right"><span class="badge badge-warning">{{ $stats['versementsPartiels'] ?? 0 }}</span></td>
+            </tr>
+            <tr>
+                <td>Versements en retard</td>
+                <td class="text-right"><span class="badge badge-danger">{{ $stats['versementsEnRetard'] ?? 0 }}</span></td>
             </tr>
             <tr>
                 <td><strong>Moyenne journalière</strong></td>
-                <td class="text-right">{{ number_format($stats['moyenneJournaliere'] ?? 0) }} FC</td>
+                <td class="text-right"><strong>{{ number_format($stats['moyenneJournaliere'] ?? 0) }} FC</strong></td>
             </tr>
             <tr>
-                <td><strong>Nombre de motards actifs</strong></td>
+                <td>Motards actifs</td>
                 <td class="text-right">{{ $stats['motardsActifs'] ?? 0 }}</td>
             </tr>
             <tr>
-                <td><strong>Nombre de motos actives</strong></td>
+                <td>Motos actives</td>
                 <td class="text-right">{{ $stats['motosActives'] ?? 0 }}</td>
             </tr>
         </table>
@@ -64,88 +78,50 @@
             <thead>
                 <tr>
                     <th>Semaine</th>
-                    <th class="text-right">Montant Collecté</th>
-                    <th class="text-right">Nb Versements</th>
+                    <th class="text-right">Montant</th>
+                    <th class="text-right">% Total</th>
                 </tr>
             </thead>
             <tbody>
+                @php $totalMois = max(1, $stats['totalCollecte'] ?? 1); @endphp
                 @foreach($stats['versementsParSemaine'] as $semaine)
+                @php $pct = round((($semaine->total ?? 0) / $totalMois) * 100, 1); @endphp
                 <tr>
-                    <td>Semaine {{ $semaine->semaine }}</td>
-                    <td class="amount">{{ number_format($semaine->total) }} FC</td>
-                    <td class="text-center">{{ $semaine->count }}</td>
+                    <td>{{ $semaine->semaine ?? 'N/A' }}</td>
+                    <td class="amount">{{ number_format($semaine->total ?? 0) }} FC</td>
+                    <td class="text-right">{{ $pct }}%</td>
                 </tr>
                 @endforeach
                 <tr class="total-row">
                     <td><strong>TOTAL</strong></td>
-                    <td class="amount"><strong>{{ number_format($stats['totalCollecte']) }} FC</strong></td>
-                    <td class="text-center"><strong>{{ $stats['nombreVersements'] }}</strong></td>
+                    <td class="amount"><strong>{{ number_format($stats['totalCollecte'] ?? 0) }} FC</strong></td>
+                    <td class="text-right"><strong>100%</strong></td>
                 </tr>
             </tbody>
         </table>
     </div>
     @endif
 
-    <!-- Comparaison avec le mois précédent -->
-    @if(isset($stats['comparaison']))
-    <div class="section">
-        <h3 class="section-title">Comparaison avec le Mois Précédent</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Indicateur</th>
-                    <th class="text-right">Mois Actuel</th>
-                    <th class="text-right">Mois Précédent</th>
-                    <th class="text-right">Évolution</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Total Collecté</td>
-                    <td class="amount">{{ number_format($stats['totalCollecte']) }} FC</td>
-                    <td class="amount">{{ number_format($stats['comparaison']['totalPrecedent'] ?? 0) }} FC</td>
-                    <td class="text-right">
-                        @php
-                            $evolution = $stats['comparaison']['evolution'] ?? 0;
-                        @endphp
-                        <span class="badge {{ $evolution >= 0 ? 'badge-success' : 'badge-danger' }}">
-                            {{ $evolution >= 0 ? '+' : '' }}{{ number_format($evolution, 1) }}%
-                        </span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Nombre de Versements</td>
-                    <td class="text-center">{{ $stats['nombreVersements'] }}</td>
-                    <td class="text-center">{{ $stats['comparaison']['nbVersementsPrecedent'] ?? 0 }}</td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    @endif
-
-    <!-- Top motards du mois -->
+    <!-- Top motards -->
     @if(isset($stats['topMotards']) && count($stats['topMotards']) > 0)
     <div class="section">
-        <h3 class="section-title">Top 10 Motards du Mois</h3>
+        <h3 class="section-title">Top 10 Motards</h3>
         <table>
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Motard</th>
-                    <th class="text-right">Total Versé</th>
-                    <th class="text-center">Nb Versements</th>
-                    <th class="text-right">Moyenne/Jour</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-center">Nb</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($stats['topMotards'] as $index => $motard)
+                @foreach($stats['topMotards'] as $i => $m)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $motard->motard->user->name ?? 'N/A' }}</td>
-                    <td class="amount">{{ number_format($motard->total) }} FC</td>
-                    <td class="text-center">{{ $motard->count }}</td>
-                    <td class="amount">{{ number_format($motard->count > 0 ? $motard->total / $motard->count : 0) }} FC</td>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $m->motard->user->name ?? 'N/A' }}</td>
+                    <td class="amount">{{ number_format($m->total ?? 0) }} FC</td>
+                    <td class="text-center">{{ $m->nb_versements ?? $m->count ?? 0 }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -153,54 +129,68 @@
     </div>
     @endif
 
-    <!-- Paiements propriétaires -->
-    @if(isset($stats['paiementsProprietaires']))
+    <!-- Paiements & Maintenance -->
     <div class="section">
-        <h3 class="section-title">Paiements Propriétaires</h3>
+        <h3 class="section-title">Paiements & Maintenance</h3>
         <table>
+            @if(isset($stats['paiementsProprietaires']))
             <tr>
-                <td><strong>Total versé aux propriétaires</strong></td>
+                <td style="width: 70%;">Total versé aux propriétaires</td>
                 <td class="amount">{{ number_format($stats['paiementsProprietaires']['totalPaye'] ?? 0) }} FC</td>
             </tr>
             <tr>
-                <td><strong>Nombre de paiements</strong></td>
+                <td>Paiements effectués</td>
                 <td class="text-right">{{ $stats['paiementsProprietaires']['nombrePaiements'] ?? 0 }}</td>
             </tr>
-            <tr>
-                <td><strong>En attente</strong></td>
-                <td class="text-right"><span class="badge badge-warning">{{ $stats['paiementsProprietaires']['enAttente'] ?? 0 }}</span></td>
-            </tr>
-        </table>
-    </div>
-    @endif
-
-    <!-- Maintenance et Accidents -->
-    @if(isset($stats['maintenance']) || isset($stats['accidents']))
-    <div class="section">
-        <h3 class="section-title">Maintenance & Accidents</h3>
-        <table>
+            @endif
             @if(isset($stats['maintenance']))
             <tr>
-                <td><strong>Maintenances effectuées</strong></td>
+                <td>Maintenances</td>
                 <td class="text-right">{{ $stats['maintenance']['total'] ?? 0 }}</td>
             </tr>
             <tr>
-                <td><strong>Coût total maintenance</strong></td>
+                <td>Coût maintenance</td>
                 <td class="amount">{{ number_format($stats['maintenance']['cout'] ?? 0) }} FC</td>
             </tr>
             @endif
             @if(isset($stats['accidents']))
             <tr>
-                <td><strong>Accidents déclarés</strong></td>
+                <td>Accidents</td>
                 <td class="text-right">{{ $stats['accidents']['total'] ?? 0 }}</td>
             </tr>
             <tr>
-                <td><strong>Coût total accidents</strong></td>
+                <td>Coût accidents</td>
                 <td class="amount">{{ number_format($stats['accidents']['cout'] ?? 0) }} FC</td>
             </tr>
             @endif
         </table>
     </div>
-    @endif
+
+    <!-- Bilan -->
+    <div class="section">
+        <h3 class="section-title">Bilan Financier</h3>
+        <table>
+            <tr style="background: #e8f5e9;">
+                <td style="width: 70%;"><strong>Recettes (versements)</strong></td>
+                <td class="amount" style="color: #2e7d32;"><strong>+ {{ number_format($stats['totalCollecte'] ?? 0) }} FC</strong></td>
+            </tr>
+            @php
+                $depenses = ($stats['paiementsProprietaires']['totalPaye'] ?? 0) + ($stats['maintenance']['cout'] ?? 0) + ($stats['accidents']['cout'] ?? 0);
+                $solde = ($stats['totalCollecte'] ?? 0) - $depenses;
+            @endphp
+            <tr style="background: #ffebee;">
+                <td><strong>Dépenses</strong></td>
+                <td class="amount" style="color: #c62828;"><strong>- {{ number_format($depenses) }} FC</strong></td>
+            </tr>
+            <tr class="total-row">
+                <td><strong>SOLDE NET</strong></td>
+                <td class="amount" style="color: {{ $solde >= 0 ? '#2e7d32' : '#c62828' }};"><strong>{{ $solde >= 0 ? '+' : '' }}{{ number_format($solde) }} FC</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer-note">
+        <strong>Note:</strong> Rapport généré automatiquement. Montants en Francs Congolais (FC).
+    </div>
 @endsection
 

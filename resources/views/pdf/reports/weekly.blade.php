@@ -2,48 +2,58 @@
 
 @section('content')
     <!-- Statistiques principales -->
-    <div class="stats-grid">
-        <div class="stat-box stat-success">
-            <div class="value">{{ number_format($stats['totalCollecte']) }} FC</div>
-            <div class="label">Total Collecté</div>
-        </div>
-        <div class="stat-box stat-info">
-            <div class="value">{{ number_format($stats['totalAttendu']) }} FC</div>
-            <div class="label">Total Attendu</div>
-        </div>
-        <div class="stat-box stat-warning">
-            <div class="value">{{ number_format($stats['arrieres']) }} FC</div>
-            <div class="label">Arriérés</div>
-        </div>
-        <div class="stat-box">
-            <div class="value">{{ $stats['tauxRecouvrement'] }}%</div>
-            <div class="label">Taux Recouvrement</div>
-        </div>
-    </div>
+    <table class="stats-grid">
+        <tr>
+            <td class="stat-success">
+                <div class="stat-box">
+                    <div class="value">{{ number_format($stats['totalCollecte'] ?? 0) }} FC</div>
+                    <div class="label">Total Collecté</div>
+                </div>
+            </td>
+            <td class="stat-info">
+                <div class="stat-box">
+                    <div class="value">{{ number_format($stats['totalAttendu'] ?? 0) }} FC</div>
+                    <div class="label">Total Attendu</div>
+                </div>
+            </td>
+            <td class="stat-warning">
+                <div class="stat-box">
+                    <div class="value">{{ number_format($stats['arrieres'] ?? 0) }} FC</div>
+                    <div class="label">Arriérés</div>
+                </div>
+            </td>
+            <td>
+                <div class="stat-box">
+                    <div class="value">{{ $stats['tauxRecouvrement'] ?? 0 }}%</div>
+                    <div class="label">Taux Recouvrement</div>
+                </div>
+            </td>
+        </tr>
+    </table>
 
     <!-- Résumé -->
     <div class="section">
         <h3 class="section-title">Résumé de la Semaine</h3>
         <table>
             <tr>
-                <td><strong>Nombre de jours travaillés</strong></td>
-                <td class="text-right">{{ $stats['joursAvecVersements'] ?? 0 }}</td>
+                <td style="width: 70%;"><strong>Nombre de jours travaillés</strong></td>
+                <td class="text-right">{{ $stats['joursAvecVersements'] ?? 0 }} jour(s)</td>
             </tr>
             <tr>
                 <td><strong>Total des versements</strong></td>
-                <td class="text-right">{{ $stats['nombreVersements'] }}</td>
+                <td class="text-right"><strong>{{ $stats['nombreVersements'] ?? 0 }}</strong></td>
             </tr>
             <tr>
-                <td><strong>Versements payés</strong></td>
-                <td class="text-right"><span class="badge badge-success">{{ $stats['versementsPayes'] }}</span></td>
+                <td>Versements payés</td>
+                <td class="text-right"><span class="badge badge-success">{{ $stats['versementsPayes'] ?? 0 }}</span></td>
             </tr>
             <tr>
-                <td><strong>Versements en retard</strong></td>
-                <td class="text-right"><span class="badge badge-danger">{{ $stats['versementsEnRetard'] }}</span></td>
+                <td>Versements en retard</td>
+                <td class="text-right"><span class="badge badge-danger">{{ $stats['versementsEnRetard'] ?? 0 }}</span></td>
             </tr>
             <tr>
                 <td><strong>Moyenne journalière</strong></td>
-                <td class="text-right">{{ number_format($stats['moyenneJournaliere'] ?? 0) }} FC</td>
+                <td class="text-right"><strong>{{ number_format($stats['moyenneJournaliere'] ?? 0) }} FC</strong></td>
             </tr>
         </table>
     </div>
@@ -51,27 +61,29 @@
     <!-- Versements par jour -->
     @if(isset($stats['versementsParJour']) && count($stats['versementsParJour']) > 0)
     <div class="section">
-        <h3 class="section-title">Versements par Jour</h3>
+        <h3 class="section-title">Détail par Jour</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th class="text-right">Montant Collecté</th>
-                    <th class="text-right">Nb Versements</th>
+                    <th>Jour</th>
+                    <th class="text-right">Montant</th>
+                    <th class="text-right">% Total</th>
                 </tr>
             </thead>
             <tbody>
+                @php $totalSemaine = max(1, $stats['totalCollecte'] ?? 1); @endphp
                 @foreach($stats['versementsParJour'] as $jour)
+                @php $pct = round((($jour->total ?? 0) / $totalSemaine) * 100, 1); @endphp
                 <tr>
-                    <td>{{ \Carbon\Carbon::parse($jour->date)->format('d/m/Y') }} ({{ \Carbon\Carbon::parse($jour->date)->locale('fr')->dayName }})</td>
-                    <td class="amount">{{ number_format($jour->total) }} FC</td>
-                    <td class="text-center">{{ $jour->count }}</td>
+                    <td>{{ $jour->date ?? 'N/A' }}</td>
+                    <td class="amount">{{ number_format($jour->total ?? 0) }} FC</td>
+                    <td class="text-right">{{ $pct }}%</td>
                 </tr>
                 @endforeach
                 <tr class="total-row">
                     <td><strong>TOTAL</strong></td>
-                    <td class="amount"><strong>{{ number_format($stats['totalCollecte']) }} FC</strong></td>
-                    <td class="text-center"><strong>{{ $stats['nombreVersements'] }}</strong></td>
+                    <td class="amount"><strong>{{ number_format($stats['totalCollecte'] ?? 0) }} FC</strong></td>
+                    <td class="text-right"><strong>100%</strong></td>
                 </tr>
             </tbody>
         </table>
@@ -81,28 +93,32 @@
     <!-- Top motards -->
     @if(isset($stats['topMotards']) && count($stats['topMotards']) > 0)
     <div class="section">
-        <h3 class="section-title">Top 10 Motards de la Semaine</h3>
+        <h3 class="section-title">Top 10 Motards</h3>
         <table>
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Motard</th>
-                    <th class="text-right">Total Versé</th>
-                    <th class="text-center">Nb Versements</th>
+                    <th class="text-right">Total</th>
+                    <th class="text-center">Nb</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($stats['topMotards'] as $index => $motard)
+                @foreach($stats['topMotards'] as $i => $m)
                 <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ $motard->motard->user->name ?? 'N/A' }}</td>
-                    <td class="amount">{{ number_format($motard->total) }} FC</td>
-                    <td class="text-center">{{ $motard->count }}</td>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $m->motard->user->name ?? 'N/A' }}</td>
+                    <td class="amount">{{ number_format($m->total ?? 0) }} FC</td>
+                    <td class="text-center">{{ $m->count ?? 0 }}</td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
     @endif
+
+    <div class="footer-note">
+        <strong>Note:</strong> Rapport généré automatiquement. Montants en Francs Congolais (FC).
+    </div>
 @endsection
 

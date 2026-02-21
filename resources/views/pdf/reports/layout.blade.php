@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <title>{{ $title ?? 'Rapport' }}</title>
     <style>
+        @page {
+            margin: 15mm 10mm 20mm 10mm;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -11,95 +14,99 @@
         }
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 10px;
+            line-height: 1.3;
             color: #333;
         }
         .header {
-            background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+            background: #1a237e;
             color: white;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 12px 15px;
+            margin: -15mm -10mm 15px -10mm;
+            width: calc(100% + 20mm);
         }
         .header h1 {
-            font-size: 18px;
-            margin-bottom: 5px;
+            font-size: 16px;
+            margin-bottom: 3px;
         }
         .header p {
-            font-size: 11px;
+            font-size: 9px;
             opacity: 0.9;
+            margin: 0;
         }
         .company-info {
             float: right;
             text-align: right;
-            font-size: 10px;
+            font-size: 8px;
+            margin-top: -30px;
         }
         .company-info strong {
-            font-size: 12px;
+            font-size: 10px;
         }
         .content {
-            padding: 0 20px;
+            padding: 0;
         }
         .stats-grid {
-            display: table;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            border-collapse: collapse;
         }
-        .stat-box {
-            display: table-cell;
+        .stats-grid td {
             width: 25%;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
             border: 1px solid #e0e0e0;
             background: #f5f5f5;
         }
         .stat-box .value {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             color: #1a237e;
         }
         .stat-box .label {
-            font-size: 9px;
+            font-size: 8px;
             color: #666;
             text-transform: uppercase;
+            margin-top: 2px;
         }
-        .stat-success { background: #e8f5e9; }
+        .stat-success { background: #e8f5e9 !important; }
         .stat-success .value { color: #2e7d32; }
-        .stat-warning { background: #fff3e0; }
+        .stat-warning { background: #fff3e0 !important; }
         .stat-warning .value { color: #ef6c00; }
-        .stat-danger { background: #ffebee; }
+        .stat-danger { background: #ffebee !important; }
         .stat-danger .value { color: #c62828; }
-        .stat-info { background: #e3f2fd; }
+        .stat-info { background: #e3f2fd !important; }
         .stat-info .value { color: #1565c0; }
 
         .section {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
+            page-break-inside: avoid;
         }
         .section-title {
-            font-size: 13px;
+            font-size: 11px;
             font-weight: bold;
             color: #1a237e;
             border-bottom: 2px solid #1a237e;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         table th {
             background: #1a237e;
             color: white;
-            padding: 8px 5px;
+            padding: 5px 4px;
             text-align: left;
-            font-size: 10px;
+            font-size: 8px;
             text-transform: uppercase;
         }
         table td {
-            padding: 6px 5px;
+            padding: 4px;
             border-bottom: 1px solid #e0e0e0;
-            font-size: 10px;
+            font-size: 9px;
         }
         table tr:nth-child(even) {
             background: #f9f9f9;
@@ -108,9 +115,9 @@
         .text-center { text-align: center; }
         .badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 8px;
             font-weight: bold;
         }
         .badge-success { background: #c8e6c9; color: #2e7d32; }
@@ -118,20 +125,6 @@
         .badge-danger { background: #ffcdd2; color: #c62828; }
         .badge-info { background: #bbdefb; color: #1565c0; }
 
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 10px 20px;
-            background: #f5f5f5;
-            border-top: 1px solid #e0e0e0;
-            font-size: 9px;
-            color: #666;
-        }
-        .footer .page-number {
-            float: right;
-        }
         .amount {
             font-family: 'DejaVu Sans Mono', monospace;
             text-align: right;
@@ -140,36 +133,43 @@
             font-weight: bold;
             background: #e8eaf6 !important;
         }
-        .clearfix::after {
-            content: "";
-            clear: both;
-            display: table;
+        .footer-note {
+            margin-top: 15px;
+            padding: 8px;
+            background: #f5f5f5;
+            font-size: 8px;
+            border-radius: 3px;
+        }
+        .page-footer {
+            position: fixed;
+            bottom: -15mm;
+            left: 0;
+            right: 0;
+            height: 12mm;
+            font-size: 8px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 3mm;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="header clearfix">
+    <div class="header">
+        <h1>{{ $title ?? 'Rapport' }}</h1>
+        <p>{{ $subtitle ?? '' }} | Généré le {{ now()->format('d/m/Y à H:i') }}</p>
         <div class="company-info">
             <strong>New Technology Hub Sarl</strong><br>
-            Gestion Motos-Tricycles<br>
             Kinshasa, RDC
         </div>
-        <h1>{{ $title ?? 'Rapport' }}</h1>
-        <p>{{ $subtitle ?? '' }}</p>
-        <p>Généré le {{ now()->format('d/m/Y à H:i') }}</p>
     </div>
 
     <div class="content">
         @yield('content')
     </div>
 
-    <div class="footer">
-        <span>© {{ date('Y') }} New Technology Hub Sarl - Système de Gestion des Motos-Tricycles</span>
-        <span class="page-number">Page <script type="text/php">
-            if (isset($pdf)) {
-                $pdf->page_text(520, 820, "Page {PAGE_NUM} / {PAGE_COUNT}", null, 9, array(0,0,0));
-            }
-        </script></span>
+    <div class="page-footer">
+        © {{ date('Y') }} New Technology Hub Sarl - Système de Gestion des Motos-Tricycles
     </div>
 </body>
 </html>
