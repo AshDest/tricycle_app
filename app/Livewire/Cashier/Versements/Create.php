@@ -127,11 +127,12 @@ class Create extends Component
         // Mettre à jour le solde du caissier
         $caissier->increment('solde_actuel', $montantVerse);
 
-        // Stocker l'ID pour le téléchargement du reçu
-        $this->dernierVersementId = $versement->id;
+        // Message de succès avec l'ID du versement pour télécharger le reçu
+        session()->flash('success', 'Versement de ' . number_format($montantVerse) . ' FC enregistré avec succès.');
+        session()->flash('dernierVersementId', $versement->id);
 
-        // Générer et télécharger le reçu PDF
-        return $this->telechargerRecu($versement->id);
+        // Rediriger vers la liste des versements
+        return redirect()->route('cashier.versements.index');
     }
 
     /**

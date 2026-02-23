@@ -15,7 +15,16 @@
     <!-- Messages Flash -->
     @if (session()->has('success'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+            </div>
+            @if(session()->has('dernierVersementId'))
+            <button wire:click="telechargerRecu({{ session('dernierVersementId') }})" class="btn btn-sm btn-success ms-3">
+                <i class="bi bi-download me-1"></i>Télécharger le reçu
+            </button>
+            @endif
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     @endif
