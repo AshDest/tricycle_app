@@ -12,6 +12,21 @@
         </a>
     </div>
 
+    <!-- Messages Flash -->
+    @if (session()->has('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
+    @if (session()->has('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <!-- Stats du jour -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-3">
@@ -109,6 +124,7 @@
                         @forelse($versements ?? [] as $versement)
                         @php
                             $ecart = ($versement->montant ?? 0) - ($versement->montant_attendu ?? 0);
+                            $peutCompleter = $ecart < 0 && $versement->date_versement?->isToday();
                         @endphp
                         <tr class="{{ $ecart < 0 ? 'table-warning' : '' }}">
                             <td class="ps-4">
@@ -165,9 +181,16 @@
                                 <i class="bi bi-clock me-1"></i>{{ $versement->created_at?->format('H:i') }}
                             </td>
                             <td class="text-end pe-4">
-                                <button wire:click="telechargerRecu({{ $versement->id }})" class="btn btn-sm btn-outline-danger" title="Télécharger le reçu">
-                                    <i class="bi bi-receipt"></i>
-                                </button>
+                                <div class="d-flex gap-1 justify-content-end">
+                                    @if($peutCompleter)
+                                    <button wire:click="ouvrirComplement({{ $versement->id }})" class="btn btn-sm btn-warning" title="Compléter le versement">
+                                        <i class="bi bi-plus-circle"></i>
+                                    </button>
+                                    @endif
+                                    <button wire:click="telechargerRecu({{ $versement->id }})" class="btn btn-sm btn-outline-danger" title="Télécharger le reçu">
+                                        <i class="bi bi-receipt"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         @empty
@@ -191,4 +214,95 @@
         </div>
         @endif
     </div>
+
+    <!-- Modal de complément -->
+    @if($showComplementModal && $versementACompleter)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning bg-opacity-10">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2 text-warning"></i>Compléter le Versement
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="fermerComplement"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Info Motard -->
+                    <div class="d-flex align-items-center gap-3 p-3 bg-light rounded mb-4">
+                        <div class="avatar avatar-md bg-warning bg-opacity-10 text-warning rounded-circle">
+                            {{ strtoupper(substr($versementACompleter->motard->user->name ?? 'M', 0, 1)) }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">{{ $versementACompleter->motard->user->name ?? 'N/A' }}</h6>
+                            <small class="text-muted">{{ $versementACompleter->moto->plaque_immatriculation ?? '' }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Détails du versement -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted d-block">Montant versé</small>
+                                <span class="fw-bold text-primary">{{ number_format($versementACompleter->montant ?? 0) }} FC</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <small class="text-muted d-block">Montant attendu</small>
+                                <span class="fw-bold">{{ number_format($versementACompleter->montant_attendu ?? 0) }} FC</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+                        <i class="bi bi-exclamation-triangle fs-5"></i>
+                        <div>
+                            <strong>Montant manquant:</strong> {{ number_format($montantManquant) }} FC
+                        </div>
+                    </div>
+
+                    <!-- Formulaire -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Montant du complément <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" wire:model="montantComplement" class="form-control form-control-lg @error('montantComplement') is-invalid @enderror" placeholder="0" min="1">
+                            <span class="input-group-text">FC</span>
+                        </div>
+                        @error('montantComplement')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" wire:click="$set('montantComplement', {{ $montantManquant }})" class="btn btn-sm btn-outline-warning">
+                                Montant exact ({{ number_format($montantManquant) }} FC)
+                            </button>
+                        </div>
+                    </div>
+
+                    @if($montantComplement && $montantComplement > 0)
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nouveau total après complément: <strong>{{ number_format(($versementACompleter->montant ?? 0) + (float)$montantComplement) }} FC</strong>
+                        @if((float)$montantComplement >= $montantManquant)
+                        <span class="badge bg-success ms-2">Complet</span>
+                        @endif
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" wire:click="fermerComplement">
+                        <i class="bi bi-x-lg me-1"></i>Annuler
+                    </button>
+                    <button type="button" class="btn btn-warning" wire:click="enregistrerComplement" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="enregistrerComplement">
+                            <i class="bi bi-check-lg me-1"></i>Enregistrer le Complément
+                        </span>
+                        <span wire:loading wire:target="enregistrerComplement">
+                            <span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Versement;
+use App\Models\Motard;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -26,6 +27,12 @@ class Index extends Component
     public $soldeEnCaisse = 0;
     public $motardsServisJour = 0;
 
+    // Modal de complément
+    public $showComplementModal = false;
+    public $versementACompleter = null;
+    public $montantComplement = '';
+    public $montantManquant = 0;
+
     protected $queryString = ['search', 'filterStatut', 'filterMode', 'filterDate'];
 
     public function updatingSearch() { $this->resetPage(); }
@@ -39,9 +46,81 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function voirDetails($versementId)
+    /**
+     * Ouvrir le modal pour compléter un versement
+     */
+    public function ouvrirComplement($versementId)
     {
-        // Peut ouvrir un modal ou rediriger
+        $this->versementACompleter = Versement::with(['motard.user', 'moto'])->find($versementId);
+
+        if ($this->versementACompleter) {
+            $this->montantManquant = max(0, ($this->versementACompleter->montant_attendu ?? 0) - ($this->versementACompleter->montant ?? 0));
+            $this->montantComplement = $this->montantManquant;
+            $this->showComplementModal = true;
+        }
+    }
+
+    /**
+     * Fermer le modal
+     */
+    public function fermerComplement()
+    {
+        $this->showComplementModal = false;
+        $this->versementACompleter = null;
+        $this->montantComplement = '';
+        $this->montantManquant = 0;
+    }
+
+    /**
+     * Enregistrer le complément de versement
+     */
+    public function enregistrerComplement()
+    {
+        $this->validate([
+            'montantComplement' => 'required|numeric|min:1',
+        ], [
+            'montantComplement.required' => 'Le montant est obligatoire.',
+            'montantComplement.min' => 'Le montant doit être supérieur à 0.',
+        ]);
+
+        if (!$this->versementACompleter) {
+            session()->flash('error', 'Versement non trouvé.');
+            return;
+        }
+
+        $caissier = auth()->user()->caissier;
+        $montantComplement = (float) $this->montantComplement;
+        $versement = $this->versementACompleter;
+
+        // Mettre à jour le versement existant
+        $nouveauMontant = ($versement->montant ?? 0) + $montantComplement;
+        $montantAttendu = $versement->montant_attendu ?? 0;
+
+        // Calculer le nouveau statut
+        if ($nouveauMontant >= $montantAttendu) {
+            $nouveauStatut = 'paye';
+        } else {
+            $nouveauStatut = 'partiel';
+        }
+
+        // Calculer les arriérés restants pour ce versement
+        $nouveauxArrieres = max(0, $montantAttendu - $nouveauMontant);
+
+        $versement->update([
+            'montant' => $nouveauMontant,
+            'arrieres' => $nouveauxArrieres,
+            'statut' => $nouveauStatut,
+            'notes' => ($versement->notes ? $versement->notes . "\n" : '') .
+                       "[Complément de " . number_format($montantComplement) . " FC le " . now()->format('d/m/Y H:i') . "]",
+        ]);
+
+        // Mettre à jour le solde du caissier
+        $caissier->increment('solde_actuel', $montantComplement);
+
+        // Fermer le modal
+        $this->fermerComplement();
+
+        session()->flash('success', 'Complément de ' . number_format($montantComplement) . ' FC enregistré avec succès.');
     }
 
     /**

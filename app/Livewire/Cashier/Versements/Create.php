@@ -72,40 +72,105 @@ class Create extends Component
 
         // Montant attendu depuis la moto ou paramètre système
         $montantAttendu = $moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
+        $montantVerse = (float) $this->montant;
 
-        // Le statut sera déterminé automatiquement
-        $statut = 'non_effectue';
-        if ($this->montant >= $montantAttendu) {
+        // Récupérer les arriérés cumulés du motard
+        $arrieresCumules = $motard->getTotalArrieres();
+
+        // Déterminer le statut et les arriérés
+        $excedent = 0;
+        $arrieresDuJour = 0;
+        $remboursementArrieres = 0;
+        $notesSupplementaires = '';
+
+        if ($montantVerse >= $montantAttendu) {
+            // Le montant couvre au moins le versement du jour
             $statut = 'paye';
-        } elseif ($this->montant > 0) {
+            $arrieresDuJour = 0;
+
+            // Vérifier s'il y a un excédent pour rembourser les arriérés
+            $excedent = $montantVerse - $montantAttendu;
+
+            if ($excedent > 0 && $arrieresCumules > 0) {
+                // L'excédent va rembourser les arriérés anciens
+                $remboursementArrieres = min($excedent, $arrieresCumules);
+                $notesSupplementaires = "Excédent de " . number_format($excedent) . " FC utilisé pour rembourser " . number_format($remboursementArrieres) . " FC d'arriérés.";
+
+                // Mettre à jour les anciens versements partiels pour réduire leurs arriérés
+                $this->rembourserArrieres($motard, $remboursementArrieres);
+            }
+        } elseif ($montantVerse > 0) {
+            // Versement partiel
             $statut = 'partiel';
+            $arrieresDuJour = $montantAttendu - $montantVerse;
+            $notesSupplementaires = "Montant insuffisant. Arriéré du jour: " . number_format($arrieresDuJour) . " FC";
+        } else {
+            $statut = 'non_effectue';
+            $arrieresDuJour = $montantAttendu;
         }
 
-        // Calcul des arriérés
-        $arrieres = max(0, $montantAttendu - $this->montant);
-
+        // Créer le versement
         $versement = Versement::create([
             'motard_id' => $this->motard_id,
             'moto_id' => $moto?->id,
             'caissier_id' => $caissier->id,
-            'montant' => $this->montant,
+            'montant' => $montantVerse,
             'montant_attendu' => $montantAttendu,
-            'arrieres' => $arrieres,
+            'arrieres' => $arrieresDuJour,
             'mode_paiement' => $this->mode_paiement,
             'statut' => $statut,
             'date_versement' => Carbon::today(),
             'validated_by_caissier_at' => Carbon::now(),
-            'notes' => $this->notes,
+            'notes' => trim(($this->notes ? $this->notes . "\n" : '') . $notesSupplementaires),
         ]);
 
         // Mettre à jour le solde du caissier
-        $caissier->increment('solde_actuel', $this->montant);
+        $caissier->increment('solde_actuel', $montantVerse);
 
         // Stocker l'ID pour le téléchargement du reçu
         $this->dernierVersementId = $versement->id;
 
         // Générer et télécharger le reçu PDF
         return $this->telechargerRecu($versement->id);
+    }
+
+    /**
+     * Rembourser les arriérés des anciens versements
+     */
+    protected function rembourserArrieres(Motard $motard, float $montantRemboursement)
+    {
+        if ($montantRemboursement <= 0) return;
+
+        // Récupérer les versements avec arriérés, du plus ancien au plus récent
+        $versementsAvecArrieres = Versement::where('motard_id', $motard->id)
+            ->where('arrieres', '>', 0)
+            ->orderBy('date_versement', 'asc')
+            ->get();
+
+        $restant = $montantRemboursement;
+
+        foreach ($versementsAvecArrieres as $versement) {
+            if ($restant <= 0) break;
+
+            $arriereActuel = $versement->arrieres;
+            $remboursement = min($restant, $arriereActuel);
+
+            // Mettre à jour le versement
+            $nouveauMontant = $versement->montant + $remboursement;
+            $nouveauxArrieres = $arriereActuel - $remboursement;
+
+            $nouveauStatut = $nouveauxArrieres <= 0 ? 'paye' : 'partiel';
+
+            $versement->update([
+                'montant' => $nouveauMontant,
+                'arrieres' => max(0, $nouveauxArrieres),
+                'statut' => $nouveauStatut,
+                'notes' => ($versement->notes ? $versement->notes . "\n" : '') .
+                           "[Remboursement de " . number_format($remboursement) . " FC le " . now()->format('d/m/Y') . "]",
+            ]);
+
+            $restant -= $remboursement;
+        }
     }
 
     public function telechargerRecu($versementId)

@@ -102,7 +102,17 @@
                                 <div class="alert alert-success py-2 mb-0">
                                     <i class="bi bi-check-circle me-2"></i>
                                     <strong>Versement complet</strong> - Le montant couvre le tarif journalier
-                                    @if($ecart > 0)
+                                    @if($ecart > 0 && $arrieresCumules > 0)
+                                    <div class="mt-2 pt-2 border-top border-success">
+                                        <i class="bi bi-arrow-repeat me-1"></i>
+                                        Excédent de <strong>{{ number_format($ecart) }} FC</strong> sera utilisé pour rembourser les arriérés
+                                        @if($ecart >= $arrieresCumules)
+                                        <span class="badge bg-success ms-1">Arriérés soldés!</span>
+                                        @else
+                                        <span class="badge bg-warning ms-1">Reste: {{ number_format($arrieresCumules - $ecart) }} FC</span>
+                                        @endif
+                                    </div>
+                                    @elseif($ecart > 0)
                                     <span class="badge bg-success ms-2">+{{ number_format($ecart) }} FC</span>
                                     @endif
                                 </div>
@@ -110,6 +120,12 @@
                                 <div class="alert alert-warning py-2 mb-0">
                                     <i class="bi bi-exclamation-triangle me-2"></i>
                                     <strong>Versement partiel</strong> - Arriéré de ce jour: <strong class="text-danger">{{ number_format(abs($ecart)) }} FC</strong>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Ce montant sera ajouté aux arriérés cumulés. Le motard pourra compléter ultérieurement.
+                                        </small>
+                                    </div>
                                 </div>
                                 @endif
                             </div>
