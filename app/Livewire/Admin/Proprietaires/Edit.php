@@ -43,6 +43,7 @@ class Edit extends Component
         // Remplir les champs utilisateur
         $this->name = $proprietaire->user->name ?? '';
         $this->email = $proprietaire->user->email ?? '';
+        $this->phone = $proprietaire->user->phone ?? '';
 
         // Remplir les champs propriétaire
         $this->raison_sociale = $proprietaire->raison_sociale ?? '';
@@ -94,6 +95,7 @@ class Edit extends Component
             $userData = [
                 'name' => $this->name,
                 'email' => $this->email,
+                'phone' => $this->phone ?: null,
             ];
 
             if (!empty($this->password)) {
@@ -105,7 +107,7 @@ class Edit extends Component
             // Mettre à jour le profil propriétaire
             $this->proprietaire->update([
                 'raison_sociale' => $this->raison_sociale ?: null,
-                'telephone' => $this->contact_phone ?: null,
+                'telephone' => $this->contact_phone ?: $this->phone ?: null,
                 'adresse' => $this->adresse ?: null,
                 'numero_compte_mpesa' => $this->numero_compte_mpesa ?: null,
                 'numero_compte_airtel' => $this->numero_compte_airtel ?: null,
@@ -117,7 +119,7 @@ class Edit extends Component
             DB::commit();
 
             session()->flash('success', 'Propriétaire mis à jour avec succès.');
-            return redirect()->route('admin.proprietaires.show', $this->proprietaire);
+            return redirect()->route('admin.proprietaires.index');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -127,7 +129,6 @@ class Edit extends Component
 
     public function render()
     {
-        return view('livewire.admin.proprietaires.edit')
-            ->layout('layouts.dashlite', ['title' => 'Modifier Propriétaire']);
+        return view('livewire.admin.proprietaires.edit');
     }
 }

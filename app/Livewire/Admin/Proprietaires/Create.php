@@ -75,6 +75,7 @@ class Create extends Component
             $user = User::create([
                 'name' => $this->name,
                 'email' => $this->email,
+                'phone' => $this->phone ?: null,
                 'password' => Hash::make($this->password),
             ]);
 
@@ -107,7 +108,6 @@ class Create extends Component
 
     public function render()
     {
-        return view('livewire.admin.proprietaires.create')
-            ->layout('layouts.dashlite', ['title' => 'Nouveau Propriétaire']);
+        return view('livewire.admin.proprietaires.create');
     }
 }

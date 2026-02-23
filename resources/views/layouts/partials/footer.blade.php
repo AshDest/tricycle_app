@@ -1,7 +1,7 @@
 <!-- footer @s -->
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
     <div>
-        &copy; {{ date('Y') }} <a href="https://nth-sarl.com" target="_blank" class="text-decoration-none fw-semibold text-primary">New Technology Hub Sarl</a>
+        &copy; {{ date('Y') }} <a href="https://newtechnologyhub.net" target="_blank" class="text-decoration-none fw-semibold text-primary">New Technology Hub Sarl</a>
         <span class="mx-2">•</span>
         <span>Tous droits réservés.</span>
     </div>
