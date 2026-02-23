@@ -46,11 +46,6 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function demanderRetrait()
-    {
-        $this->message = 'La fonctionnalité de demande de retrait sera bientôt disponible. Veuillez contacter l\'administration pour effectuer un retrait.';
-        $this->messageType = 'info';
-    }
 
     public function closeMessage()
     {

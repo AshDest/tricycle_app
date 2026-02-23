@@ -7,14 +7,9 @@
             </h4>
             <p class="text-muted mb-0">Historique de vos paiements reçus</p>
         </div>
-        <div class="d-flex gap-2">
-            <button wire:click="exportPdf" class="btn btn-danger">
-                <i class="bi bi-file-pdf me-1"></i>PDF
-            </button>
-            <button wire:click="demanderRetrait" class="btn btn-success">
-                <i class="bi bi-cash-coin me-1"></i>Demander un Retrait
-            </button>
-        </div>
+        <button wire:click="exportPdf" class="btn btn-danger">
+            <i class="bi bi-file-pdf me-1"></i>Exporter PDF
+        </button>
     </div>
 
     <!-- Message Alert -->
