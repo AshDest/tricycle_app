@@ -98,9 +98,9 @@ class Index extends Component
 
         // Calculer le nouveau statut
         if ($nouveauMontant >= $montantAttendu) {
-            $nouveauStatut = 'paye';
+            $nouveauStatut = 'payé';
         } else {
-            $nouveauStatut = 'partiel';
+            $nouveauStatut = 'partiellement_payé';
         }
 
         // Calculer les arriérés restants pour ce versement

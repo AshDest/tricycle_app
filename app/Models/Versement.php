@@ -86,11 +86,11 @@ class Versement extends Model
         $montantVerse = $this->montant ?? 0;
 
         if ($montantVerse <= 0) {
-            $this->statut = 'non_effectue';
+            $this->statut = 'non_effectué';
         } elseif ($montantVerse >= $montantAttendu) {
-            $this->statut = 'paye';
+            $this->statut = 'payé';
         } elseif ($montantVerse > 0 && $montantVerse < $montantAttendu) {
-            $this->statut = 'partiel';
+            $this->statut = 'partiellement_payé';
         }
     }
 
@@ -239,7 +239,7 @@ class Versement extends Model
      */
     public function scopePartiels($query)
     {
-        return $query->where('statut', 'partiel')
+        return $query->where('statut', 'partiellement_payé')
                      ->orWhereRaw('montant > 0 AND montant < montant_attendu');
     }
 }

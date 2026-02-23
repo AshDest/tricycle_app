@@ -85,7 +85,7 @@ class Create extends Component
 
         if ($montantVerse >= $montantAttendu) {
             // Le montant couvre au moins le versement du jour
-            $statut = 'paye';
+            $statut = 'payé';
             $arrieresDuJour = 0;
 
             // Vérifier s'il y a un excédent pour rembourser les arriérés
@@ -101,11 +101,11 @@ class Create extends Component
             }
         } elseif ($montantVerse > 0) {
             // Versement partiel
-            $statut = 'partiel';
+            $statut = 'partiellement_payé';
             $arrieresDuJour = $montantAttendu - $montantVerse;
             $notesSupplementaires = "Montant insuffisant. Arriéré du jour: " . number_format($arrieresDuJour) . " FC";
         } else {
-            $statut = 'non_effectue';
+            $statut = 'non_effectué';
             $arrieresDuJour = $montantAttendu;
         }
 
@@ -160,7 +160,7 @@ class Create extends Component
             $nouveauMontant = $versement->montant + $remboursement;
             $nouveauxArrieres = $arriereActuel - $remboursement;
 
-            $nouveauStatut = $nouveauxArrieres <= 0 ? 'paye' : 'partiel';
+            $nouveauStatut = $nouveauxArrieres <= 0 ? 'payé' : 'partiellement_payé';
 
             $versement->update([
                 'montant' => $nouveauMontant,

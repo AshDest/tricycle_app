@@ -38,13 +38,13 @@ class PaymentService
     public function calculateStatus(Versement $versement): string
     {
         if ($versement->montant >= $versement->montant_attendu) {
-            return 'paye';
+            return 'payé';
         } elseif ($versement->montant > 0) {
-            return 'partiel';
+            return 'partiellement_payé';
         } elseif (Carbon::parse($versement->date_versement)->isPast()) {
             return 'en_retard';
         }
-        return 'non_effectue';
+        return 'non_effectué';
     }
 
     /**
