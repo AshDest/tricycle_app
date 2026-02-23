@@ -21,7 +21,8 @@
 
     <!-- Header Tools -->
     <div class="d-flex align-items-center gap-3">
-        {{-- Quick Actions (Desktop) --}}
+        {{-- Quick Actions (Desktop) - Only for Admin and Supervisor --}}
+        @if(auth()->user()->hasRole(['admin', 'supervisor']))
         <div class="dropdown d-none d-lg-block">
             <button class="btn btn-primary btn-sm d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
                 <i class="bi bi-plus-lg"></i>
@@ -45,6 +46,7 @@
                 @endrole
             </ul>
         </div>
+        @endif
 
         {{-- Notifications --}}
         <div class="dropdown">

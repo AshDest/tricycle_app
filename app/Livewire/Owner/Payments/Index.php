@@ -54,8 +54,39 @@ class Index extends Component
 
     public function telechargerRecu($paymentId)
     {
-        // Logique pour télécharger le reçu PDF
-        session()->flash('info', 'Téléchargement du reçu en cours...');
+        $payment = Payment::with(['proprietaire.user'])->find($paymentId);
+
+        if (!$payment) {
+            $this->message = 'Paiement non trouvé.';
+            $this->messageType = 'danger';
+            return;
+        }
+
+        // Vérifier que le paiement appartient au propriétaire connecté
+        $proprietaire = auth()->user()->proprietaire;
+        if (!$proprietaire || $payment->proprietaire_id !== $proprietaire->id) {
+            $this->message = 'Vous n\'êtes pas autorisé à télécharger ce reçu.';
+            $this->messageType = 'danger';
+            return;
+        }
+
+        // Vérifier que le paiement est payé
+        if (!in_array($payment->statut, ['paye', 'payé'])) {
+            $this->message = 'Le reçu n\'est disponible que pour les paiements effectués.';
+            $this->messageType = 'warning';
+            return;
+        }
+
+        $pdf = Pdf::loadView('pdf.recu-paiement', compact('payment'));
+
+        // Dimensions d'un petit reçu (80mm x 200mm)
+        $pdf->setPaper([0, 0, 226.77, 566.93], 'portrait');
+
+        $filename = 'recu_paiement_' . $payment->id . '_' . now()->format('YmdHis') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 
     protected function getBaseQuery()
