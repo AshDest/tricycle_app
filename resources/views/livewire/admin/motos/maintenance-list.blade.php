@@ -210,14 +210,9 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                <div class="btn-group">
-                                    <a href="{{ route('admin.motos.show', $moto) }}" class="btn btn-sm btn-outline-primary" title="Voir détails">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.maintenances.create', ['moto_id' => $moto->id]) }}" class="btn btn-sm btn-outline-success" title="Nouvelle maintenance">
-                                        <i class="bi bi-tools"></i>
-                                    </a>
-                                </div>
+                                <a href="{{ route('admin.motos.show', $moto) }}" class="btn btn-sm btn-outline-primary" title="Voir détails">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                             </td>
                         </tr>
                         @empty

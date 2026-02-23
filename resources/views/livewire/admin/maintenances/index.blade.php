@@ -184,9 +184,6 @@
                             <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="bi bi-tools fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucune maintenance enregistrée</p>
-                                <a href="{{ route('admin.maintenances.create') }}" class="btn btn-sm btn-primary mt-3">
-                                    <i class="bi bi-plus-lg me-1"></i>Nouvelle maintenance
-                                </a>
                             </td>
                         </tr>
                         @endforelse
