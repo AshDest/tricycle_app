@@ -66,7 +66,7 @@
             <div class="card bg-info bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <h4 class="fw-bold text-info mb-1">{{ $motardsServisJour ?? 0 }}</h4>
-                    <small class="text-muted">Motards servis</small>
+                    <small class="text-muted">Motards distincts</small>
                 </div>
             </div>
         </div>

@@ -37,12 +37,12 @@
             <div class="card stat-card h-100 border-start border-primary border-4">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Motards Servis</p>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Nbre de Versements</p>
                         <h3 class="fw-bold mb-1">{{ $nombreVersements ?? 0 }}</h3>
                         <small class="text-muted">aujourd'hui</small>
                     </div>
                     <div class="stat-icon bg-primary bg-opacity-10 text-primary">
-                        <i class="bi bi-people"></i>
+                        <i class="bi bi-receipt"></i>
                     </div>
                 </div>
             </div>
