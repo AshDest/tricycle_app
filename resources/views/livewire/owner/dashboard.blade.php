@@ -48,9 +48,9 @@
             <div class="card stat-card h-100 border-start border-info border-4">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Prochain Paiement</p>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Solde Disponible</p>
                         <h3 class="fw-bold text-info mb-1">{{ number_format($prochainPaiement ?? 0) }}</h3>
-                        <small class="text-muted">FC estimé</small>
+                        <small class="text-muted">FC à retirer</small>
                     </div>
                     <div class="stat-icon bg-info bg-opacity-10 text-info">
                         <i class="bi bi-wallet2"></i>
@@ -62,12 +62,12 @@
             <div class="card stat-card h-100 border-start border-warning border-4">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Maintenances</p>
-                        <h3 class="fw-bold mb-1">{{ $maintenancesEnCours ?? 0 }}</h3>
-                        <small class="text-muted">en cours</small>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Arriérés Motards</p>
+                        <h3 class="fw-bold text-{{ ($totalArrieres ?? 0) > 0 ? 'danger' : 'success' }} mb-1">{{ number_format($totalArrieres ?? 0) }}</h3>
+                        <small class="text-muted">FC</small>
                     </div>
                     <div class="stat-icon bg-warning bg-opacity-10 text-warning">
-                        <i class="bi bi-tools"></i>
+                        <i class="bi bi-exclamation-triangle"></i>
                     </div>
                 </div>
             </div>
@@ -89,9 +89,24 @@
                         <a href="{{ route('owner.payments.index') }}" class="btn btn-outline-primary">
                             <i class="bi bi-credit-card me-2"></i>Historique paiements
                         </a>
-                        <a href="{{ route('owner.reports.index') }}" class="btn btn-outline-info">
-                            <i class="bi bi-file-earmark-bar-graph me-2"></i>Mes rapports
-                        </a>
+                    </div>
+
+                    <!-- Résumé -->
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Total revenus</span>
+                            <span class="fw-bold">{{ number_format($revenusTotal ?? 0) }} FC</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Maintenances en cours</span>
+                            <span class="badge bg-warning">{{ $maintenancesEnCours ?? 0 }}</span>
+                        </div>
+                        @if(($paiementsEnAttente ?? 0) > 0)
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Demandes en attente</span>
+                            <span class="badge bg-info">{{ $paiementsEnAttente }}</span>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -99,8 +114,8 @@
         <div class="col-lg-8">
             <div class="card h-100">
                 <div class="card-header d-flex justify-content-between align-items-center py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Derniers Paiements</h6>
-                    <a href="{{ route('owner.payments.index') }}" class="btn btn-sm btn-outline-primary">Voir tout</a>
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Derniers Versements</h6>
+                    <a href="{{ route('owner.versements.index') }}" class="btn btn-sm btn-outline-primary">Voir tout</a>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -108,28 +123,42 @@
                             <thead>
                                 <tr>
                                     <th class="ps-4">Date</th>
-                                    <th>Montant</th>
-                                    <th>Mode</th>
+                                    <th>Motard</th>
+                                    <th>Moto</th>
+                                    <th class="text-end">Montant</th>
                                     <th class="pe-4">Statut</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($derniersPaiements ?? [] as $paiement)
+                                @forelse($derniersVersements ?? [] as $versement)
                                 <tr>
-                                    <td class="ps-4">{{ $paiement->date_paiement?->format('d/m/Y') ?? 'N/A' }}</td>
-                                    <td class="fw-semibold text-success">{{ number_format($paiement->montant ?? 0) }} FC</td>
-                                    <td>{{ ucfirst($paiement->mode_paiement ?? 'N/A') }}</td>
+                                    <td class="ps-4">{{ $versement->date_versement?->format('d/m/Y') ?? 'N/A' }}</td>
+                                    <td>{{ $versement->motard->user->name ?? 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            {{ $versement->moto->plaque_immatriculation ?? 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-semibold text-success">{{ number_format($versement->montant ?? 0) }} FC</td>
                                     <td class="pe-4">
-                                        <span class="badge badge-soft-{{ $paiement->statut === 'payé' ? 'success' : 'warning' }}">
-                                            {{ ucfirst($paiement->statut ?? 'En attente') }}
+                                        @php
+                                            $statutColors = [
+                                                'payé' => 'success',
+                                                'partiellement_payé' => 'warning',
+                                                'en_retard' => 'danger',
+                                                'non_effectué' => 'secondary'
+                                            ];
+                                        @endphp
+                                        <span class="badge badge-soft-{{ $statutColors[$versement->statut] ?? 'secondary' }}">
+                                            {{ ucfirst(str_replace('_', ' ', $versement->statut ?? 'N/A')) }}
                                         </span>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">
+                                    <td colspan="5" class="text-center py-4 text-muted">
                                         <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                                        Aucun paiement récent
+                                        Aucun versement récent
                                     </td>
                                 </tr>
                                 @endforelse
@@ -144,7 +173,7 @@
     <!-- Motos List -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center py-3">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-bicycle me-2 text-info"></i>Mes Motos</h6>
+            <h6 class="mb-0 fw-bold"><i class="bi bi-bicycle me-2 text-info"></i>Mes Motos ({{ $totalMotos ?? 0 }})</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -152,9 +181,9 @@
                     <thead>
                         <tr>
                             <th class="ps-4">Plaque</th>
+                            <th>Matricule</th>
                             <th>Motard Assigné</th>
-                            <th>Versements ce mois</th>
-                            <th class="pe-4">Statut</th>
+                            <th class="pe-4 text-center">Statut</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -165,9 +194,15 @@
                                     <i class="bi bi-bicycle me-1"></i>{{ $moto->plaque_immatriculation ?? 'N/A' }}
                                 </span>
                             </td>
-                            <td>{{ $moto->motard->user->name ?? 'Non assigné' }}</td>
-                            <td>{{ number_format($moto->versements_mois ?? 0) }} FC</td>
-                            <td class="pe-4">
+                            <td class="text-muted">{{ $moto->numero_matricule ?? 'N/A' }}</td>
+                            <td>
+                                @if($moto->motard)
+                                <span class="fw-medium">{{ $moto->motard->user->name ?? 'N/A' }}</span>
+                                @else
+                                <span class="text-muted fst-italic">Non assigné</span>
+                                @endif
+                            </td>
+                            <td class="pe-4 text-center">
                                 <span class="badge badge-soft-{{ $moto->statut === 'actif' ? 'success' : 'secondary' }}">
                                     {{ ucfirst($moto->statut ?? 'Inactif') }}
                                 </span>
