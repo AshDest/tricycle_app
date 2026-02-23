@@ -67,9 +67,15 @@
                         <h6 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Affectation</h6>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <small>Le numéro identifiant sera généré automatiquement (ex: COL-0001)</small>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Numéro d'identifiant</label>
+                            <div class="input-group">
+                                <input type="text" wire:model="numero_identifiant" class="form-control bg-light" readonly>
+                                <button type="button" wire:click="regenerateNumero" class="btn btn-outline-secondary" title="Régénérer">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Généré automatiquement</small>
                         </div>
 
                         <div class="mb-3">

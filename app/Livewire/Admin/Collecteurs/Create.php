@@ -16,6 +16,7 @@ class Create extends Component
     public $email = '';
     public $phone = '';
     public $password = '';
+    public $numero_identifiant = '';
     public $zone_id = '';
     public $telephone = '';
     public $is_active = true;
@@ -39,6 +40,11 @@ class Create extends Component
         'telephone.required' => 'Le téléphone est obligatoire.',
     ];
 
+    public function mount()
+    {
+        $this->numero_identifiant = $this->generateNumeroIdentifiant();
+    }
+
     /**
      * Générer un numéro identifiant unique pour le collecteur
      */
@@ -60,6 +66,14 @@ class Create extends Component
         return $prefix . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
+    /**
+     * Régénérer le numéro d'identifiant
+     */
+    public function regenerateNumero()
+    {
+        $this->numero_identifiant = $this->generateNumeroIdentifiant();
+    }
+
     public function save()
     {
         $this->validate();
@@ -67,8 +81,10 @@ class Create extends Component
         // Récupérer le nom de la zone
         $zone = Zone::find($this->zone_id);
 
-        // Générer le numéro identifiant automatiquement
-        $numeroIdentifiant = $this->generateNumeroIdentifiant();
+        // Vérifier l'unicité du numéro d'identifiant
+        if (Collecteur::where('numero_identifiant', $this->numero_identifiant)->exists()) {
+            $this->numero_identifiant = $this->generateNumeroIdentifiant();
+        }
 
         $user = User::create([
             'name' => $this->name,
@@ -81,13 +97,13 @@ class Create extends Component
 
         Collecteur::create([
             'user_id' => $user->id,
-            'numero_identifiant' => $numeroIdentifiant,
+            'numero_identifiant' => $this->numero_identifiant,
             'zone_affectation' => $zone->nom ?? '',
             'telephone' => $this->telephone,
             'is_active' => $this->is_active,
         ]);
 
-        session()->flash('success', 'Collecteur créé avec succès. Identifiant: ' . $numeroIdentifiant);
+        session()->flash('success', 'Collecteur créé avec succès. Identifiant: ' . $this->numero_identifiant);
         return redirect()->route('admin.collecteurs.index');
     }
 

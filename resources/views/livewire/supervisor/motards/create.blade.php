@@ -69,9 +69,14 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Numéro d'identifiant <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="numero_identifiant" class="form-control @error('numero_identifiant') is-invalid @enderror" placeholder="MTD-001">
-                            @error('numero_identifiant') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label class="form-label">Numéro d'identifiant</label>
+                            <div class="input-group">
+                                <input type="text" wire:model="numero_identifiant" class="form-control bg-light" readonly>
+                                <button type="button" wire:click="regenerateNumero" class="btn btn-outline-secondary" title="Régénérer">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Généré automatiquement</small>
                         </div>
 
                         <div class="mb-3">

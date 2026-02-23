@@ -30,7 +30,6 @@ class Create extends Component
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
-            'numero_identifiant' => 'required|string|unique:motards,numero_identifiant',
             'licence_numero' => 'nullable|string|max:50',
             'zone_affectation' => 'required|string|max:255',
         ];
@@ -43,14 +42,53 @@ class Create extends Component
         'password.required' => 'Le mot de passe est obligatoire.',
         'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
         'password.confirmed' => 'Les mots de passe ne correspondent pas.',
-        'numero_identifiant.required' => 'Le numéro d\'identifiant est obligatoire.',
-        'numero_identifiant.unique' => 'Ce numéro d\'identifiant existe déjà.',
         'zone_affectation.required' => 'La zone d\'affectation est obligatoire.',
     ];
+
+    public function mount()
+    {
+        $this->numero_identifiant = $this->generateNumeroIdentifiant();
+    }
+
+    /**
+     * Génère un numéro d'identifiant unique pour le motard
+     * Format: MTD-XXXX (ex: MTD-0001)
+     */
+    protected function generateNumeroIdentifiant(): string
+    {
+        $prefix = 'MTD';
+
+        $lastMotard = Motard::withTrashed()
+            ->where('numero_identifiant', 'like', $prefix . '-%')
+            ->orderByRaw('CAST(SUBSTRING(numero_identifiant, 5) AS UNSIGNED) DESC')
+            ->first();
+
+        if ($lastMotard) {
+            $lastNumber = (int) substr($lastMotard->numero_identifiant, 4);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        return sprintf('%s-%04d', $prefix, $newNumber);
+    }
+
+    /**
+     * Régénérer le numéro d'identifiant
+     */
+    public function regenerateNumero()
+    {
+        $this->numero_identifiant = $this->generateNumeroIdentifiant();
+    }
 
     public function save()
     {
         $this->validate();
+
+        // Vérifier l'unicité du numéro d'identifiant
+        if (Motard::where('numero_identifiant', $this->numero_identifiant)->exists()) {
+            $this->numero_identifiant = $this->generateNumeroIdentifiant();
+        }
 
         try {
             DB::beginTransaction();

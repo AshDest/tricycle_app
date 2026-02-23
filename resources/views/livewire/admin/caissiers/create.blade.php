@@ -69,6 +69,17 @@
                     <div class="card-body">
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Numéro d'identifiant</label>
+                            <div class="input-group">
+                                <input type="text" wire:model="numero_identifiant" class="form-control bg-light" readonly>
+                                <button type="button" wire:click="regenerateNumero" class="btn btn-outline-secondary" title="Régénérer">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Généré automatiquement</small>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Nom du point de collecte <span class="text-danger">*</span></label>
                             <input type="text" wire:model="nom_point_collecte" class="form-control @error('nom_point_collecte') is-invalid @enderror" placeholder="Point de collecte Gombe">
                             @error('nom_point_collecte') <div class="invalid-feedback">{{ $message }}</div> @enderror

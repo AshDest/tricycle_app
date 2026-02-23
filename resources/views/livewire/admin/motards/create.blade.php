@@ -52,20 +52,30 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Num&eacute;ro d'Identifiant <span class="text-danger">*</span></label>
-                        <input type="text" wire:model="numero_identifiant" class="form-control @error('numero_identifiant') is-invalid @enderror" placeholder="ID unique du motard">
-                        @error('numero_identifiant') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label class="form-label">Numéro d'Identifiant</label>
+                        <div class="input-group">
+                            <input type="text" wire:model="numero_identifiant" class="form-control bg-light" readonly>
+                            <button type="button" wire:click="regenerateNumero" class="btn btn-outline-secondary" title="Régénérer">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Généré automatiquement</small>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Num&eacute;ro de Licence</label>
-                        <input type="text" wire:model="licence_numero" class="form-control @error('licence_numero') is-invalid @enderror" placeholder="Num&eacute;ro de licence">
+                        <label class="form-label">Numéro de Licence</label>
+                        <input type="text" wire:model="licence_numero" class="form-control @error('licence_numero') is-invalid @enderror" placeholder="Numéro de permis">
                         @error('licence_numero') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Zone d'Affectation <span class="text-danger">*</span></label>
-                        <input type="text" wire:model="zone_affectation" class="form-control @error('zone_affectation') is-invalid @enderror" placeholder="Zone d'affectation">
+                        <select wire:model="zone_affectation" class="form-select @error('zone_affectation') is-invalid @enderror">
+                            <option value="">-- Sélectionner une zone --</option>
+                            @foreach($zones ?? [] as $zone)
+                            <option value="{{ $zone->nom }}">{{ $zone->nom }}</option>
+                            @endforeach
+                        </select>
                         @error('zone_affectation') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
