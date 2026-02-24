@@ -9,11 +9,11 @@ use App\Models\Collecteur;
 #[Layout('components.dashlite-layout')]
 class Show extends Component
 {
-    public $collecteur;
+    public Collecteur $collecteur;
 
     public function mount(Collecteur $collecteur)
     {
-        $this->collecteur = $collecteur;
+        $this->collecteur = $collecteur->load('user', 'tournees');
     }
 
     public function render()
