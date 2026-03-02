@@ -8,6 +8,7 @@ use App\Models\Motard;
 use App\Models\Moto;
 use App\Models\Versement;
 use App\Models\Tournee;
+use App\Services\RepartitionService;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -19,9 +20,17 @@ class Dashboard extends Component
     public $arrieresCumules = 0;
     public $tourneesAujourdhui = [];
 
+    // Solde OKAMI
+    public $soldeOkamiTotal = 0;
+    public $soldeOkamiSemaine = 0;
+    public $soldeOkamiMois = 0;
+    public $repartitionHebdo = [];
+
     public function mount()
     {
         $today = Carbon::today();
+        $startOfWeek = Carbon::now()->startOfWeek();
+        $startOfMonth = Carbon::now()->startOfMonth();
 
         // Motards en retard ou avec arriérés
         $this->motardsEnRetard = Motard::whereHas('versements', function($q) {
@@ -41,6 +50,35 @@ class Dashboard extends Component
         $this->tourneesAujourdhui = Tournee::whereDate('date', $today)
             ->with('collecteur.user')
             ->get();
+
+        // Calcul du solde OKAMI (part 1/6)
+        // Total historique (part_okami stockée dans les versements)
+        $this->soldeOkamiTotal = Versement::sum('part_okami') ?? 0;
+
+        // Si part_okami n'est pas remplie, calculer à partir du montant
+        if ($this->soldeOkamiTotal == 0) {
+            $totalVersements = Versement::sum('montant') ?? 0;
+            $this->soldeOkamiTotal = RepartitionService::getPartOkami($totalVersements);
+        }
+
+        // Solde OKAMI cette semaine
+        $versementsSemaine = Versement::whereBetween('date_versement', [$startOfWeek, $today])->get();
+        $this->soldeOkamiSemaine = $versementsSemaine->sum('part_okami') ?? 0;
+        if ($this->soldeOkamiSemaine == 0) {
+            $totalSemaine = $versementsSemaine->sum('montant') ?? 0;
+            $this->soldeOkamiSemaine = RepartitionService::getPartOkami($totalSemaine);
+        }
+
+        // Solde OKAMI ce mois
+        $versementsMois = Versement::whereBetween('date_versement', [$startOfMonth, $today])->get();
+        $this->soldeOkamiMois = $versementsMois->sum('part_okami') ?? 0;
+        if ($this->soldeOkamiMois == 0) {
+            $totalMois = $versementsMois->sum('montant') ?? 0;
+            $this->soldeOkamiMois = RepartitionService::getPartOkami($totalMois);
+        }
+
+        // Répartition hebdomadaire globale
+        $this->repartitionHebdo = RepartitionService::getResumeHebdomadaireGlobal();
     }
 
     public function render()

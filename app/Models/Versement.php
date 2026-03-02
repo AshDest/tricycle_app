@@ -33,13 +33,22 @@ class Versement extends Model
         'collecte_id',
         'notes',
         'arrieres',
+        'semaine_debut',
+        'semaine_fin',
+        'numero_semaine',
+        'part_proprietaire',
+        'part_okami',
     ];
 
     protected $casts = [
         'montant' => 'decimal:2',
         'montant_attendu' => 'decimal:2',
         'arrieres' => 'decimal:2',
+        'part_proprietaire' => 'decimal:2',
+        'part_okami' => 'decimal:2',
         'date_versement' => 'date',
+        'semaine_debut' => 'date',
+        'semaine_fin' => 'date',
         'validated_by_caissier_at' => 'datetime',
         'validated_by_okami_at' => 'datetime',
         'valide_par_okami' => 'boolean',

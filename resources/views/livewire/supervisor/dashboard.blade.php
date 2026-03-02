@@ -77,6 +77,58 @@
         </div>
     </div>
 
+    <!-- Solde OKAMI (Part 1/6) -->
+    <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #00838f 0%, #006064 100%);">
+        <div class="card-body text-white">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-wallet2 fs-2"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold">Solde OKAMI</h5>
+                            <small class="opacity-75">Part de 1/6 sur chaque versement (≈16.67%)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-3 text-center">
+                        <div class="col-4">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Cette semaine</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiSemaine ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Ce mois</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiMois ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white bg-opacity-25 rounded p-3">
+                                <small class="d-block opacity-75">Total cumulé</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiTotal ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="opacity-75">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Système: 6 jours de recettes → 5 jours Propriétaire + 1 jour OKAMI
+                    </small>
+                    <a href="{{ route('supervisor.reports.repartition') }}" class="btn btn-sm btn-light">
+                        <i class="bi bi-pie-chart me-1"></i>Voir la répartition détaillée
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="row g-3 mb-4">
         <div class="col-12">

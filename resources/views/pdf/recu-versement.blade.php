@@ -209,6 +209,20 @@
         <div class="section">
             <div class="section-title">Détails</div>
             <table class="info">
+                @if($versement->semaine_debut && $versement->semaine_fin)
+                <tr>
+                    <td class="label">Semaine civile</td>
+                    <td class="value">{{ $versement->semaine_debut->format('d/m') }} - {{ $versement->semaine_fin->format('d/m') }}</td>
+                </tr>
+                <tr>
+                    <td class="label">N° Semaine</td>
+                    <td class="value">{{ $versement->numero_semaine ?? $versement->semaine_debut->weekOfYear }}/{{ $versement->semaine_debut->year }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Jours</td>
+                    <td class="value">Lundi - Samedi (6 jours)</td>
+                </tr>
+                @endif
                 <tr>
                     <td class="label">Attendu</td>
                     <td class="value">{{ number_format($versement->montant_attendu ?? 0, 0, ',', ' ') }} FC</td>
@@ -242,6 +256,23 @@
                 </tr>
             </table>
         </div>
+
+        <!-- Répartition (si renseignée) -->
+        @if(($versement->part_proprietaire ?? 0) > 0 || ($versement->part_okami ?? 0) > 0)
+        <div class="section">
+            <div class="section-title">Répartition</div>
+            <table class="info">
+                <tr>
+                    <td class="label">Part Propriétaire (5/6)</td>
+                    <td class="value">{{ number_format($versement->part_proprietaire ?? 0, 0, ',', ' ') }} FC</td>
+                </tr>
+                <tr>
+                    <td class="label">Part OKAMI (1/6)</td>
+                    <td class="value">{{ number_format($versement->part_okami ?? 0, 0, ',', ' ') }} FC</td>
+                </tr>
+            </table>
+        </div>
+        @endif
 
         <!-- Arriérés si existants -->
         @if(($versement->arrieres ?? 0) > 0)

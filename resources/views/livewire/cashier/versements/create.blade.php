@@ -3,13 +3,26 @@
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h4 class="page-title mb-1">
-                <i class="bi bi-plus-circle me-2 text-success"></i>Enregistrer un Versement
+                <i class="bi bi-plus-circle me-2 text-success"></i>Enregistrer un Versement Hebdomadaire
             </h4>
-            <p class="text-muted mb-0">Réception du versement d'un motard</p>
+            <p class="text-muted mb-0">Réception du versement hebdomadaire d'un motard (Lundi - Samedi)</p>
         </div>
         <a href="{{ route('cashier.versements.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Retour
         </a>
+    </div>
+
+    <!-- Info répartition -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-info-circle fs-4"></i>
+            <div>
+                <strong>Système de répartition hebdomadaire (calendrier civil) :</strong><br>
+                <small>Semaine de travail = <strong>Lundi à Samedi</strong> (6 jours)</small><br>
+                Sur 6 jours de recettes → <span class="badge bg-warning">5 jours = Propriétaire (83.33%)</span>
+                + <span class="badge bg-info">1 jour = OKAMI (16.67%)</span>
+            </div>
+        </div>
     </div>
 
     <div class="row g-4">
@@ -21,6 +34,51 @@
                 </div>
                 <div class="card-body">
                     <form wire:submit="enregistrer">
+                        <!-- Sélection de la semaine civile -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-calendar-week text-primary me-1"></i>
+                                Semaine civile concernée <span class="text-danger">*</span>
+                            </label>
+                            <select wire:model.live="semaine_selectionnee" class="form-select @error('semaine_selectionnee') is-invalid @enderror" required>
+                                @foreach($semaines ?? [] as $semaine)
+                                <option value="{{ $semaine['index'] }}">
+                                    {{ $semaine['label'] }}
+                                    @if($semaine['est_courante'])
+                                    - Sem. {{ $semaine['numero'] }}/{{ $semaine['annee'] }}
+                                    @else
+                                    (Sem. {{ $semaine['numero'] }})
+                                    @endif
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('semaine_selectionnee')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+
+                            @if(isset($semaines[$semaine_selectionnee]))
+                            @php $semaineInfo = $semaines[$semaine_selectionnee]; @endphp
+                            <div class="mt-2 p-3 bg-light rounded">
+                                <div class="row text-center">
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Début (Lundi)</small>
+                                        <strong>{{ $semaineInfo['debut_formatted'] ?? '' }}</strong>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Fin (Samedi)</small>
+                                        <strong>{{ $semaineInfo['fin_formatted'] ?? '' }}</strong>
+                                    </div>
+                                    <div class="col-4">
+                                        <small class="text-muted d-block">Jours de travail</small>
+                                        <span class="badge {{ $semaineInfo['est_complete'] ? 'bg-success' : 'bg-warning' }}">
+                                            {{ $semaineInfo['jours_ecoules'] }}/6 jours
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+
                         <!-- Sélection du motard -->
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Motard <span class="text-danger">*</span></label>
@@ -56,27 +114,35 @@
                                     </div>
                                 </div>
                                 <div class="row g-3">
-                                    <div class="col-6">
-                                        <div class="bg-primary bg-opacity-10 rounded p-3 text-center">
-                                            <small class="text-muted d-block">Montant attendu</small>
-                                            <strong class="text-primary fs-5">{{ number_format($montantAttendu) }} FC</strong>
+                                    <div class="col-6 col-md-3">
+                                        <div class="bg-secondary bg-opacity-10 rounded p-3 text-center">
+                                            <small class="text-muted d-block">Tarif/jour</small>
+                                            <strong class="text-secondary">{{ number_format($montantJournalier) }} FC</strong>
                                         </div>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-6 col-md-3">
+                                        <div class="bg-primary bg-opacity-10 rounded p-3 text-center">
+                                            <small class="text-muted d-block">Attendu/semaine</small>
+                                            <strong class="text-primary">{{ number_format($montantHebdomadaireAttendu) }} FC</strong>
+                                            <small class="d-block text-muted">(6 jours)</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="bg-info bg-opacity-10 rounded p-3 text-center">
+                                            <small class="text-muted d-block">Jours semaine</small>
+                                            <strong class="text-info">{{ $joursEcoules }}/6</strong>
+                                            <small class="d-block text-muted">Lun-Sam</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
                                         <div class="bg-{{ $arrieresCumules > 0 ? 'danger' : 'success' }} bg-opacity-10 rounded p-3 text-center">
-                                            <small class="text-muted d-block">Arriérés cumulés</small>
-                                            <strong class="text-{{ $arrieresCumules > 0 ? 'danger' : 'success' }} fs-5">
+                                            <small class="text-muted d-block">Arriérés</small>
+                                            <strong class="text-{{ $arrieresCumules > 0 ? 'danger' : 'success' }}">
                                                 {{ number_format($arrieresCumules) }} FC
                                             </strong>
                                         </div>
                                     </div>
                                 </div>
-                                @if($arrieresCumules > 0)
-                                <div class="alert alert-warning mt-3 mb-0 py-2">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    <small>Ce motard a des arriérés en cours. Le versement du jour sera comparé au montant attendu de <strong>{{ number_format($montantAttendu) }} FC</strong>.</small>
-                                </div>
-                                @endif
                             </div>
                         </div>
                         @endif
@@ -95,42 +161,52 @@
 
                             @if($motardSelectionne && $montant)
                             @php
-                                $ecart = $montant - $montantAttendu;
+                                $ecart = $montant - $montantHebdomadaireAttendu;
                             @endphp
                             <div class="mt-2">
                                 @if($ecart >= 0)
                                 <div class="alert alert-success py-2 mb-0">
                                     <i class="bi bi-check-circle me-2"></i>
-                                    <strong>Versement complet</strong> - Le montant couvre le tarif journalier
+                                    <strong>Versement complet</strong> - Semaine payée intégralement
                                     @if($ecart > 0 && $arrieresCumules > 0)
                                     <div class="mt-2 pt-2 border-top border-success">
                                         <i class="bi bi-arrow-repeat me-1"></i>
-                                        Excédent de <strong>{{ number_format($ecart) }} FC</strong> sera utilisé pour rembourser les arriérés
-                                        @if($ecart >= $arrieresCumules)
-                                        <span class="badge bg-success ms-1">Arriérés soldés!</span>
-                                        @else
-                                        <span class="badge bg-warning ms-1">Reste: {{ number_format($arrieresCumules - $ecart) }} FC</span>
-                                        @endif
+                                        Excédent de <strong>{{ number_format($ecart) }} FC</strong> utilisé pour les arriérés
                                     </div>
-                                    @elseif($ecart > 0)
-                                    <span class="badge bg-success ms-2">+{{ number_format($ecart) }} FC</span>
                                     @endif
                                 </div>
                                 @else
                                 <div class="alert alert-warning py-2 mb-0">
                                     <i class="bi bi-exclamation-triangle me-2"></i>
-                                    <strong>Versement partiel</strong> - Arriéré de ce jour: <strong class="text-danger">{{ number_format(abs($ecart)) }} FC</strong>
-                                    <div class="mt-2 pt-2 border-top">
-                                        <small class="text-muted">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            Ce montant sera ajouté aux arriérés cumulés. Le motard pourra compléter ultérieurement.
-                                        </small>
-                                    </div>
+                                    <strong>Versement partiel</strong> - Arriéré: <strong class="text-danger">{{ number_format(abs($ecart)) }} FC</strong>
                                 </div>
                                 @endif
                             </div>
                             @endif
                         </div>
+
+                        <!-- Prévisualisation de la répartition -->
+                        @if($montant > 0)
+                        <div class="card bg-light mb-4">
+                            <div class="card-header py-2">
+                                <small class="fw-bold"><i class="bi bi-pie-chart me-2"></i>Répartition prévisionnelle</small>
+                            </div>
+                            <div class="card-body py-3">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <div class="border-end">
+                                            <small class="text-muted d-block">Part Propriétaire (5/6)</small>
+                                            <h5 class="fw-bold text-warning mb-0">{{ number_format($partProprietairePreview) }} FC</h5>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">Part OKAMI (1/6)</small>
+                                        <h5 class="fw-bold text-info mb-0">{{ number_format($partOkamiPreview) }} FC</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         <!-- Mode de paiement -->
                         <div class="mb-4">
@@ -193,16 +269,47 @@
 
         <!-- Sidebar infos -->
         <div class="col-lg-4">
+            <!-- Calendrier de la semaine -->
+            <div class="card mb-4">
+                <div class="card-header py-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-calendar3 me-2 text-primary"></i>Calendrier Civil</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">Semaine de travail: <strong>Lundi à Samedi</strong></p>
+                    <div class="d-flex justify-content-around text-center">
+                        @php
+                            $jourActuel = \Carbon\Carbon::now()->dayOfWeekIso; // 1=Lundi, 7=Dimanche
+                        @endphp
+                        @foreach(['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'] as $index => $jour)
+                        @php
+                            $estAujourdhui = ($jourActuel === ($index + 1));
+                        @endphp
+                        <div class="px-1">
+                            <small class="{{ $estAujourdhui ? 'fw-bold text-primary' : 'text-muted' }}">{{ $jour }}</small>
+                            @if($estAujourdhui)
+                            <div class="mt-1"><span class="badge bg-primary rounded-circle" style="width:8px;height:8px;padding:0;"></span></div>
+                            @endif
+                        </div>
+                        @endforeach
+                    </div>
+                    <hr class="my-3">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Le versement doit couvrir <strong>6 jours</strong> de recettes (Lundi-Samedi)
+                    </small>
+                </div>
+            </div>
+
             <div class="card mb-4">
                 <div class="card-header py-3">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-info"></i>Instructions</h6>
                 </div>
                 <div class="card-body">
                     <ol class="mb-0 ps-3">
+                        <li class="mb-2">Sélectionnez la semaine civile (Lun-Sam)</li>
                         <li class="mb-2">Sélectionnez le motard qui effectue le versement</li>
-                        <li class="mb-2">Vérifiez le montant attendu affiché</li>
+                        <li class="mb-2">Vérifiez le montant attendu pour 6 jours</li>
                         <li class="mb-2">Saisissez le montant réellement reçu</li>
-                        <li class="mb-2">Choisissez le mode de paiement</li>
                         <li>Validez l'enregistrement</li>
                     </ol>
                 </div>

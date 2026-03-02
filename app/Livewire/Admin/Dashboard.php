@@ -13,6 +13,7 @@ use App\Models\Tournee;
 use App\Models\Maintenance;
 use App\Models\Accident;
 use App\Services\PaymentService;
+use App\Services\RepartitionService;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -30,6 +31,9 @@ class Dashboard extends Component
     public $versementsAttenduAujourdhui = 0;
     public $versementsCeMois = 0;
     public $arrieresCumules = 0;
+
+    // Répartition hebdomadaire
+    public $repartitionHebdo = [];
 
     // Tournées
     public $tourneesAujourdhui = 0;
@@ -88,6 +92,9 @@ class Dashboard extends Component
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
+
+        // Répartition hebdomadaire globale
+        $this->repartitionHebdo = RepartitionService::getResumeHebdomadaireGlobal();
     }
 
     public function render()

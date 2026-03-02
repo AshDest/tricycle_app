@@ -74,6 +74,48 @@
         </div>
     </div>
 
+    <!-- Répartition Hebdomadaire -->
+    @if($repartitionHebdo)
+    <div class="card mb-4 border-info">
+        <div class="card-header bg-info bg-opacity-10 py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-info">
+                    <i class="bi bi-pie-chart me-2"></i>Répartition Hebdomadaire (Semaine en cours)
+                </h6>
+                <small class="text-muted">{{ $repartitionHebdo['periode']['debut'] ?? '' }} - {{ $repartitionHebdo['periode']['fin'] ?? '' }}</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="text-center p-3 bg-light rounded">
+                        <small class="text-muted d-block mb-1">Total Versé cette semaine</small>
+                        <h4 class="fw-bold text-success mb-0">{{ number_format($repartitionHebdo['total_verse'] ?? 0) }} FC</h4>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3 bg-warning bg-opacity-10 rounded border border-warning">
+                        <small class="text-muted d-block mb-1">Votre Part (5/6)</small>
+                        <h4 class="fw-bold text-warning mb-0">{{ number_format($partProprietaireHebdo) }} FC</h4>
+                        <small class="text-muted">≈ 83.33% des recettes</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3 bg-info bg-opacity-10 rounded border border-info">
+                        <small class="text-muted d-block mb-1">Part OKAMI (1/6)</small>
+                        <h4 class="fw-bold text-info mb-0">{{ number_format($partOkamiHebdo) }} FC</h4>
+                        <small class="text-muted">≈ 16.67% des recettes</small>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-light mt-3 mb-0 small">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Rappel:</strong> Sur 6 jours de recettes, 5 jours vous reviennent et 1 jour revient à OKAMI pour la gestion.
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Quick Actions & Recent Payments -->
     <div class="row g-3 mb-4">
         <div class="col-lg-4">

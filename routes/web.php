@@ -101,6 +101,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/daily', \App\Livewire\Admin\Reports\Daily::class)->name('reports.daily');
         Route::get('/reports/weekly', \App\Livewire\Admin\Reports\Weekly::class)->name('reports.weekly');
         Route::get('/reports/monthly', \App\Livewire\Admin\Reports\Monthly::class)->name('reports.monthly');
+        Route::get('/reports/repartition', \App\Livewire\Admin\Reports\RepartitionHebdomadaire::class)->name('reports.repartition');
 
         // Utilisateurs
         Route::get('/users', \App\Livewire\Admin\Users\Index::class)->name('users.index');
@@ -157,6 +158,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/daily', \App\Livewire\Supervisor\Reports\Daily::class)->name('reports.daily');
         Route::get('/reports/weekly', \App\Livewire\Supervisor\Reports\Weekly::class)->name('reports.weekly');
         Route::get('/reports/monthly', \App\Livewire\Supervisor\Reports\Monthly::class)->name('reports.monthly');
+        Route::get('/reports/repartition', \App\Livewire\Supervisor\Reports\RepartitionHebdomadaire::class)->name('reports.repartition');
     });
 
     /*

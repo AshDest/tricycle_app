@@ -8,6 +8,7 @@ use App\Models\Proprietaire;
 use App\Models\Versement;
 use App\Models\Payment;
 use App\Models\Maintenance;
+use App\Services\RepartitionService;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -25,6 +26,11 @@ class Dashboard extends Component
     public $maintenancesEnCours = 0;
     public $totalArrieres = 0;
     public $paiementsEnAttente = 0;
+
+    // Répartition hebdomadaire
+    public $repartitionHebdo = null;
+    public $partProprietaireHebdo = 0;
+    public $partOkamiHebdo = 0;
 
     // Listes
     public $derniersVersements = [];
@@ -62,12 +68,17 @@ class Dashboard extends Component
             ->selectRaw('SUM(montant_attendu - montant) as total')
             ->value('total') ?? 0;
 
-        // Prochain paiement estimé (versements non encore payés au propriétaire)
-        $totalVerse = Versement::whereIn('moto_id', $motoIds)->sum('montant');
+        // Répartition hebdomadaire
+        $this->repartitionHebdo = RepartitionService::getRepartitionHebdomadaireProprietaire($this->proprietaire);
+        $this->partProprietaireHebdo = $this->repartitionHebdo['total_part_proprietaire'] ?? 0;
+        $this->partOkamiHebdo = $this->repartitionHebdo['total_part_okami'] ?? 0;
+
+        // Prochain paiement estimé = part propriétaire non encore payée
+        $totalPartProprietaire = RepartitionService::getPartProprietaire($this->revenusTotal);
         $totalPayeAuProprietaire = $this->proprietaire->payments()
             ->whereIn('statut', ['paye', 'payé', 'valide'])
             ->sum('total_paye');
-        $this->prochainPaiement = max(0, $totalVerse - $totalPayeAuProprietaire);
+        $this->prochainPaiement = max(0, $totalPartProprietaire - $totalPayeAuProprietaire);
 
         // Maintenances en cours
         $this->maintenancesEnCours = Maintenance::whereIn('moto_id', $motoIds)
