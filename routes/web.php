@@ -235,6 +235,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:cleaner'])->prefix('cleaner')->name('cleaner.')->group(function () {
         Route::get('/lavages', \App\Livewire\Cleaner\LavagesList::class)->name('lavages.index');
         Route::get('/lavages/create', \App\Livewire\Cleaner\EnregistrerLavage::class)->name('lavages.create');
+        Route::get('/lavages/{lavage}/edit', \App\Livewire\Cleaner\EditLavage::class)->name('lavages.edit');
     });
 });
 

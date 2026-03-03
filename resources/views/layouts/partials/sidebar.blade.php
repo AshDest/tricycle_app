@@ -79,6 +79,18 @@
                     <li><a href="{{ route('admin.collecteurs.create') }}">Ajouter</a></li>
                 </ul>
             </li>
+            <li class="has-submenu {{ request()->is('admin/cleaners*') || request()->is('admin/lavages*') ? 'active' : '' }}">
+                <a href="#" class="toggle-submenu">
+                    <i class="bi bi-droplet text-info"></i>
+                    <span>Service Lavage</span>
+                    <i class="bi bi-chevron-down submenu-icon"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.cleaners.index') }}"><i class="bi bi-people me-1"></i>Laveurs</a></li>
+                    <li><a href="{{ route('admin.cleaners.create') }}"><i class="bi bi-plus me-1"></i>Nouveau laveur</a></li>
+                    <li><a href="{{ route('admin.lavages.index') }}"><i class="bi bi-list me-1"></i>Tous les lavages</a></li>
+                </ul>
+            </li>
 
             <li class="sidebar-heading">Finances</li>
             <li class="{{ request()->is('admin/versements*') ? 'active' : '' }}">
@@ -369,6 +381,23 @@
                 <a href="{{ route('collector.historique') }}">
                     <i class="bi bi-clock-history"></i>
                     <span>Historique</span>
+                </a>
+            </li>
+            @endrole
+
+            {{-- Cleaner Menu (Laveur) --}}
+            @role('cleaner')
+            <li class="sidebar-heading">Service Lavage</li>
+            <li class="{{ request()->is('cleaner/lavages') ? 'active' : '' }}">
+                <a href="{{ route('cleaner.lavages.index') }}">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Mes Lavages</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('cleaner/lavages/create') ? 'active' : '' }}">
+                <a href="{{ route('cleaner.lavages.create') }}">
+                    <i class="bi bi-plus-circle"></i>
+                    <span>Nouveau Lavage</span>
                 </a>
             </li>
             @endrole

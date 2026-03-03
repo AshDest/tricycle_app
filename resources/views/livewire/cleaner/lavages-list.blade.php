@@ -106,13 +106,13 @@
                         <tr>
                             <th>N° Lavage</th>
                             <th>Moto</th>
-                            <th>Propriétaire</th>
                             <th>Type</th>
                             <th>Prix</th>
                             <th>Ma part</th>
                             <th>Part OKAMI</th>
-                            <th>Paiement</th>
                             <th>Date</th>
+                            <th>Statut</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -128,13 +128,6 @@
                                 @else
                                 <span class="badge bg-info">Système</span><br>
                                 <small>{{ $lavage->moto?->plaque_immatriculation ?? 'N/A' }}</small>
-                                @endif
-                            </td>
-                            <td>
-                                @if($lavage->is_externe)
-                                {{ $lavage->proprietaire_externe ?? '-' }}
-                                @else
-                                {{ $lavage->moto?->proprietaire?->user?->name ?? 'N/A' }}
                                 @endif
                             </td>
                             <td>
@@ -157,13 +150,27 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="badge bg-{{ $lavage->mode_paiement === 'cash' ? 'success' : 'primary' }}">
-                                    {{ $lavage->mode_paiement === 'cash' ? 'Cash' : 'Mobile' }}
-                                </span>
-                            </td>
-                            <td>
                                 <small>{{ $lavage->date_lavage->format('d/m/Y') }}</small><br>
                                 <small class="text-muted">{{ $lavage->date_lavage->format('H:i') }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ $lavage->statut_paiement === 'payé' ? 'success' : ($lavage->statut_paiement === 'annulé' ? 'danger' : 'warning') }}">
+                                    {{ ucfirst($lavage->statut_paiement) }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                @if($lavage->statut_paiement === 'payé')
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ route('cleaner.lavages.edit', $lavage) }}" class="btn btn-outline-primary" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button wire:click="telechargerRecu({{ $lavage->id }})" class="btn btn-outline-info" title="Reçu">
+                                        <i class="bi bi-printer"></i>
+                                    </button>
+                                </div>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
                             </td>
                         </tr>
                         @empty
