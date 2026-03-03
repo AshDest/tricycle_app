@@ -233,9 +233,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['role:cleaner'])->prefix('cleaner')->name('cleaner.')->group(function () {
+        // Lavages
         Route::get('/lavages', \App\Livewire\Cleaner\LavagesList::class)->name('lavages.index');
         Route::get('/lavages/create', \App\Livewire\Cleaner\EnregistrerLavage::class)->name('lavages.create');
         Route::get('/lavages/{lavage}/edit', \App\Livewire\Cleaner\EditLavage::class)->name('lavages.edit');
+
+        // Dépenses
+        Route::get('/depenses', \App\Livewire\Cleaner\DepensesList::class)->name('depenses.index');
+        Route::get('/depenses/create', \App\Livewire\Cleaner\EnregistrerDepense::class)->name('depenses.create');
     });
 });
 

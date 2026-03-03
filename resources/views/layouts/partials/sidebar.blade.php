@@ -400,6 +400,19 @@
                     <span>Nouveau Lavage</span>
                 </a>
             </li>
+            <li class="sidebar-heading">Gestion Caisse</li>
+            <li class="{{ request()->is('cleaner/depenses') ? 'active' : '' }}">
+                <a href="{{ route('cleaner.depenses.index') }}">
+                    <i class="bi bi-wallet2 text-danger"></i>
+                    <span>Mes D&eacute;penses</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('cleaner/depenses/create') ? 'active' : '' }}">
+                <a href="{{ route('cleaner.depenses.create') }}">
+                    <i class="bi bi-dash-circle text-danger"></i>
+                    <span>Nouvelle D&eacute;pense</span>
+                </a>
+            </li>
             @endrole
         </ul>
     </div>

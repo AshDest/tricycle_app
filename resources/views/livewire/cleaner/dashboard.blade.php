@@ -7,9 +7,38 @@
             </h4>
             <p class="text-muted mb-0">Bienvenue, {{ auth()->user()->name }}</p>
         </div>
-        <a href="{{ route('cleaner.lavages.create') }}" class="btn btn-info">
-            <i class="bi bi-plus-circle me-1"></i>Nouveau Lavage
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('cleaner.depenses.create') }}" class="btn btn-outline-danger">
+                <i class="bi bi-dash-circle me-1"></i>Dépense
+            </a>
+            <a href="{{ route('cleaner.lavages.create') }}" class="btn btn-info">
+                <i class="bi bi-plus-circle me-1"></i>Nouveau Lavage
+            </a>
+        </div>
+    </div>
+
+    <!-- Solde en caisse - Mis en évidence -->
+    <div class="card border-0 shadow-sm mb-4 bg-gradient" style="background: linear-gradient(135deg, #198754 0%, #20c997 100%);">
+        <div class="card-body py-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-wallet2 fs-2" style="color: #fff;"></i>
+                        </div>
+                        <div>
+                            <small class="d-block" style="color: rgba(255,255,255,0.85);">Solde en caisse</small>
+                            <h2 class="mb-0 fw-bold" style="color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">{{ number_format($soldeActuel) }} FC</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{{ route('cleaner.depenses.index') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-list me-1"></i>Voir dépenses
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Statistiques du jour -->
@@ -55,13 +84,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                <i class="bi bi-calendar-month text-warning fs-4"></i>
+                            <div class="bg-danger bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-dash-circle text-danger fs-4"></i>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h3 class="mb-0 fw-bold">{{ number_format($chiffreAffairesMois) }} FC</h3>
-                            <span class="text-muted">Recettes du mois</span>
+                            <h3 class="mb-0 fw-bold">{{ number_format($depensesJour) }} FC</h3>
+                            <span class="text-muted">Dépenses du jour</span>
                         </div>
                     </div>
                 </div>
@@ -73,19 +102,63 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                <i class="bi bi-percent text-primary fs-4"></i>
+                            <div class="bg-{{ $beneficeNetMois >= 0 ? 'primary' : 'warning' }} bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-graph-up-arrow text-{{ $beneficeNetMois >= 0 ? 'primary' : 'warning' }} fs-4"></i>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h3 class="mb-0 fw-bold">{{ number_format($partOkamiMois) }} FC</h3>
-                            <span class="text-muted">Part OKAMI (mois)</span>
+                            <h3 class="mb-0 fw-bold text-{{ $beneficeNetMois >= 0 ? 'primary' : 'warning' }}">{{ number_format($beneficeNetMois) }} FC</h3>
+                            <span class="text-muted">Bénéfice net (mois)</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Stats mensuelles -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Recettes du mois</small>
+                            <h4 class="fw-bold mb-0 text-success">{{ number_format($chiffreAffairesMois) }} FC</h4>
+                        </div>
+                        <i class="bi bi-arrow-up-circle text-success fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Dépenses du mois</small>
+                            <h4 class="fw-bold mb-0 text-danger">{{ number_format($depensesMois) }} FC</h4>
+                        </div>
+                        <i class="bi bi-arrow-down-circle text-danger fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted">Part OKAMI (mois)</small>
+                            <h4 class="fw-bold mb-0 text-warning">{{ number_format($partOkamiMois) }} FC</h4>
+                        </div>
+                        <i class="bi bi-percent text-warning fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Répartition et Prix -->
     <div class="row g-4 mb-4">

@@ -5,6 +5,7 @@ namespace App\Livewire\Cleaner;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Lavage;
+use App\Models\DepenseLavage;
 use App\Models\SystemSetting;
 use Carbon\Carbon;
 
@@ -19,6 +20,12 @@ class Dashboard extends Component
     public $lavagesInternes = 0;
     public $lavagesExternes = 0;
     public $derniersLavages = [];
+
+    // Solde et dépenses
+    public $soldeActuel = 0;
+    public $depensesJour = 0;
+    public $depensesMois = 0;
+    public $beneficeNetMois = 0;
 
     // Prix configurés
     public $prixSimple = 0;
@@ -36,6 +43,9 @@ class Dashboard extends Component
 
         $today = Carbon::today();
         $startOfMonth = Carbon::now()->startOfMonth();
+
+        // Solde actuel
+        $this->soldeActuel = $cleaner->solde_actuel;
 
         // Lavages du jour
         $lavagesJour = Lavage::where('cleaner_id', $cleaner->id)
@@ -57,6 +67,18 @@ class Dashboard extends Component
 
         $this->chiffreAffairesMois = $lavagesMois->sum('part_cleaner');
         $this->partOkamiMois = $lavagesMois->sum('part_okami');
+
+        // Dépenses du jour et du mois
+        $this->depensesJour = DepenseLavage::where('cleaner_id', $cleaner->id)
+            ->whereDate('date_depense', $today)
+            ->sum('montant');
+
+        $this->depensesMois = DepenseLavage::where('cleaner_id', $cleaner->id)
+            ->whereBetween('date_depense', [$startOfMonth, now()])
+            ->sum('montant');
+
+        // Bénéfice net du mois (recettes - dépenses)
+        $this->beneficeNetMois = $this->chiffreAffairesMois - $this->depensesMois;
 
         // Derniers lavages
         $this->derniersLavages = Lavage::where('cleaner_id', $cleaner->id)

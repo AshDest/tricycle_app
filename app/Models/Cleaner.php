@@ -68,6 +68,14 @@ class Cleaner extends Model
     }
 
     /**
+     * Relation avec les dépenses
+     */
+    public function depenses(): HasMany
+    {
+        return $this->hasMany(DepenseLavage::class);
+    }
+
+    /**
      * Obtenir le nombre de lavages du jour
      */
     public function getLavagesAujourdhuiAttribute(): int
