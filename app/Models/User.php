@@ -68,6 +68,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relation avec le profil Laveur (Cleaner)
+     */
+    public function cleaner()
+    {
+        return $this->hasOne(Cleaner::class);
+    }
+
+    /**
      * Vérifier si l'utilisateur est un motard
      */
     public function isMotard(): bool
@@ -97,6 +105,14 @@ class User extends Authenticatable
     public function isCollecteur(): bool
     {
         return $this->hasRole('collector') && $this->collecteur !== null;
+    }
+
+    /**
+     * Vérifier si l'utilisateur est un laveur (cleaner)
+     */
+    public function isCleaner(): bool
+    {
+        return $this->hasRole('cleaner') && $this->cleaner !== null;
     }
 
     /**

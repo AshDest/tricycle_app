@@ -143,6 +143,12 @@ class RoleAndPermissionSeeder extends Seeder
         Permission::create(['name' => 'receive_messages']);
         Permission::create(['name' => 'send_preformatted_messages']); // Motard uniquement
 
+        // --- Permissions Lavages ---
+        Permission::create(['name' => 'view_lavages']);
+        Permission::create(['name' => 'view_own_lavages']); // Pour laveur
+        Permission::create(['name' => 'create_lavages']);
+        Permission::create(['name' => 'manage_lavages']); // Admin
+
         // ========================================
         // CRÉATION DES RÔLES
         // ========================================
@@ -238,6 +244,17 @@ class RoleAndPermissionSeeder extends Seeder
             // Création des collectes lors du ramassage
             'view_collectes',
             'create_collectes',
+            // Notifications
+            'receive_notifications',
+        ]);
+
+        // 7. CLEANER (Laveur) - Service de lavage des motos
+        $cleanerRole = Role::create(['name' => 'cleaner']);
+        $cleanerRole->givePermissionTo([
+            'view_dashboard',
+            // Lavages
+            'view_own_lavages',
+            'create_lavages',
             // Notifications
             'receive_notifications',
         ]);

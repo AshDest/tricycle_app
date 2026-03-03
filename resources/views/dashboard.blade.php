@@ -25,5 +25,9 @@
     @role('collector')
         <livewire:collector.dashboard />
     @endrole
+
+    @role('cleaner')
+        <livewire:cleaner.dashboard />
+    @endrole
 </x-dashlite-layout>
 

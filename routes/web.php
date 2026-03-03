@@ -70,6 +70,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/collecteurs/{collecteur}', \App\Livewire\Admin\Collecteurs\Show::class)->name('collecteurs.show');
         Route::get('/collecteurs/{collecteur}/edit', \App\Livewire\Admin\Collecteurs\Edit::class)->name('collecteurs.edit');
 
+        // Laveurs (Cleaners)
+        Route::get('/cleaners', \App\Livewire\Admin\Cleaners\Index::class)->name('cleaners.index');
+        Route::get('/cleaners/create', \App\Livewire\Admin\Cleaners\Create::class)->name('cleaners.create');
+        Route::get('/cleaners/{cleaner}', \App\Livewire\Admin\Cleaners\Show::class)->name('cleaners.show');
+        Route::get('/cleaners/{cleaner}/edit', \App\Livewire\Admin\Cleaners\Edit::class)->name('cleaners.edit');
+
+        // Lavages (Admin vue)
+        Route::get('/lavages', \App\Livewire\Admin\Lavages\Index::class)->name('lavages.index');
+
         // Versements
         Route::get('/versements', \App\Livewire\Admin\Versements\Index::class)->name('versements.index');
         Route::get('/versements/{versement}', \App\Livewire\Admin\Versements\Show::class)->name('versements.show');
@@ -216,6 +225,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Solde des propriétaires
         Route::get('/proprietaires', \App\Livewire\Collector\Proprietaires\Index::class)->name('proprietaires.index');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routes Cleaner (Laveur)
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['role:cleaner'])->prefix('cleaner')->name('cleaner.')->group(function () {
+        Route::get('/lavages', \App\Livewire\Cleaner\LavagesList::class)->name('lavages.index');
+        Route::get('/lavages/create', \App\Livewire\Cleaner\EnregistrerLavage::class)->name('lavages.create');
     });
 });
 
