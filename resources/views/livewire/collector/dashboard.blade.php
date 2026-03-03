@@ -25,6 +25,51 @@
     </div>
 
     @if($collecteur)
+    <!-- Solde Caisse avec Répartition - Mis en évidence -->
+    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #212529 0%, #343a40 100%);">
+        <div class="card-body py-4">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-wallet2 fs-2" style="color: #fff;"></i>
+                        </div>
+                        <div>
+                            <small class="d-block" style="color: rgba(255,255,255,0.7);">Solde Total en Caisse</small>
+                            <h2 class="mb-0 fw-bold" style="color: #fff;">{{ number_format($soldeCaisse) }} FC</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="d-block" style="color: rgba(255,255,255,0.6);">Part OKAMI (1/6)</small>
+                                        <h4 class="mb-0 fw-bold" style="color: #ffc107;">{{ number_format($soldePartOkami) }} FC</h4>
+                                    </div>
+                                    <i class="bi bi-building fs-3" style="color: rgba(255,193,7,0.7);"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="d-block" style="color: rgba(255,255,255,0.6);">Part Propriétaires (5/6)</small>
+                                        <h4 class="mb-0 fw-bold" style="color: #20c997;">{{ number_format($soldePartProprietaire) }} FC</h4>
+                                    </div>
+                                    <i class="bi bi-people fs-3" style="color: rgba(32,201,151,0.7);"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Stats Row -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">
@@ -75,12 +120,14 @@
             <div class="card stat-card h-100 border-start border-info border-4">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <p class="text-muted small text-uppercase fw-semibold mb-2">Solde Caisse</p>
-                        <h3 class="fw-bold text-info mb-1">{{ number_format($soldeCaisse) }} FC</h3>
-                        <small class="text-muted">disponible pour paiements</small>
+                        <p class="text-muted small text-uppercase fw-semibold mb-2">Demandes Paiement</p>
+                        <h3 class="fw-bold text-info mb-1">
+                            <a href="{{ route('collector.payments.index') }}" class="text-info text-decoration-none">Voir</a>
+                        </h3>
+                        <small class="text-muted">à traiter</small>
                     </div>
                     <div class="stat-icon bg-info bg-opacity-10 text-info">
-                        <i class="bi bi-clock-history"></i>
+                        <i class="bi bi-credit-card"></i>
                     </div>
                 </div>
             </div>

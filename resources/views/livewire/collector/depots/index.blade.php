@@ -7,13 +7,51 @@
             </h4>
             <p class="text-muted mb-0">Réception et validation des sommes déposées par les caissiers</p>
         </div>
-        <div class="d-flex gap-2 align-items-center">
-            <div class="bg-info bg-opacity-10 text-info px-3 py-2 rounded fw-bold">
-                <i class="bi bi-safe me-1"></i>Caisse: {{ number_format($soldeCaisse) }} FC
+        <button wire:click="$refresh" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+        </button>
+    </div>
+
+    <!-- Solde Caisse avec Répartition -->
+    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #212529 0%, #343a40 100%);">
+        <div class="card-body py-4">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-10 rounded-circle p-3">
+                            <i class="bi bi-safe fs-2" style="color: #fff;"></i>
+                        </div>
+                        <div>
+                            <small class="d-block" style="color: rgba(255,255,255,0.7);">Solde Total en Caisse</small>
+                            <h2 class="mb-0 fw-bold" style="color: #fff;">{{ number_format($soldeCaisse) }} FC</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-building me-1"></i>Part OKAMI (1/6)</small>
+                                        <h4 class="mb-0 fw-bold" style="color: #ffc107;">{{ number_format($soldePartOkami) }} FC</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-people me-1"></i>Part Propriétaires (5/6)</small>
+                                        <h4 class="mb-0 fw-bold" style="color: #20c997;">{{ number_format($soldePartProprietaire) }} FC</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button wire:click="$refresh" class="btn btn-outline-primary">
-                <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
-            </button>
         </div>
     </div>
 
@@ -27,6 +65,13 @@
     @if(session('warning'))
     <div class="alert alert-warning alert-dismissible fade show mb-4">
         <i class="bi bi-exclamation-triangle me-2"></i>{{ session('warning') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="bi bi-x-circle me-2"></i>{{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     @endif
@@ -98,15 +143,21 @@
                         <tr>
                             <th class="ps-4">Date/Heure</th>
                             <th>Caissier</th>
-                            <th>Montant attendu</th>
                             <th>Montant reçu</th>
-                            <th>Écart</th>
+                            <th class="text-center">Part OKAMI</th>
+                            <th class="text-center">Part Propriétaire</th>
                             <th>Statut</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($collectes as $collecte)
+                        @php
+                            // Calcul prévisualisation pour les non validés
+                            $montant = $collecte->montant_collecte ?? 0;
+                            $partOkami = $collecte->valide_par_collecteur ? $collecte->part_okami : round($montant / 6, 2);
+                            $partProprietaire = $collecte->valide_par_collecteur ? $collecte->part_proprietaire : ($montant - $partOkami);
+                        @endphp
                         <tr class="{{ !$collecte->valide_par_collecteur ? 'table-warning' : '' }}">
                             <td class="ps-4">
                                 <span class="fw-medium">{{ $collecte->created_at?->format('d/m/Y') }}</span>
@@ -119,19 +170,26 @@
                                     </div>
                                     <div>
                                         <span class="fw-medium d-block">{{ $collecte->caissier->user->name ?? 'N/A' }}</span>
-                                        <small class="text-muted">{{ $collecte->caissier->nom_point_collecte ?? '' }}</small>
+                                        <small class="text-muted">{{ $collecte->caissier->zone ?? '' }}</small>
                                     </div>
                                 </div>
                             </td>
-                            <td class="text-muted">{{ number_format($collecte->montant_attendu ?? 0) }} FC</td>
-                            <td class="fw-bold text-success">{{ number_format($collecte->montant_collecte ?? 0) }} FC</td>
-                            <td>
-                                @php
-                                    $ecart = ($collecte->montant_collecte ?? 0) - ($collecte->montant_attendu ?? 0);
-                                @endphp
-                                <span class="badge {{ $ecart >= 0 ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $ecart >= 0 ? '+' : '' }}{{ number_format($ecart) }} FC
+                            <td class="fw-bold text-success">{{ number_format($montant) }} FC</td>
+                            <td class="text-center">
+                                <span class="badge bg-warning bg-opacity-25 text-warning">
+                                    {{ number_format($partOkami) }} FC
                                 </span>
+                                @if(!$collecte->valide_par_collecteur)
+                                <small class="d-block text-muted">(estimé)</small>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success bg-opacity-25 text-success">
+                                    {{ number_format($partProprietaire) }} FC
+                                </span>
+                                @if(!$collecte->valide_par_collecteur)
+                                <small class="d-block text-muted">(estimé)</small>
+                                @endif
                             </td>
                             <td>
                                 @if($collecte->statut === 'en_litige')
@@ -149,7 +207,7 @@
                                 <div class="btn-group">
                                     <button wire:click="validerReception({{ $collecte->id }})"
                                             class="btn btn-sm btn-success"
-                                            wire:confirm="Confirmer la réception de {{ number_format($collecte->montant_collecte) }} FC ?">
+                                            wire:confirm="Confirmer la réception de {{ number_format($montant) }} FC ?&#10;&#10;Part OKAMI: {{ number_format($partOkami) }} FC&#10;Part Propriétaire: {{ number_format($partProprietaire) }} FC">
                                         <i class="bi bi-check-lg"></i> Valider
                                     </button>
                                     <button wire:click="signalerProbleme({{ $collecte->id }})"
@@ -184,5 +242,21 @@
             {{ $collectes->links() }}
         </div>
         @endif
+    </div>
+
+    <!-- Légende -->
+    <div class="card mt-4 bg-light border-0">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <i class="bi bi-info-circle text-info me-2"></i>
+                    <strong>Répartition automatique:</strong>
+                </div>
+                <div class="col">
+                    <span class="badge bg-warning me-2">1/6 pour OKAMI</span>
+                    <span class="badge bg-success">5/6 pour les Propriétaires</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

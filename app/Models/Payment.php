@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Payment = Paiement vers le propriétaire (reversement des recettes).
- * Workflow: OKAMI soumet une demande → Collecteur traite → OKAMI valide → Propriétaire visualise
- * Modes supportés: M-PESA, Airtel Money, Orange Money, Virement bancaire
+ * Payment = Paiement vers le propriétaire ou bénéficiaire (reversement des recettes).
+ * Workflow: OKAMI soumet une demande → Collecteur traite → OKAMI valide → Bénéficiaire visualise
+ *
+ * Sources de caisse:
+ * - 'proprietaire': Paiement depuis la caisse des propriétaires (5/6)
+ * - 'okami': Paiement depuis la caisse OKAMI (1/6)
+ *
+ * Modes supportés: M-PESA, Airtel Money, Orange Money, Virement bancaire, Cash
  */
 class Payment extends Model
 {
@@ -17,6 +22,10 @@ class Payment extends Model
 
     protected $fillable = [
         'proprietaire_id',
+        'source_caisse',         // 'proprietaire' ou 'okami'
+        'beneficiaire_nom',      // Nom du bénéficiaire (si caisse OKAMI)
+        'beneficiaire_telephone', // Téléphone du bénéficiaire
+        'beneficiaire_motif',    // Motif du paiement (si caisse OKAMI)
         'total_du',
         'total_paye',
         'mode_paiement',
@@ -154,5 +163,62 @@ class Payment extends Model
             'orange_money' => 'Orange Money',
             'virement_bancaire' => 'Virement Bancaire',
         ];
+    }
+
+    /**
+     * Les sources de caisse disponibles
+     */
+    public static function getSourcesCaisse(): array
+    {
+        return [
+            'proprietaire' => 'Caisse Propriétaires (5/6)',
+            'okami' => 'Caisse OKAMI (1/6)',
+        ];
+    }
+
+    /**
+     * Vérifier si le paiement provient de la caisse OKAMI
+     */
+    public function getIsFromOkamiAttribute(): bool
+    {
+        return $this->source_caisse === 'okami';
+    }
+
+    /**
+     * Vérifier si le paiement provient de la caisse Propriétaire
+     */
+    public function getIsFromProprietaireAttribute(): bool
+    {
+        return $this->source_caisse === 'proprietaire' || empty($this->source_caisse);
+    }
+
+    /**
+     * Obtenir le nom du bénéficiaire (propriétaire ou bénéficiaire OKAMI)
+     */
+    public function getBeneficiaireNomCompletAttribute(): string
+    {
+        if ($this->is_from_okami) {
+            return $this->beneficiaire_nom ?? 'N/A';
+        }
+        return $this->proprietaire?->user?->name ?? $this->proprietaire?->raison_sociale ?? 'N/A';
+    }
+
+    /**
+     * Scope pour les paiements depuis la caisse OKAMI
+     */
+    public function scopeFromOkami($query)
+    {
+        return $query->where('source_caisse', 'okami');
+    }
+
+    /**
+     * Scope pour les paiements depuis la caisse Propriétaire
+     */
+    public function scopeFromProprietaire($query)
+    {
+        return $query->where(function($q) {
+            $q->where('source_caisse', 'proprietaire')
+              ->orWhereNull('source_caisse');
+        });
     }
 }

@@ -13,11 +13,14 @@ use Carbon\Carbon;
  * Gestion des dépôts reçus des caissiers
  * Le caissier dépose une somme au collecteur pendant la tournée
  * Le collecteur valide la réception
+ * La somme est répartie entre OKAMI (1/6) et Propriétaire (5/6)
  */
 #[Layout('components.dashlite-layout')]
 class Index extends Component
 {
     use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
 
     public $filterStatut = '';
     public $filterDate = '';
@@ -41,7 +44,7 @@ class Index extends Component
     }
 
     /**
-     * Valider la réception d'un dépôt
+     * Valider la réception d'un dépôt avec répartition
      */
     public function validerReception($collecteId)
     {
@@ -54,18 +57,30 @@ class Index extends Component
             return;
         }
 
+        // Calculer la répartition (1/6 OKAMI, 5/6 Propriétaire)
+        $montant = $collecte->montant_collecte;
+        $partOkami = round($montant / 6, 2);
+        $partProprietaire = $montant - $partOkami;
+
+        // Mettre à jour la collecte avec la répartition
         $collecte->update([
             'valide_par_collecteur' => true,
             'valide_collecteur_at' => now(),
             'statut' => 'reussie',
+            'part_okami' => $partOkami,
+            'part_proprietaire' => $partProprietaire,
         ]);
 
-        // Ajouter le montant à la caisse du collecteur
+        // Ajouter le montant à la caisse du collecteur avec répartition
         if ($collecteur) {
-            $collecteur->increment('solde_caisse', $collecte->montant_collecte);
+            $collecteur->ajouterMontantAvecRepartition($montant);
         }
 
-        session()->flash('success', 'Dépôt de ' . number_format($collecte->montant_collecte) . ' FC validé et ajouté à votre caisse.');
+        session()->flash('success',
+            'Dépôt de ' . number_format($montant) . ' FC validé! ' .
+            'Part OKAMI: ' . number_format($partOkami) . ' FC, ' .
+            'Part Propriétaire: ' . number_format($partProprietaire) . ' FC'
+        );
     }
 
     /**
@@ -106,7 +121,10 @@ class Index extends Component
         $this->totalValide = (clone $query)->where('valide_par_collecteur', true)->count();
         $this->montantTotal = (clone $query)->sum('montant_collecte');
 
+        // Soldes détaillés
         $soldeCaisse = $collecteur?->solde_caisse ?? 0;
+        $soldePartOkami = $collecteur?->solde_part_okami ?? 0;
+        $soldePartProprietaire = $collecteur?->solde_part_proprietaire ?? 0;
 
         $collectes = $query->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
@@ -114,6 +132,8 @@ class Index extends Component
         return view('livewire.collector.depots.index', [
             'collectes' => $collectes,
             'soldeCaisse' => $soldeCaisse,
+            'soldePartOkami' => $soldePartOkami,
+            'soldePartProprietaire' => $soldePartProprietaire,
         ]);
     }
 }

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Collecteur = Agent terrain qui récupère l'argent chez les caissiers.
  * Il effectue des tournées quotidiennes et transmet l'argent à NTH (Admin).
+ * La caisse est répartie entre la part OKAMI et la part Propriétaire.
  */
 class Collecteur extends Model
 {
@@ -20,6 +21,8 @@ class Collecteur extends Model
         'numero_identifiant',
         'zone_affectation',
         'solde_caisse',
+        'solde_part_okami',
+        'solde_part_proprietaire',
         'telephone',
         'is_active',
     ];
@@ -27,6 +30,8 @@ class Collecteur extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'solde_caisse' => 'decimal:2',
+        'solde_part_okami' => 'decimal:2',
+        'solde_part_proprietaire' => 'decimal:2',
     ];
 
     /**
@@ -51,6 +56,59 @@ class Collecteur extends Model
     public function tourneeAujourdhui()
     {
         return $this->tournees()->whereDate('date', today())->first();
+    }
+
+    /**
+     * Ajouter un montant à la caisse avec répartition
+     * Selon le cahier des charges: sur 6 jours, 5 jours pour propriétaire, 1 jour pour OKAMI
+     * Ratio: 5/6 propriétaire, 1/6 OKAMI
+     */
+    public function ajouterMontantAvecRepartition(float $montant): array
+    {
+        // Calcul de la répartition
+        $partOkami = round($montant / 6, 2); // 1/6 pour OKAMI
+        $partProprietaire = $montant - $partOkami; // 5/6 pour propriétaire
+
+        // Mise à jour des soldes
+        $this->increment('solde_caisse', $montant);
+        $this->increment('solde_part_okami', $partOkami);
+        $this->increment('solde_part_proprietaire', $partProprietaire);
+
+        return [
+            'montant_total' => $montant,
+            'part_okami' => $partOkami,
+            'part_proprietaire' => $partProprietaire,
+        ];
+    }
+
+    /**
+     * Retirer un montant de la caisse (pour paiement propriétaire)
+     */
+    public function retirerMontantProprietaire(float $montant): bool
+    {
+        if ($montant > $this->solde_part_proprietaire) {
+            return false;
+        }
+
+        $this->decrement('solde_caisse', $montant);
+        $this->decrement('solde_part_proprietaire', $montant);
+
+        return true;
+    }
+
+    /**
+     * Retirer un montant pour OKAMI
+     */
+    public function retirerMontantOkami(float $montant): bool
+    {
+        if ($montant > $this->solde_part_okami) {
+            return false;
+        }
+
+        $this->decrement('solde_caisse', $montant);
+        $this->decrement('solde_part_okami', $montant);
+
+        return true;
     }
 
     /**

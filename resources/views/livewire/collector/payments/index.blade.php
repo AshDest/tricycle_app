@@ -8,12 +8,44 @@
             <p class="text-muted mb-0">Traiter les demandes de paiement soumises par OKAMI</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
-            <div class="bg-info bg-opacity-10 text-info px-3 py-2 rounded fw-bold">
-                <i class="bi bi-safe me-1"></i>Caisse: {{ number_format($soldeCaisse) }} FC
-            </div>
             <span class="badge bg-warning text-dark px-3 py-2 fs-6">
                 <i class="bi bi-hourglass-split me-1"></i>{{ $demandesEnAttente }} en attente
             </span>
+        </div>
+    </div>
+
+    <!-- Solde Caisse avec Répartition -->
+    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #212529 0%, #343a40 100%);">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-2 mb-lg-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-safe fs-4" style="color: #fff;"></i>
+                        <div>
+                            <small class="d-block" style="color: rgba(255,255,255,0.7);">Solde Total</small>
+                            <h5 class="mb-0 fw-bold" style="color: #fff;">{{ number_format($soldeCaisse) }} FC</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="bg-white bg-opacity-10 rounded p-2">
+                                <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-building me-1"></i>Part OKAMI</small>
+                                <strong style="color: #ffc107;">{{ number_format($soldePartOkami) }} FC</strong>
+                                <small class="d-block text-muted">({{ $demandesOkami }} demande(s))</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-white bg-opacity-10 rounded p-2">
+                                <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-people me-1"></i>Part Propriétaires</small>
+                                <strong style="color: #20c997;">{{ number_format($soldePartProprietaire) }} FC</strong>
+                                <small class="d-block text-muted">({{ $demandesProprietaire }} demande(s))</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -37,7 +69,7 @@
             <div class="row g-3 align-items-end">
                 <div class="col-md-8">
                     <label class="form-label small fw-semibold">Rechercher</label>
-                    <input type="text" wire:model.live="search" class="form-control" placeholder="Nom du propriétaire...">
+                    <input type="text" wire:model.live="search" class="form-control" placeholder="Nom du propriétaire ou bénéficiaire...">
                 </div>
                 <div class="col-md-4">
                     <button wire:click="$refresh" class="btn btn-outline-primary w-100">
@@ -56,10 +88,10 @@
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4">Date demande</th>
-                            <th>Propriétaire</th>
+                            <th>Source</th>
+                            <th>Bénéficiaire</th>
                             <th>Montant demandé</th>
                             <th>Mode</th>
-                            <th>N° Compte</th>
                             <th>Demandé par</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
@@ -72,6 +104,33 @@
                                 <small class="text-muted d-block">{{ $payment->demande_at?->format('H:i') }}</small>
                             </td>
                             <td>
+                                @if($payment->source_caisse === 'okami')
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-building me-1"></i>OKAMI
+                                </span>
+                                @else
+                                <span class="badge bg-success">
+                                    <i class="bi bi-people me-1"></i>Propriétaire
+                                </span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($payment->source_caisse === 'okami')
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle">
+                                        {{ strtoupper(substr($payment->beneficiaire_nom ?? 'B', 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">{{ $payment->beneficiaire_nom ?? 'N/A' }}</span>
+                                        <small class="text-muted">{{ $payment->beneficiaire_telephone ?? '' }}</small>
+                                        @if($payment->beneficiaire_motif)
+                                        <small class="d-block text-info" title="{{ $payment->beneficiaire_motif }}">
+                                            <i class="bi bi-info-circle me-1"></i>{{ Str::limit($payment->beneficiaire_motif, 30) }}
+                                        </small>
+                                        @endif
+                                    </div>
+                                </div>
+                                @else
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="avatar avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle">
                                         {{ strtoupper(substr($payment->proprietaire->user->name ?? 'P', 0, 1)) }}
@@ -81,15 +140,16 @@
                                         <small class="text-muted">{{ $payment->proprietaire->telephone ?? '' }}</small>
                                     </div>
                                 </div>
+                                @endif
                             </td>
                             <td class="fw-bold text-success fs-5">{{ number_format($payment->total_du) }} FC</td>
                             <td>
                                 <span class="badge bg-light text-dark">
                                     {{ \App\Models\Payment::getModesPaiement()[$payment->mode_paiement] ?? $payment->mode_paiement }}
                                 </span>
-                            </td>
-                            <td>
-                                <code>{{ $payment->numero_compte ?? '-' }}</code>
+                                @if($payment->numero_compte)
+                                <br><code class="small">{{ $payment->numero_compte }}</code>
+                                @endif
                             </td>
                             <td>
                                 <small class="text-muted">{{ $payment->demandePar->name ?? 'OKAMI' }}</small>
@@ -139,40 +199,70 @@
                     <button type="button" class="btn-close" wire:click="fermerModal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Info propriétaire -->
-                    <div class="alert alert-info mb-4">
-                        <div class="d-flex justify-content-between align-items-center">
+                    <!-- Source de la caisse -->
+                    @php
+                        $isFromOkami = $paymentEnCours->source_caisse === 'okami';
+                        $modeLabel = \App\Models\Payment::getModesPaiement()[$paymentEnCours->mode_paiement] ?? '';
+                        $isCash = $paymentEnCours->mode_paiement === 'cash';
+                    @endphp
+
+                    <div class="alert {{ $isFromOkami ? 'alert-warning' : 'alert-info' }} mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <div>
-                                <strong>{{ $paymentEnCours->proprietaire->user->name ?? 'N/A' }}</strong>
-                                <br>
-                                @php
-                                    $modeLabel = \App\Models\Payment::getModesPaiement()[$paymentEnCours->mode_paiement] ?? '';
-                                    $isCash = $paymentEnCours->mode_paiement === 'cash';
-                                @endphp
-                                <span class="badge {{ $isCash ? 'bg-warning text-dark' : 'bg-primary' }}">
+                                @if($isFromOkami)
+                                <span class="badge bg-warning text-dark me-2"><i class="bi bi-building"></i> Caisse OKAMI</span>
+                                @else
+                                <span class="badge bg-success me-2"><i class="bi bi-people"></i> Caisse Propriétaire</span>
+                                @endif
+                                <span class="badge {{ $isCash ? 'bg-secondary' : 'bg-primary' }}">
                                     {{ $modeLabel }}
                                 </span>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-success fs-6">{{ number_format($paymentEnCours->total_du) }} FC</span>
+                                <span class="badge bg-dark fs-6">{{ number_format($paymentEnCours->total_du) }} FC</span>
                             </div>
                         </div>
-                        @if(!$isCash && $paymentEnCours->numero_compte)
                         <hr class="my-2">
-                        <small><strong>N° Compte:</strong> {{ $paymentEnCours->numero_compte }}</small>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>Bénéficiaire:</strong><br>
+                                @if($isFromOkami)
+                                {{ $paymentEnCours->beneficiaire_nom ?? 'N/A' }}
+                                @if($paymentEnCours->beneficiaire_telephone)
+                                <br><small class="text-muted">{{ $paymentEnCours->beneficiaire_telephone }}</small>
+                                @endif
+                                @else
+                                {{ $paymentEnCours->proprietaire->user->name ?? 'N/A' }}
+                                @endif
+                            </div>
+                            @if($paymentEnCours->numero_compte)
+                            <div class="text-end">
+                                <strong>N° Compte:</strong><br>
+                                <code>{{ $paymentEnCours->numero_compte }}</code>
+                            </div>
+                            @endif
+                        </div>
+                        @if($isFromOkami && $paymentEnCours->beneficiaire_motif)
+                        <hr class="my-2">
+                        <small><strong>Motif:</strong> {{ $paymentEnCours->beneficiaire_motif }}</small>
                         @endif
                     </div>
 
                     @if($isCash)
-                    <div class="alert alert-warning mb-3">
+                    <div class="alert alert-secondary mb-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <i class="bi bi-info-circle me-2"></i>
+                                <i class="bi bi-cash-stack me-2"></i>
                                 <strong>Paiement en Cash</strong>
                             </div>
                             <div class="text-end">
-                                <small>Votre caisse:</small>
-                                <strong class="ms-1">{{ number_format($soldeCaisse) }} FC</strong>
+                                @if($isFromOkami)
+                                <small>Solde OKAMI:</small>
+                                <strong class="ms-1 text-warning">{{ number_format($soldePartOkami) }} FC</strong>
+                                @else
+                                <small>Solde Propriétaires:</small>
+                                <strong class="ms-1 text-success">{{ number_format($soldePartProprietaire) }} FC</strong>
+                                @endif
                             </div>
                         </div>
                         <small class="d-block mt-1">Un reçu sera généré automatiquement après le traitement.</small>

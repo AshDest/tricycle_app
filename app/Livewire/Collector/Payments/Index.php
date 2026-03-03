@@ -83,23 +83,35 @@ class Index extends Component
 
         $collecteur = auth()->user()->collecteur;
         $isCash = $this->paymentEnCours->mode_paiement === 'cash';
+        $isFromOkami = $this->paymentEnCours->source_caisse === 'okami';
 
         // Pour les paiements cash, vérifier que le collecteur a assez dans sa caisse
         if ($isCash && $collecteur) {
-            $soldeCaisse = $collecteur->solde_caisse ?? 0;
-            if ($this->montant_paye > $soldeCaisse) {
-                $this->addError('montant_paye', "Le montant dépasse votre solde de caisse ({$soldeCaisse} FC). Veuillez d'abord collecter auprès des caissiers.");
-                return;
+            // Vérifier selon la source de la caisse
+            if ($isFromOkami) {
+                $soldeDisponible = $collecteur->solde_part_okami ?? 0;
+                if ($this->montant_paye > $soldeDisponible) {
+                    $this->addError('montant_paye', "Le montant dépasse votre solde de caisse OKAMI ({$soldeDisponible} FC).");
+                    return;
+                }
+            } else {
+                $soldeDisponible = $collecteur->solde_part_proprietaire ?? 0;
+                if ($this->montant_paye > $soldeDisponible) {
+                    $this->addError('montant_paye', "Le montant dépasse votre solde de caisse Propriétaires ({$soldeDisponible} FC).");
+                    return;
+                }
             }
         }
 
-        // Vérifier que le montant ne dépasse pas le solde disponible du propriétaire
-        $paymentService = new PaymentService();
-        $soldeDisponible = $paymentService->getSoldeDisponibleProprietaire($this->paymentEnCours->proprietaire);
+        // Vérifier le solde disponible selon la source
+        if (!$isFromOkami && $this->paymentEnCours->proprietaire) {
+            $paymentService = new PaymentService();
+            $soldeProprietaire = $paymentService->getSoldeDisponibleProprietaire($this->paymentEnCours->proprietaire);
 
-        if ($this->montant_paye > $soldeDisponible) {
-            $this->addError('montant_paye', "Le montant dépasse le solde disponible du propriétaire ({$soldeDisponible} FC).");
-            return;
+            if ($this->montant_paye > $soldeProprietaire) {
+                $this->addError('montant_paye', "Le montant dépasse le solde disponible du propriétaire ({$soldeProprietaire} FC).");
+                return;
+            }
         }
 
         // Générer un numéro de référence pour les paiements cash
@@ -108,6 +120,7 @@ class Index extends Component
             $numeroEnvoi = 'CASH-' . date('YmdHis') . '-' . $this->paymentEnCours->id;
         }
 
+        $paymentService = new PaymentService();
         $paymentService->traiterPaiement($this->paymentEnCours, [
             'montant_paye' => $this->montant_paye,
             'numero_envoi' => $numeroEnvoi,
@@ -117,7 +130,13 @@ class Index extends Component
 
         // Déduire le montant de la caisse du collecteur pour les paiements cash
         if ($isCash && $collecteur) {
-            $collecteur->decrement('solde_caisse', $this->montant_paye);
+            if ($isFromOkami) {
+                // Déduire de la part OKAMI
+                $collecteur->retirerMontantOkami($this->montant_paye);
+            } else {
+                // Déduire de la part Propriétaires
+                $collecteur->retirerMontantProprietaire($this->montant_paye);
+            }
         }
 
         $paymentId = $this->paymentEnCours->id;
@@ -168,22 +187,34 @@ class Index extends Component
     {
         $collecteur = auth()->user()->collecteur;
         $soldeCaisse = $collecteur?->solde_caisse ?? 0;
+        $soldePartOkami = $collecteur?->solde_part_okami ?? 0;
+        $soldePartProprietaire = $collecteur?->solde_part_proprietaire ?? 0;
 
         // Demandes à traiter (statut = en_attente)
         $payments = Payment::with(['proprietaire.user', 'demandePar'])
             ->where('statut', 'en_attente')
             ->when($this->search, function($q) {
-                $q->whereHas('proprietaire.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'));
+                $q->where(function($q2) {
+                    // Recherche dans le nom du propriétaire ou le nom du bénéficiaire OKAMI
+                    $q2->whereHas('proprietaire.user', fn($q3) => $q3->where('name', 'like', '%'.$this->search.'%'))
+                       ->orWhere('beneficiaire_nom', 'like', '%'.$this->search.'%');
+                });
             })
             ->orderBy('created_at', 'asc')
             ->paginate($this->perPage);
 
         $demandesEnAttente = Payment::where('statut', 'en_attente')->count();
+        $demandesOkami = Payment::where('statut', 'en_attente')->where('source_caisse', 'okami')->count();
+        $demandesProprietaire = Payment::where('statut', 'en_attente')->fromProprietaire()->count();
 
         return view('livewire.collector.payments.index', [
             'payments' => $payments,
             'demandesEnAttente' => $demandesEnAttente,
+            'demandesOkami' => $demandesOkami,
+            'demandesProprietaire' => $demandesProprietaire,
             'soldeCaisse' => $soldeCaisse,
+            'soldePartOkami' => $soldePartOkami,
+            'soldePartProprietaire' => $soldePartProprietaire,
         ]);
     }
 }

@@ -163,7 +163,7 @@ class PaymentService
     }
 
     /**
-     * Créer une demande de paiement (par OKAMI)
+     * Créer une demande de paiement (par OKAMI) - depuis caisse Propriétaire
      */
     public function creerDemandePaiementOKAMI(array $data, int $okamUserId): Payment
     {
@@ -178,6 +178,7 @@ class PaymentService
 
         return Payment::create([
             'proprietaire_id' => $proprietaire->id,
+            'source_caisse' => $data['source_caisse'] ?? 'proprietaire',
             'total_du' => $montantDemande,
             'total_paye' => 0,
             'mode_paiement' => $data['mode_paiement'],
@@ -188,6 +189,37 @@ class PaymentService
             'demande_at' => now(),
             'periode_debut' => $data['periode_debut'] ?? null,
             'periode_fin' => $data['periode_fin'] ?? null,
+            'notes' => $data['notes'] ?? null,
+        ]);
+    }
+
+    /**
+     * Créer une demande de paiement depuis la caisse OKAMI (vers un bénéficiaire externe)
+     */
+    public function creerDemandePaiementDepuisOKAMI(array $data, int $okamUserId): Payment
+    {
+        $montantDemande = $data['montant'];
+
+        // Vérifier que le montant ne dépasse pas le solde OKAMI disponible
+        $soldeOkami = \App\Models\Collecteur::sum('solde_part_okami');
+        if ($montantDemande > $soldeOkami) {
+            throw new \Exception("Le montant demandé (" . number_format($montantDemande) . " FC) dépasse le solde OKAMI disponible (" . number_format($soldeOkami) . " FC).");
+        }
+
+        return Payment::create([
+            'proprietaire_id' => null, // Pas de propriétaire, c'est un bénéficiaire externe
+            'source_caisse' => 'okami',
+            'beneficiaire_nom' => $data['beneficiaire_nom'],
+            'beneficiaire_telephone' => $data['beneficiaire_telephone'] ?? null,
+            'beneficiaire_motif' => $data['beneficiaire_motif'],
+            'total_du' => $montantDemande,
+            'total_paye' => 0,
+            'mode_paiement' => $data['mode_paiement'],
+            'numero_compte' => $data['numero_compte'] ?? $data['beneficiaire_telephone'] ?? null,
+            'statut' => 'en_attente',
+            'date_demande' => now(),
+            'demande_par' => $okamUserId,
+            'demande_at' => now(),
             'notes' => $data['notes'] ?? null,
         ]);
     }

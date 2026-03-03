@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Collecte = Ramassage de l'argent par le collecteur chez un CAISSIER (point de collecte).
  * Le collecteur visite plusieurs caissiers pendant sa tournée.
+ * La somme collectée est répartie: 1/6 pour OKAMI, 5/6 pour les Propriétaires.
  */
 class Collecte extends Model
 {
@@ -20,6 +21,8 @@ class Collecte extends Model
         'caissier_id',
         'montant_attendu',
         'montant_collecte',
+        'part_okami',
+        'part_proprietaire',
         'ecart',
         'statut',
         'valide_par_collecteur',
@@ -37,6 +40,8 @@ class Collecte extends Model
     protected $casts = [
         'montant_attendu' => 'decimal:2',
         'montant_collecte' => 'decimal:2',
+        'part_okami' => 'decimal:2',
+        'part_proprietaire' => 'decimal:2',
         'ecart' => 'decimal:2',
         'heure_arrivee' => 'datetime',
         'heure_depart' => 'datetime',
