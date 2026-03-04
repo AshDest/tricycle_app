@@ -169,18 +169,18 @@
                                 </span>
                             </td>
                             <td class="text-end">
-                                @if($lavage->statut_paiement === 'payé')
                                 <div class="btn-group btn-group-sm">
+                                    @if($lavage->statut_paiement !== 'payé')
                                     <a href="{{ route('cleaner.lavages.edit', $lavage) }}" class="btn btn-outline-primary" title="Modifier">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <button wire:click="telechargerRecu({{ $lavage->id }})" class="btn btn-outline-info" title="Reçu">
+                                    @endif
+                                    @if($lavage->statut_paiement === 'payé')
+                                    <button wire:click="telechargerRecu({{ $lavage->id }})" class="btn btn-outline-info" title="Télécharger reçu">
                                         <i class="bi bi-printer"></i>
                                     </button>
+                                    @endif
                                 </div>
-                                @else
-                                <span class="text-muted">-</span>
-                                @endif
                             </td>
                         </tr>
                         @empty

@@ -72,6 +72,12 @@ class EditLavage extends Component
             return redirect()->route('cleaner.lavages.index');
         }
 
+        // Vérifier que le lavage n'est pas déjà payé
+        if ($lavage->statut_paiement === 'payé') {
+            session()->flash('error', 'Ce lavage a déjà été payé et ne peut plus être modifié.');
+            return redirect()->route('cleaner.lavages.index');
+        }
+
         // Charger les prix configurés
         $this->prixSimple = Lavage::getPrixLavage('simple');
         $this->prixComplet = Lavage::getPrixLavage('complet');
@@ -152,6 +158,12 @@ class EditLavage extends Component
 
     public function save()
     {
+        // Double vérification: empêcher la modification d'un lavage déjà payé
+        if ($this->lavage->statut_paiement === 'payé') {
+            session()->flash('error', 'Ce lavage a déjà été payé et ne peut plus être modifié.');
+            return redirect()->route('cleaner.lavages.index');
+        }
+
         $this->validate();
 
         $cleaner = auth()->user()->cleaner;
