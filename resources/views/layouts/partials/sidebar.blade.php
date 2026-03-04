@@ -377,6 +377,12 @@
                     <span>Solde Propri&eacute;taires</span>
                 </a>
             </li>
+            <li class="{{ request()->is('collector/solde-okami*') ? 'active' : '' }}">
+                <a href="{{ route('collector.solde-okami') }}">
+                    <i class="bi bi-building"></i>
+                    <span>Solde OKAMI</span>
+                </a>
+            </li>
             <li class="{{ request()->is('collector/historique*') ? 'active' : '' }}">
                 <a href="{{ route('collector.historique') }}">
                     <i class="bi bi-clock-history"></i>

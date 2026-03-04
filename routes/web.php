@@ -225,6 +225,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Solde des propriétaires
         Route::get('/proprietaires', \App\Livewire\Collector\Proprietaires\Index::class)->name('proprietaires.index');
+
+        // Solde OKAMI
+        Route::get('/solde-okami', \App\Livewire\Collector\SoldeOkami::class)->name('solde-okami');
     });
 
     /*
