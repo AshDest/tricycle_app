@@ -94,5 +94,48 @@ class DepensesList extends Component
         $this->reset(['search', 'filterCategorie', 'dateDebut', 'dateFin']);
         $this->resetPage();
     }
+
+    /**
+     * Exporter la liste des dépenses en PDF
+     */
+    public function exporterPdf()
+    {
+        $cleaner = auth()->user()->cleaner;
+
+        $depenses = DepenseLavage::where('cleaner_id', $cleaner->id)
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('numero_depense', 'like', '%' . $this->search . '%')
+                      ->orWhere('description', 'like', '%' . $this->search . '%')
+                      ->orWhere('fournisseur', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->filterCategorie, fn($q) => $q->where('categorie', $this->filterCategorie))
+            ->when($this->dateDebut, fn($q) => $q->whereDate('date_depense', '>=', $this->dateDebut))
+            ->when($this->dateFin, fn($q) => $q->whereDate('date_depense', '<=', $this->dateFin))
+            ->orderBy('date_depense', 'desc')
+            ->get();
+
+        $stats = [
+            'total' => $depenses->sum('montant'),
+            'count' => $depenses->count(),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.liste-depenses-lavage', [
+            'depenses' => $depenses,
+            'stats' => $stats,
+            'cleaner' => $cleaner,
+            'dateDebut' => $this->dateDebut,
+            'dateFin' => $this->dateFin,
+            'categories' => DepenseLavage::CATEGORIES,
+        ]);
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'liste_depenses_' . now()->format('Y-m-d_His') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
+    }
 }
 

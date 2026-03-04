@@ -7,9 +7,19 @@
             </h4>
             <p class="text-muted mb-0">Historique de toutes vos collectes effectuées</p>
         </div>
-        <a href="{{ route('collector.tournee.index') }}" class="btn btn-primary">
-            <i class="bi bi-play-circle me-1"></i>Tournée du Jour
-        </a>
+        <div class="d-flex gap-2">
+            <button wire:click="exporterPdf" class="btn btn-outline-danger" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="exporterPdf">
+                    <i class="bi bi-file-pdf me-1"></i>Export PDF
+                </span>
+                <span wire:loading wire:target="exporterPdf">
+                    <span class="spinner-border spinner-border-sm me-1"></span>...
+                </span>
+            </button>
+            <a href="{{ route('collector.tournee.index') }}" class="btn btn-primary">
+                <i class="bi bi-play-circle me-1"></i>Tournée du Jour
+            </a>
+        </div>
     </div>
 
     <!-- Stats -->

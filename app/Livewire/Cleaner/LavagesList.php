@@ -107,5 +107,53 @@ class LavagesList extends Component
             echo $pdf->output();
         }, $filename);
     }
+
+    /**
+     * Exporter la liste des lavages en PDF
+     */
+    public function exporterPdf()
+    {
+        $cleaner = auth()->user()->cleaner;
+
+        $lavages = Lavage::where('cleaner_id', $cleaner->id)
+            ->with('moto.proprietaire.user')
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('numero_lavage', 'like', '%' . $this->search . '%')
+                      ->orWhere('plaque_externe', 'like', '%' . $this->search . '%')
+                      ->orWhere('proprietaire_externe', 'like', '%' . $this->search . '%');
+                });
+            })
+            ->when($this->filterType, fn($q) => $q->where('type_lavage', $this->filterType))
+            ->when($this->filterStatut, fn($q) => $q->where('statut_paiement', $this->filterStatut))
+            ->when($this->filterSource === 'interne', fn($q) => $q->where('is_externe', false))
+            ->when($this->filterSource === 'externe', fn($q) => $q->where('is_externe', true))
+            ->when($this->dateDebut, fn($q) => $q->whereDate('date_lavage', '>=', $this->dateDebut))
+            ->when($this->dateFin, fn($q) => $q->whereDate('date_lavage', '<=', $this->dateFin))
+            ->orderBy('date_lavage', 'desc')
+            ->get();
+
+        $stats = [
+            'total' => $lavages->count(),
+            'total_montant' => $lavages->sum('montant'),
+            'part_cleaner' => $lavages->sum('part_cleaner'),
+            'part_okami' => $lavages->sum('part_okami'),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.liste-lavages', [
+            'lavages' => $lavages,
+            'stats' => $stats,
+            'cleaner' => $cleaner,
+            'dateDebut' => $this->dateDebut,
+            'dateFin' => $this->dateFin,
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        $filename = 'liste_lavages_' . now()->format('Y-m-d_His') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
+    }
 }
 

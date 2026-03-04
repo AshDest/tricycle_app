@@ -98,6 +98,48 @@ class Index extends Component
         session()->flash('warning', 'Dépôt signalé comme problématique.');
     }
 
+    /**
+     * Exporter la liste des dépôts en PDF
+     */
+    public function exporterPdf()
+    {
+        $collecteur = auth()->user()->collecteur;
+        $collecteurId = $collecteur?->id;
+
+        $collectes = Collecte::with(['caissier.user', 'tournee'])
+            ->whereHas('tournee', function($q) use ($collecteurId) {
+                $q->where('collecteur_id', $collecteurId);
+            })
+            ->when($this->filterDate, fn($q) => $q->whereDate('created_at', $this->filterDate))
+            ->when($this->filterStatut === 'a_valider', fn($q) => $q->where('valide_par_collecteur', false))
+            ->when($this->filterStatut === 'valide', fn($q) => $q->where('valide_par_collecteur', true))
+            ->when($this->filterStatut === 'litige', fn($q) => $q->where('statut', 'en_litige'))
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $stats = [
+            'total_collecte' => $collectes->sum('montant_collecte'),
+            'part_okami' => $collectes->where('valide_par_collecteur', true)->sum('part_okami'),
+            'part_proprietaire' => $collectes->where('valide_par_collecteur', true)->sum('part_proprietaire'),
+            'count' => $collectes->count(),
+            'valides' => $collectes->where('valide_par_collecteur', true)->count(),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.liste-depots-collecteur', [
+            'collectes' => $collectes,
+            'stats' => $stats,
+            'collecteur' => $collecteur,
+            'date' => $this->filterDate ?: now()->format('Y-m-d'),
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        $filename = 'depots_collecteur_' . now()->format('Y-m-d_His') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
+    }
+
     public function render()
     {
         $collecteur = auth()->user()->collecteur;

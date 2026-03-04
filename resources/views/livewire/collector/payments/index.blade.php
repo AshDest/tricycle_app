@@ -8,6 +8,14 @@
             <p class="text-muted mb-0">Traiter les demandes de paiement soumises par OKAMI</p>
         </div>
         <div class="d-flex gap-2 align-items-center">
+            <button wire:click="exporterPdf" class="btn btn-outline-danger" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="exporterPdf">
+                    <i class="bi bi-file-pdf me-1"></i>Export PDF
+                </span>
+                <span wire:loading wire:target="exporterPdf">
+                    <span class="spinner-border spinner-border-sm me-1"></span>...
+                </span>
+            </button>
             <span class="badge bg-warning text-dark px-3 py-2 fs-6">
                 <i class="bi bi-hourglass-split me-1"></i>{{ $demandesEnAttente }} en attente
             </span>

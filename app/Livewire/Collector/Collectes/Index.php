@@ -44,6 +44,54 @@ class Index extends Component
         // Peut ouvrir un modal ou rediriger vers une page de détail
     }
 
+    /**
+     * Exporter la liste des collectes en PDF
+     */
+    public function exporterPdf()
+    {
+        $collecteur = auth()->user()->collecteur;
+        $collecteur_id = $collecteur?->id;
+
+        $tourneeIds = collect();
+        if ($collecteur_id) {
+            $tourneeIds = Tournee::where('collecteur_id', $collecteur_id)->pluck('id');
+        }
+
+        $collectes = Collecte::with(['caissier.user', 'tournee'])
+            ->whereIn('tournee_id', $tourneeIds)
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
+            ->when($this->filterDate, fn($q) => $q->whereDate('created_at', $this->filterDate))
+            ->when($this->filterPeriode, function($q) {
+                switch($this->filterPeriode) {
+                    case 'today': $q->whereDate('created_at', Carbon::today()); break;
+                    case 'week': $q->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]); break;
+                    case 'month': $q->whereMonth('created_at', Carbon::now()->month)->whereYear('created_at', Carbon::now()->year); break;
+                }
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $stats = [
+            'total_collecte' => $collectes->sum('montant_collecte'),
+            'count' => $collectes->count(),
+            'partielles' => $collectes->where('statut', 'partielle')->count(),
+            'litiges' => $collectes->where('statut', 'en_litige')->count(),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.liste-collectes', [
+            'collectes' => $collectes,
+            'stats' => $stats,
+            'collecteur' => $collecteur,
+        ]);
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'collectes_' . now()->format('Y-m-d_His') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
+    }
+
     public function render()
     {
         $collecteur = auth()->user()->collecteur;

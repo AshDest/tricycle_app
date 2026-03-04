@@ -44,6 +44,59 @@ class Historique extends Component
         // Peut ouvrir un modal avec les détails de la tournée
     }
 
+    /**
+     * Exporter l'historique des tournées en PDF
+     */
+    public function exporterPdf()
+    {
+        $collecteur = auth()->user()->collecteur;
+        $collecteur_id = $collecteur?->id;
+
+        $tournees = Tournee::withCount('collectes')
+            ->withSum('collectes', 'montant_collecte')
+            ->where('collecteur_id', $collecteur_id)
+            ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
+            ->when($this->dateFrom, fn($q) => $q->whereDate('date', '>=', $this->dateFrom))
+            ->when($this->dateTo, fn($q) => $q->whereDate('date', '<=', $this->dateTo))
+            ->when($this->filterPeriode, function($q) {
+                switch($this->filterPeriode) {
+                    case 'week': $q->whereBetween('date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]); break;
+                    case 'month': $q->whereMonth('date', Carbon::now()->month)->whereYear('date', Carbon::now()->year); break;
+                    case 'year': $q->whereYear('date', Carbon::now()->year); break;
+                }
+            })
+            ->orderBy('date', 'desc')
+            ->get();
+
+        // Ajouter les totaux
+        $tournees->transform(function ($tournee) {
+            $tournee->total_collecte = $tournee->collectes_sum_montant_collecte ?? 0;
+            return $tournee;
+        });
+
+        $stats = [
+            'total_collecte' => $tournees->sum('total_collecte'),
+            'nombre_tournees' => $tournees->count(),
+            'nombre_collectes' => $tournees->sum('collectes_count'),
+            'moyenne_par_tournee' => $tournees->count() > 0 ? round($tournees->sum('total_collecte') / $tournees->count()) : 0,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.historique-collecteur', [
+            'tournees' => $tournees,
+            'stats' => $stats,
+            'collecteur' => $collecteur,
+            'dateFrom' => $this->dateFrom,
+            'dateTo' => $this->dateTo,
+        ]);
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'historique_collecteur_' . now()->format('Y-m-d_His') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
+    }
+
     public function render()
     {
         $collecteur = auth()->user()->collecteur;

@@ -171,6 +171,49 @@ class Index extends Component
     }
 
     /**
+     * Exporter la liste des demandes de paiement en PDF
+     */
+    public function exporterPdf()
+    {
+        $paymentService = new PaymentService();
+        $collecteur = auth()->user()->collecteur;
+
+        $payments = Payment::with(['proprietaire.user', 'demandePar'])
+            ->where('statut', 'en_attente')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        // Calculer le solde pour chaque paiement
+        foreach ($payments as $payment) {
+            if ($payment->source_caisse === 'okami' || !$payment->proprietaire) {
+                $payment->solde_disponible = $collecteur?->solde_part_okami ?? 0;
+            } else {
+                $payment->solde_disponible = $paymentService->getSoldeDisponibleProprietaire($payment->proprietaire);
+            }
+        }
+
+        $stats = [
+            'total_demandes' => $payments->count(),
+            'total_montant' => $payments->sum('total_du'),
+            'demandes_okami' => $payments->where('source_caisse', 'okami')->count(),
+            'demandes_proprietaire' => $payments->where('source_caisse', '!=', 'okami')->count(),
+        ];
+
+        $pdf = Pdf::loadView('pdf.liste-demandes-paiement', [
+            'payments' => $payments,
+            'stats' => $stats,
+            'collecteur' => $collecteur,
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        $filename = 'demandes_paiement_' . now()->format('Y-m-d_His') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
+    }
+
+    /**
      * Rejeter une demande
      */
     public function rejeterDemande($paymentId, $motif = 'Rejeté par le collecteur')
