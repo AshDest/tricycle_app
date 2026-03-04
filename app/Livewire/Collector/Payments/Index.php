@@ -190,6 +190,8 @@ class Index extends Component
         $soldePartOkami = $collecteur?->solde_part_okami ?? 0;
         $soldePartProprietaire = $collecteur?->solde_part_proprietaire ?? 0;
 
+        $paymentService = new PaymentService();
+
         // Demandes à traiter (statut = en_attente)
         $payments = Payment::with(['proprietaire.user', 'demandePar'])
             ->where('statut', 'en_attente')
@@ -202,6 +204,20 @@ class Index extends Component
             })
             ->orderBy('created_at', 'asc')
             ->paginate($this->perPage);
+
+        // Calculer le solde disponible pour chaque propriétaire
+        foreach ($payments as $payment) {
+            if ($payment->source_caisse === 'okami' || !$payment->proprietaire) {
+                // Pour les paiements OKAMI, on utilise le solde OKAMI du collecteur
+                $payment->solde_disponible = $soldePartOkami;
+                $payment->peut_etre_paye = $payment->total_du <= $soldePartOkami;
+            } else {
+                // Pour les paiements propriétaire, calculer le solde réel du propriétaire
+                $soldeProprietaire = $paymentService->getSoldeDisponibleProprietaire($payment->proprietaire);
+                $payment->solde_disponible = $soldeProprietaire;
+                $payment->peut_etre_paye = $payment->total_du <= $soldeProprietaire && $payment->total_du <= $soldePartProprietaire;
+            }
+        }
 
         $demandesEnAttente = Payment::where('statut', 'en_attente')->count();
         $demandesOkami = Payment::where('statut', 'en_attente')->where('source_caisse', 'okami')->count();

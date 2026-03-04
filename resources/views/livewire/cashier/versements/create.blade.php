@@ -3,27 +3,28 @@
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h4 class="page-title mb-1">
-                <i class="bi bi-plus-circle me-2 text-success"></i>Enregistrer un Versement Hebdomadaire
+                <i class="bi bi-plus-circle me-2 text-success"></i>Enregistrer un Versement
             </h4>
-            <p class="text-muted mb-0">Réception du versement hebdomadaire d'un motard (Lundi - Samedi)</p>
+            <p class="text-muted mb-0">Réception du versement hebdomadaire ou remboursement d'arriérés</p>
         </div>
         <a href="{{ route('cashier.versements.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Retour
         </a>
     </div>
 
-    <!-- Info répartition -->
-    <div class="alert alert-info mb-4">
-        <div class="d-flex align-items-center gap-3">
-            <i class="bi bi-info-circle fs-4"></i>
-            <div>
-                <strong>Système de répartition hebdomadaire (calendrier civil) :</strong><br>
-                <small>Semaine de travail = <strong>Lundi à Samedi</strong> (6 jours)</small><br>
-                Sur 6 jours de recettes → <span class="badge bg-warning">5 jours = Propriétaire (83.33%)</span>
-                + <span class="badge bg-info">1 jour = OKAMI (16.67%)</span>
-            </div>
-        </div>
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4">
+        <i class="bi bi-x-circle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
 
     <div class="row g-4">
         <!-- Formulaire -->
@@ -34,55 +35,12 @@
                 </div>
                 <div class="card-body">
                     <form wire:submit="enregistrer">
-                        <!-- Sélection de la semaine civile -->
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-calendar-week text-primary me-1"></i>
-                                Semaine civile concernée <span class="text-danger">*</span>
-                            </label>
-                            <select wire:model.live="semaine_selectionnee" class="form-select @error('semaine_selectionnee') is-invalid @enderror" required>
-                                @foreach($semaines ?? [] as $semaine)
-                                <option value="{{ $semaine['index'] }}">
-                                    {{ $semaine['label'] }}
-                                    @if($semaine['est_courante'])
-                                    - Sem. {{ $semaine['numero'] }}/{{ $semaine['annee'] }}
-                                    @else
-                                    (Sem. {{ $semaine['numero'] }})
-                                    @endif
-                                </option>
-                                @endforeach
-                            </select>
-                            @error('semaine_selectionnee')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-
-                            @if(isset($semaines[$semaine_selectionnee]))
-                            @php $semaineInfo = $semaines[$semaine_selectionnee]; @endphp
-                            <div class="mt-2 p-3 bg-light rounded">
-                                <div class="row text-center">
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Début (Lundi)</small>
-                                        <strong>{{ $semaineInfo['debut_formatted'] ?? '' }}</strong>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Fin (Samedi)</small>
-                                        <strong>{{ $semaineInfo['fin_formatted'] ?? '' }}</strong>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Jours de travail</small>
-                                        <span class="badge {{ $semaineInfo['est_complete'] ? 'bg-success' : 'bg-warning' }}">
-                                            {{ $semaineInfo['jours_ecoules'] }}/6 jours
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-                        </div>
-
                         <!-- Sélection du motard -->
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Motard <span class="text-danger">*</span></label>
-                            <select wire:model.live="motard_id" class="form-select @error('motard_id') is-invalid @enderror" required>
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person me-1 text-primary"></i>Motard <span class="text-danger">*</span>
+                            </label>
+                            <select wire:model.live="motard_id" class="form-select form-select-lg @error('motard_id') is-invalid @enderror" required>
                                 <option value="">-- Sélectionner un motard --</option>
                                 @foreach($motards ?? [] as $motard)
                                 <option value="{{ $motard->id }}">
@@ -97,7 +55,7 @@
 
                         @if($motardSelectionne)
                         <!-- Infos du motard sélectionné -->
-                        <div class="card mb-4 {{ $arrieresCumules > 0 ? 'border-warning' : 'border-success' }}">
+                        <div class="card mb-4 border-{{ $arrieresCumules > 0 ? 'warning' : 'success' }}">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div>
@@ -107,42 +65,173 @@
                                         </span>
                                     </div>
                                     <div class="text-end">
-                                        <small class="text-muted d-block">Taux de paiement</small>
-                                        <span class="badge badge-soft-{{ $tauxPaiement >= 90 ? 'success' : ($tauxPaiement >= 70 ? 'warning' : 'danger') }} fs-6">
-                                            {{ $tauxPaiement }}%
-                                        </span>
+                                        <small class="text-muted d-block">Tarif hebdomadaire</small>
+                                        <strong class="text-primary fs-5">{{ number_format($montantHebdomadaireAttendu) }} FC</strong>
+                                        <small class="d-block text-muted">({{ number_format($montantJournalier) }} FC/jour × 6)</small>
                                     </div>
                                 </div>
-                                <div class="row g-3">
-                                    <div class="col-6 col-md-3">
-                                        <div class="bg-secondary bg-opacity-10 rounded p-3 text-center">
-                                            <small class="text-muted d-block">Tarif/jour</small>
-                                            <strong class="text-secondary">{{ number_format($montantJournalier) }} FC</strong>
+
+                                @if($arrieresCumules > 0)
+                                <div class="alert alert-warning py-2 mb-0">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            <strong>Arriérés cumulés:</strong>
                                         </div>
-                                    </div>
-                                    <div class="col-6 col-md-3">
-                                        <div class="bg-primary bg-opacity-10 rounded p-3 text-center">
-                                            <small class="text-muted d-block">Attendu/semaine</small>
-                                            <strong class="text-primary">{{ number_format($montantHebdomadaireAttendu) }} FC</strong>
-                                            <small class="d-block text-muted">(6 jours)</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6 col-md-3">
-                                        <div class="bg-info bg-opacity-10 rounded p-3 text-center">
-                                            <small class="text-muted d-block">Jours semaine</small>
-                                            <strong class="text-info">{{ $joursEcoules }}/6</strong>
-                                            <small class="d-block text-muted">Lun-Sam</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6 col-md-3">
-                                        <div class="bg-{{ $arrieresCumules > 0 ? 'danger' : 'success' }} bg-opacity-10 rounded p-3 text-center">
-                                            <small class="text-muted d-block">Arriérés</small>
-                                            <strong class="text-{{ $arrieresCumules > 0 ? 'danger' : 'success' }}">
-                                                {{ number_format($arrieresCumules) }} FC
-                                            </strong>
-                                        </div>
+                                        <span class="badge bg-danger fs-6">{{ number_format($arrieresCumules) }} FC</span>
                                     </div>
                                 </div>
+                                @else
+                                <div class="alert alert-success py-2 mb-0">
+                                    <i class="bi bi-check-circle me-2"></i>Aucun arriéré - Motard à jour
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Type de versement -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Type de versement <span class="text-danger">*</span></label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'semaine' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
+                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="semaine" id="typeSemaine">
+                                        <label class="form-check-label d-block" for="typeSemaine">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <i class="bi bi-calendar-week fs-4 text-primary"></i>
+                                                <strong>Versement Hebdomadaire</strong>
+                                            </div>
+                                            <small class="text-muted">Payer une semaine de travail (6 jours)</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'arrieres' ? 'border-danger bg-danger bg-opacity-10' : '' }} {{ $arrieresCumules <= 0 ? 'opacity-50' : '' }}">
+                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="arrieres" id="typeArrieres" {{ $arrieresCumules <= 0 ? 'disabled' : '' }}>
+                                        <label class="form-check-label d-block" for="typeArrieres">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <i class="bi bi-arrow-counterclockwise fs-4 text-danger"></i>
+                                                <strong>Remboursement Arriérés</strong>
+                                            </div>
+                                            <small class="text-muted">
+                                                @if($arrieresCumules > 0)
+                                                Total: <strong class="text-danger">{{ number_format($arrieresCumules) }} FC</strong>
+                                                @else
+                                                Aucun arriéré
+                                                @endif
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($type_versement === 'semaine')
+                        <!-- Sélection de la semaine civile -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-calendar-week text-primary me-1"></i>
+                                Semaine civile <span class="text-danger">*</span>
+                            </label>
+                            <select wire:model.live="semaine_selectionnee" class="form-select @error('semaine_selectionnee') is-invalid @enderror" required>
+                                @foreach($semaines ?? [] as $semaine)
+                                <option value="{{ $semaine['index'] }}">
+                                    {{ $semaine['label'] }} (Sem. {{ $semaine['numero'] }})
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('semaine_selectionnee')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+
+                            <!-- Statut de la semaine sélectionnée -->
+                            @if($semaineDejaVersee)
+                            <div class="alert alert-info mt-3 mb-0">
+                                <div class="d-flex align-items-start gap-3">
+                                    <i class="bi bi-info-circle fs-4"></i>
+                                    <div class="flex-grow-1">
+                                        <strong>Semaine déjà versée partiellement</strong>
+                                        <div class="row mt-2">
+                                            <div class="col-4 text-center">
+                                                <small class="text-muted d-block">Déjà versé</small>
+                                                <span class="badge bg-success fs-6">{{ number_format($montantDejaVerse) }} FC</span>
+                                            </div>
+                                            <div class="col-4 text-center">
+                                                <small class="text-muted d-block">Restant</small>
+                                                <span class="badge bg-warning fs-6">{{ number_format($montantRestantSemaine) }} FC</span>
+                                            </div>
+                                            <div class="col-4 text-center">
+                                                <small class="text-muted d-block">Attendu</small>
+                                                <span class="badge bg-secondary">{{ number_format($montantHebdomadaireAttendu) }} FC</span>
+                                            </div>
+                                        </div>
+                                        @if($montantRestantSemaine > 0)
+                                        <div class="mt-2">
+                                            <small class="text-muted">Tout versement sera ajouté comme complément.</small>
+                                        </div>
+                                        @else
+                                        <div class="mt-2">
+                                            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Semaine complète!</span>
+                                            @if($arrieresCumules > 0)
+                                            <small class="d-block text-muted mt-1">Passez au remboursement d'arriérés si besoin.</small>
+                                            @endif
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @else
+                            <div class="alert alert-light mt-3 mb-0 border">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-calendar-check text-success"></i>
+                                    <span><strong>Nouvelle semaine</strong> - Aucun versement enregistré</span>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Montant attendu: </small>
+                                    <strong class="text-primary">{{ number_format($montantHebdomadaireAttendu) }} FC</strong>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
+
+                        @if($type_versement === 'arrieres' && count($arrieresDetails) > 0)
+                        <!-- Détail des arriérés par semaine -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-list-ul text-danger me-1"></i>
+                                Détail des arriérés
+                            </label>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Semaine</th>
+                                            <th class="text-end">Versé</th>
+                                            <th class="text-end">Attendu</th>
+                                            <th class="text-end text-danger">Arriéré</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($arrieresDetails as $detail)
+                                        <tr>
+                                            <td>
+                                                <small>Sem. {{ $detail['semaine_numero'] }}</small>
+                                                <br><small class="text-muted">{{ $detail['semaine_debut'] }} - {{ $detail['semaine_fin'] }}</small>
+                                            </td>
+                                            <td class="text-end">{{ number_format($detail['montant_verse']) }} FC</td>
+                                            <td class="text-end">{{ number_format($detail['montant_attendu']) }} FC</td>
+                                            <td class="text-end text-danger fw-bold">{{ number_format($detail['arrieres']) }} FC</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot class="table-warning">
+                                        <tr>
+                                            <th colspan="3" class="text-end">Total arriérés:</th>
+                                            <th class="text-end text-danger">{{ number_format($arrieresCumules) }} FC</th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
                             </div>
                         </div>
                         @endif
@@ -150,58 +239,57 @@
                         <!-- Montant reçu -->
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Montant reçu (FC) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" wire:model.live="montant" class="form-control form-control-lg @error('montant') is-invalid @enderror"
-                                       placeholder="0" min="0" required>
+                            <div class="input-group input-group-lg">
+                                <input type="number" wire:model.live="montant" class="form-control @error('montant') is-invalid @enderror"
+                                       placeholder="0" min="1" required>
                                 <span class="input-group-text">FC</span>
                             </div>
                             @error('montant')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
 
-                            @if($motardSelectionne && $montant)
-                            @php
-                                $ecart = $montant - $montantHebdomadaireAttendu;
-                            @endphp
-                            <div class="mt-2">
-                                @if($ecart >= 0)
-                                <div class="alert alert-success py-2 mb-0">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    <strong>Versement complet</strong> - Semaine payée intégralement
-                                    @if($ecart > 0 && $arrieresCumules > 0)
-                                    <div class="mt-2 pt-2 border-top border-success">
-                                        <i class="bi bi-arrow-repeat me-1"></i>
-                                        Excédent de <strong>{{ number_format($ecart) }} FC</strong> utilisé pour les arriérés
-                                    </div>
+                            <!-- Boutons de remplissage rapide -->
+                            <div class="mt-2 d-flex flex-wrap gap-2">
+                                @if($type_versement === 'semaine')
+                                    @if($semaineDejaVersee && $montantRestantSemaine > 0)
+                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-lightning me-1"></i>Complément: {{ number_format($montantRestantSemaine) }} FC
+                                    </button>
+                                    @elseif(!$semaineDejaVersee)
+                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-lightning me-1"></i>Semaine: {{ number_format($montantHebdomadaireAttendu) }} FC
+                                    </button>
                                     @endif
-                                </div>
+                                    @if($arrieresCumules > 0 && !$semaineDejaVersee)
+                                    <button type="button" wire:click="remplirTotalDu" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-check-all me-1"></i>Tout: {{ number_format($montantHebdomadaireAttendu + $arrieresCumules) }} FC
+                                    </button>
+                                    @endif
                                 @else
-                                <div class="alert alert-warning py-2 mb-0">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                    <strong>Versement partiel</strong> - Arriéré: <strong class="text-danger">{{ number_format(abs($ecart)) }} FC</strong>
-                                </div>
+                                    <button type="button" wire:click="remplirMontantArrieres" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-lightning me-1"></i>Arriérés: {{ number_format($arrieresCumules) }} FC
+                                    </button>
                                 @endif
                             </div>
-                            @endif
                         </div>
 
                         <!-- Prévisualisation de la répartition -->
                         @if($montant > 0)
                         <div class="card bg-light mb-4">
                             <div class="card-header py-2">
-                                <small class="fw-bold"><i class="bi bi-pie-chart me-2"></i>Répartition prévisionnelle</small>
+                                <small class="fw-bold"><i class="bi bi-pie-chart me-2"></i>Répartition (5/6 Propriétaire + 1/6 OKAMI)</small>
                             </div>
                             <div class="card-body py-3">
                                 <div class="row text-center">
                                     <div class="col-6">
                                         <div class="border-end">
-                                            <small class="text-muted d-block">Part Propriétaire (5/6)</small>
-                                            <h5 class="fw-bold text-warning mb-0">{{ number_format($partProprietairePreview) }} FC</h5>
+                                            <small class="text-muted d-block">Part Propriétaire</small>
+                                            <h5 class="fw-bold text-success mb-0">{{ number_format($partProprietairePreview) }} FC</h5>
                                         </div>
                                     </div>
                                     <div class="col-6">
-                                        <small class="text-muted d-block">Part OKAMI (1/6)</small>
-                                        <h5 class="fw-bold text-info mb-0">{{ number_format($partOkamiPreview) }} FC</h5>
+                                        <small class="text-muted d-block">Part OKAMI</small>
+                                        <h5 class="fw-bold text-warning mb-0">{{ number_format($partOkamiPreview) }} FC</h5>
                                     </div>
                                 </div>
                             </div>
@@ -211,51 +299,55 @@
                         <!-- Mode de paiement -->
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="form-check card p-3 {{ $mode_paiement === 'cash' ? 'border-success bg-success bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model="mode_paiement" value="cash" id="modeCash">
-                                        <label class="form-check-label d-flex align-items-center gap-2" for="modeCash">
-                                            <i class="bi bi-cash text-success fs-4"></i>
-                                            <span>Cash</span>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <div class="form-check card p-2 text-center {{ $mode_paiement === 'cash' ? 'border-success bg-success bg-opacity-10' : '' }}">
+                                        <input class="form-check-input d-none" type="radio" wire:model="mode_paiement" value="cash" id="modeCash">
+                                        <label class="form-check-label" for="modeCash">
+                                            <i class="bi bi-cash text-success fs-4 d-block"></i>
+                                            <small>Cash</small>
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-check card p-3 {{ $mode_paiement === 'mobile_money' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model="mode_paiement" value="mobile_money" id="modeMobile">
-                                        <label class="form-check-label d-flex align-items-center gap-2" for="modeMobile">
-                                            <i class="bi bi-phone text-primary fs-4"></i>
-                                            <span>Mobile Money</span>
+                                <div class="col-4">
+                                    <div class="form-check card p-2 text-center {{ $mode_paiement === 'mobile_money' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
+                                        <input class="form-check-input d-none" type="radio" wire:model="mode_paiement" value="mobile_money" id="modeMobile">
+                                        <label class="form-check-label" for="modeMobile">
+                                            <i class="bi bi-phone text-primary fs-4 d-block"></i>
+                                            <small>Mobile</small>
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-check card p-3 {{ $mode_paiement === 'depot' ? 'border-info bg-info bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model="mode_paiement" value="depot" id="modeDepot">
-                                        <label class="form-check-label d-flex align-items-center gap-2" for="modeDepot">
-                                            <i class="bi bi-bank text-info fs-4"></i>
-                                            <span>Dépôt</span>
+                                <div class="col-4">
+                                    <div class="form-check card p-2 text-center {{ $mode_paiement === 'depot' ? 'border-info bg-info bg-opacity-10' : '' }}">
+                                        <input class="form-check-input d-none" type="radio" wire:model="mode_paiement" value="depot" id="modeDepot">
+                                        <label class="form-check-label" for="modeDepot">
+                                            <i class="bi bi-bank text-info fs-4 d-block"></i>
+                                            <small>Dépôt</small>
                                         </label>
                                     </div>
                                 </div>
                             </div>
-                            @error('mode_paiement')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
                         </div>
 
                         <!-- Notes -->
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Notes / Observations</label>
-                            <textarea wire:model="notes" class="form-control" rows="3" placeholder="Remarques éventuelles..."></textarea>
+                            <label class="form-label fw-semibold">Notes</label>
+                            <textarea wire:model="notes" class="form-control" rows="2" placeholder="Remarques éventuelles..."></textarea>
                         </div>
 
                         <!-- Bouton soumettre -->
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled">
+                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled" {{ !$motard_id ? 'disabled' : '' }}>
                                 <span wire:loading.remove>
-                                    <i class="bi bi-check-circle me-2"></i>Enregistrer le Versement
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    @if($type_versement === 'arrieres')
+                                    Enregistrer le Remboursement
+                                    @elseif($semaineDejaVersee)
+                                    Enregistrer le Complément
+                                    @else
+                                    Enregistrer le Versement
+                                    @endif
                                 </span>
                                 <span wire:loading>
                                     <span class="spinner-border spinner-border-sm me-2"></span>Enregistrement...
@@ -265,65 +357,67 @@
                     </form>
                 </div>
             </div>
+        @endif
         </div>
 
         <!-- Sidebar infos -->
         <div class="col-lg-4">
-            <!-- Calendrier de la semaine -->
-            <div class="card mb-4">
-                <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-calendar3 me-2 text-primary"></i>Calendrier Civil</h6>
-                </div>
+            <!-- Résumé rapide -->
+            @if($motardSelectionne)
+            <div class="card mb-4 bg-dark text-white">
                 <div class="card-body">
-                    <p class="small text-muted mb-3">Semaine de travail: <strong>Lundi à Samedi</strong></p>
-                    <div class="d-flex justify-content-around text-center">
-                        @php
-                            $jourActuel = \Carbon\Carbon::now()->dayOfWeekIso; // 1=Lundi, 7=Dimanche
-                        @endphp
-                        @foreach(['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'] as $index => $jour)
-                        @php
-                            $estAujourdhui = ($jourActuel === ($index + 1));
-                        @endphp
-                        <div class="px-1">
-                            <small class="{{ $estAujourdhui ? 'fw-bold text-primary' : 'text-muted' }}">{{ $jour }}</small>
-                            @if($estAujourdhui)
-                            <div class="mt-1"><span class="badge bg-primary rounded-circle" style="width:8px;height:8px;padding:0;"></span></div>
-                            @endif
-                        </div>
-                        @endforeach
+                    <h6 class="text-white-50 mb-3"><i class="bi bi-receipt me-2"></i>Résumé</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-white-50">Motard:</span>
+                        <strong>{{ $motardSelectionne->user->name ?? 'N/A' }}</strong>
                     </div>
-                    <hr class="my-3">
-                    <small class="text-muted">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Le versement doit couvrir <strong>6 jours</strong> de recettes (Lundi-Samedi)
-                    </small>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-white-50">Type:</span>
+                        <span class="badge {{ $type_versement === 'semaine' ? 'bg-primary' : 'bg-danger' }}">
+                            {{ $type_versement === 'semaine' ? 'Semaine' : 'Arriérés' }}
+                        </span>
+                    </div>
+                    @if($type_versement === 'semaine' && isset($semaines[$semaine_selectionnee]))
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-white-50">Semaine:</span>
+                        <span>{{ $semaines[$semaine_selectionnee]['numero'] }}/{{ $semaines[$semaine_selectionnee]['annee'] }}</span>
+                    </div>
+                    @endif
+                    <hr class="border-secondary">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-white-50">Montant:</span>
+                        <strong class="fs-5 text-success">{{ number_format($montant ?: 0) }} FC</strong>
+                    </div>
                 </div>
             </div>
+            @endif
 
+            <!-- Info système -->
             <div class="card mb-4">
                 <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-info"></i>Instructions</h6>
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-info"></i>Système</h6>
                 </div>
                 <div class="card-body">
-                    <ol class="mb-0 ps-3">
-                        <li class="mb-2">Sélectionnez la semaine civile (Lun-Sam)</li>
-                        <li class="mb-2">Sélectionnez le motard qui effectue le versement</li>
-                        <li class="mb-2">Vérifiez le montant attendu pour 6 jours</li>
-                        <li class="mb-2">Saisissez le montant réellement reçu</li>
-                        <li>Validez l'enregistrement</li>
-                    </ol>
+                    <ul class="mb-0 ps-3 small">
+                        <li class="mb-2">Semaine = <strong>Lundi à Samedi</strong> (6 jours)</li>
+                        <li class="mb-2">Répartition: 5/6 Propriétaire + 1/6 OKAMI</li>
+                        <li class="mb-2">Si semaine déjà versée → Complément automatique</li>
+                        <li>Les excédents remboursent les arriérés</li>
+                    </ul>
                 </div>
             </div>
 
+            <!-- Solde -->
             <div class="card">
                 <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-wallet2 me-2 text-warning"></i>Solde Actuel</h6>
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-wallet2 me-2 text-warning"></i>Ma Caisse</h6>
                 </div>
                 <div class="card-body text-center">
-                    <h3 class="fw-bold text-warning mb-2">{{ number_format($soldeActuel ?? 0) }} FC</h3>
-                    <small class="text-muted">En caisse (non collecté)</small>
+                    <h3 class="fw-bold text-warning mb-1">{{ number_format($soldeActuel ?? 0) }} FC</h3>
+                    <small class="text-muted">Non collecté</small>
                 </div>
             </div>
         </div>
     </div>
 </div>
+

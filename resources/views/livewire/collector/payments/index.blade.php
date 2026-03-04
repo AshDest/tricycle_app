@@ -87,18 +87,18 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4">Date demande</th>
+                            <th class="ps-4">Date</th>
                             <th>Source</th>
                             <th>Bénéficiaire</th>
-                            <th>Montant demandé</th>
+                            <th class="text-center">Solde dû</th>
+                            <th class="text-center">Demandé</th>
                             <th>Mode</th>
-                            <th>Demandé par</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($payments as $payment)
-                        <tr>
+                        <tr class="{{ !$payment->peut_etre_paye ? 'table-danger bg-opacity-25' : '' }}">
                             <td class="ps-4">
                                 <span class="fw-medium">{{ $payment->date_demande?->format('d/m/Y') }}</span>
                                 <small class="text-muted d-block">{{ $payment->demande_at?->format('H:i') }}</small>
@@ -122,10 +122,9 @@
                                     </div>
                                     <div>
                                         <span class="fw-medium d-block">{{ $payment->beneficiaire_nom ?? 'N/A' }}</span>
-                                        <small class="text-muted">{{ $payment->beneficiaire_telephone ?? '' }}</small>
                                         @if($payment->beneficiaire_motif)
-                                        <small class="d-block text-info" title="{{ $payment->beneficiaire_motif }}">
-                                            <i class="bi bi-info-circle me-1"></i>{{ Str::limit($payment->beneficiaire_motif, 30) }}
+                                        <small class="text-muted" title="{{ $payment->beneficiaire_motif }}">
+                                            {{ Str::limit($payment->beneficiaire_motif, 25) }}
                                         </small>
                                         @endif
                                     </div>
@@ -142,30 +141,61 @@
                                 </div>
                                 @endif
                             </td>
-                            <td class="fw-bold text-success fs-5">{{ number_format($payment->total_du) }} FC</td>
-                            <td>
-                                <span class="badge bg-light text-dark">
-                                    {{ \App\Models\Payment::getModesPaiement()[$payment->mode_paiement] ?? $payment->mode_paiement }}
+                            <td class="text-center">
+                                <!-- Solde disponible du propriétaire -->
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge {{ $payment->solde_disponible >= $payment->total_du ? 'bg-success' : 'bg-danger' }} fs-6">
+                                        {{ number_format($payment->solde_disponible) }} FC
+                                    </span>
+                                    @if($payment->peut_etre_paye)
+                                    <small class="text-success mt-1">
+                                        <i class="bi bi-check-circle me-1"></i>OK
+                                    </small>
+                                    @else
+                                    <small class="text-danger mt-1">
+                                        <i class="bi bi-x-circle me-1"></i>Insuffisant
+                                    </small>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="fw-bold {{ $payment->peut_etre_paye ? 'text-success' : 'text-danger' }} fs-5">
+                                    {{ number_format($payment->total_du) }} FC
                                 </span>
                                 @if($payment->numero_compte)
                                 <br><code class="small">{{ $payment->numero_compte }}</code>
                                 @endif
                             </td>
                             <td>
-                                <small class="text-muted">{{ $payment->demandePar->name ?? 'OKAMI' }}</small>
+                                <span class="badge bg-light text-dark">
+                                    {{ \App\Models\Payment::getModesPaiement()[$payment->mode_paiement] ?? $payment->mode_paiement }}
+                                </span>
                             </td>
                             <td class="text-end pe-4">
+                                @if($payment->peut_etre_paye)
                                 <div class="btn-group">
                                     <button wire:click="ouvrirTraitement({{ $payment->id }})"
                                             class="btn btn-sm btn-success">
                                         <i class="bi bi-cash-coin me-1"></i>Traiter
                                     </button>
-                                    <button wire:click="rejeterDemande({{ $payment->id }}, 'Fonds insuffisants')"
+                                    <button wire:click="rejeterDemande({{ $payment->id }}, 'Rejeté par le collecteur')"
                                             class="btn btn-sm btn-outline-danger"
                                             wire:confirm="Rejeter cette demande ?">
                                         <i class="bi bi-x-lg"></i>
                                     </button>
                                 </div>
+                                @else
+                                <div class="d-flex flex-column align-items-end gap-1">
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Fonds insuffisants
+                                    </span>
+                                    <button wire:click="rejeterDemande({{ $payment->id }}, 'Solde insuffisant du propriétaire')"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            wire:confirm="Rejeter cette demande pour fonds insuffisants ?">
+                                        <i class="bi bi-x-lg me-1"></i>Rejeter
+                                    </button>
+                                </div>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -185,6 +215,24 @@
             {{ $payments->links() }}
         </div>
         @endif
+    </div>
+
+    <!-- Légende -->
+    <div class="card mt-3 bg-light border-0">
+        <div class="card-body py-2">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <small class="fw-bold text-muted"><i class="bi bi-info-circle me-1"></i>Légende:</small>
+                </div>
+                <div class="col">
+                    <span class="badge bg-success me-2"><i class="bi bi-check-circle me-1"></i>OK</span>
+                    <small class="text-muted me-3">Le propriétaire a assez de solde</small>
+
+                    <span class="badge bg-danger me-2"><i class="bi bi-x-circle me-1"></i>Insuffisant</span>
+                    <small class="text-muted">Le solde du propriétaire est insuffisant</small>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de traitement -->
