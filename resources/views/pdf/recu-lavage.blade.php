@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Reçu Lavage {{ $lavage->numero_lavage }}</title>
     <style>
+        @page {
+            margin: 0;
+            padding: 0;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -13,8 +17,14 @@
             font-family: 'DejaVu Sans', Arial, sans-serif;
             font-size: 10px;
             line-height: 1.3;
-            padding: 8px;
-            width: 80mm;
+            width: 100%;
+            max-width: 80mm;
+            margin: 0 auto;
+            padding: 5px 8px;
+        }
+        .container {
+            width: 100%;
+            text-align: center;
         }
         .header {
             text-align: center;
@@ -41,6 +51,7 @@
         }
         .section {
             margin-bottom: 8px;
+            text-align: left;
         }
         .section-title {
             font-weight: bold;
@@ -48,6 +59,7 @@
             margin-bottom: 4px;
             color: #333;
             text-transform: uppercase;
+            text-align: center;
         }
         .info {
             width: 100%;
@@ -59,11 +71,13 @@
         }
         .info .label {
             color: #666;
-            width: 40%;
+            width: 45%;
+            text-align: left;
         }
         .info .value {
             font-weight: 500;
             text-align: right;
+            width: 55%;
         }
         .montant-box {
             background: #e8f4fd;
@@ -72,9 +86,10 @@
             margin: 8px 0;
             border-radius: 4px;
         }
-        .montant-box .label {
+        .montant-box .montant-label {
             font-size: 9px;
             color: #666;
+            display: block;
         }
         .montant-box .montant {
             font-size: 16px;
@@ -82,26 +97,26 @@
             color: #0d6efd;
         }
         .repartition {
-            display: table;
             width: 100%;
             margin: 8px 0;
+            border-collapse: collapse;
         }
-        .repartition-item {
-            display: table-cell;
+        .repartition td {
             width: 50%;
             text-align: center;
-            padding: 6px;
+            padding: 6px 4px;
             background: #f8f9fa;
+            vertical-align: top;
         }
-        .repartition-item:first-child {
+        .repartition td:first-child {
             border-right: 1px solid #ddd;
         }
-        .repartition-item .label {
+        .repartition .rep-label {
             font-size: 8px;
             color: #666;
             display: block;
         }
-        .repartition-item .value {
+        .repartition .rep-value {
             font-size: 11px;
             font-weight: bold;
         }
@@ -134,6 +149,7 @@
     </style>
 </head>
 <body>
+<div class="container">
     <!-- Header -->
     <div class="header">
         <h1>SERVICE DE LAVAGE</h1>
@@ -205,22 +221,24 @@
 
     <!-- Montant -->
     <div class="montant-box">
-        <span class="label">MONTANT PAYÉ</span>
+        <span class="montant-label">MONTANT PAYÉ</span>
         <div class="montant">{{ number_format($lavage->prix_final, 0, ',', ' ') }} FC</div>
     </div>
 
     <!-- Répartition (si moto du système) -->
     @if(!$lavage->is_externe)
-    <div class="repartition">
-        <div class="repartition-item">
-            <span class="label">Service Lavage (80%)</span>
-            <span class="value" style="color: #198754;">{{ number_format($lavage->part_cleaner, 0, ',', ' ') }} FC</span>
-        </div>
-        <div class="repartition-item">
-            <span class="label">OKAMI (20%)</span>
-            <span class="value" style="color: #ffc107;">{{ number_format($lavage->part_okami, 0, ',', ' ') }} FC</span>
-        </div>
-    </div>
+    <table class="repartition">
+        <tr>
+            <td>
+                <span class="rep-label">Service Lavage (80%)</span>
+                <span class="rep-value" style="color: #198754;">{{ number_format($lavage->part_cleaner, 0, ',', ' ') }} FC</span>
+            </td>
+            <td>
+                <span class="rep-label">OKAMI (20%)</span>
+                <span class="rep-value" style="color: #ffc107;">{{ number_format($lavage->part_okami, 0, ',', ' ') }} FC</span>
+            </td>
+        </tr>
+    </table>
     @endif
 
     <!-- Laveur -->
@@ -242,6 +260,7 @@
         <p>Merci pour votre confiance!</p>
         <p>{{ now()->format('d/m/Y H:i:s') }}</p>
     </div>
+</div>
 </body>
 </html>
 
