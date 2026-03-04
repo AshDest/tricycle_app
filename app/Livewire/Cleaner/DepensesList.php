@@ -34,6 +34,10 @@ class DepensesList extends Component
     public function supprimer($depenseId)
     {
         $cleaner = auth()->user()->cleaner;
+        if (!$cleaner) {
+            session()->flash('error', 'Profil laveur non trouvé.');
+            return;
+        }
         $depense = DepenseLavage::where('cleaner_id', $cleaner->id)->findOrFail($depenseId);
 
         $depense->delete();
@@ -44,6 +48,22 @@ class DepensesList extends Component
     public function render()
     {
         $cleaner = auth()->user()->cleaner;
+
+        // Si pas de profil cleaner, retourner une vue vide avec un paginator vide
+        if (!$cleaner) {
+            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, $this->perPage);
+            return view('livewire.cleaner.depenses-list', [
+                'depenses' => $emptyPaginator,
+                'stats' => [
+                    'total_mois' => 0,
+                    'total_jour' => 0,
+                    'nb_depenses_mois' => 0,
+                    'solde_actuel' => 0,
+                ],
+                'parCategorie' => [],
+                'categories' => DepenseLavage::CATEGORIES,
+            ]);
+        }
 
         $depenses = DepenseLavage::where('cleaner_id', $cleaner->id)
             ->when($this->search, function ($query) {
@@ -101,6 +121,11 @@ class DepensesList extends Component
     public function exporterPdf()
     {
         $cleaner = auth()->user()->cleaner;
+
+        if (!$cleaner) {
+            session()->flash('error', 'Profil laveur non trouvé.');
+            return;
+        }
 
         $depenses = DepenseLavage::where('cleaner_id', $cleaner->id)
             ->when($this->search, function ($query) {

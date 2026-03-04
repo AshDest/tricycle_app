@@ -48,14 +48,14 @@ class EnregistrerDepense extends Component
     {
         $this->date_depense = now()->format('Y-m-d');
         $cleaner = auth()->user()->cleaner;
-        $this->soldeActuel = $cleaner->solde_actuel ?? 0;
+        $this->soldeActuel = $cleaner?->solde_actuel ?? 0;
     }
 
     public function updatedMontant($value)
     {
         // Vérifier si le montant dépasse le solde
         $cleaner = auth()->user()->cleaner;
-        $this->soldeActuel = $cleaner->solde_actuel ?? 0;
+        $this->soldeActuel = $cleaner?->solde_actuel ?? 0;
     }
 
     public function enregistrer()

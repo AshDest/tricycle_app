@@ -79,7 +79,7 @@ class Create extends Component
     public function mount()
     {
         $caissier = auth()->user()->caissier;
-        $this->soldeActuel = $caissier->solde_actuel ?? 0;
+        $this->soldeActuel = $caissier?->solde_actuel ?? 0;
         $this->loadSemaines();
 
         // Sélectionner la semaine courante par défaut

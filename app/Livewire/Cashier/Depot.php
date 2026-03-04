@@ -58,6 +58,11 @@ class Depot extends Component
      */
     public function ouvrirDepot($collecteId)
     {
+        if (!$this->caissier) {
+            session()->flash('error', 'Profil caissier non trouvé.');
+            return;
+        }
+
         $this->collecteEnCours = Collecte::with(['tournee.collecteur.user'])
             ->where('id', $collecteId)
             ->where('caissier_id', $this->caissier->id)

@@ -39,6 +39,19 @@ class LavagesList extends Component
     {
         $cleaner = auth()->user()->cleaner;
 
+        // Si pas de profil cleaner, retourner une vue vide avec un paginator vide
+        if (!$cleaner) {
+            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator([], 0, $this->perPage);
+            return view('livewire.cleaner.lavages-list', [
+                'lavages' => $emptyPaginator,
+                'stats' => [
+                    'total' => 0,
+                    'aujourdhui' => 0,
+                    'ca_jour' => 0,
+                ],
+            ]);
+        }
+
         $lavages = Lavage::where('cleaner_id', $cleaner->id)
             ->with('moto.proprietaire.user')
             ->when($this->search, function ($query) {
@@ -114,6 +127,11 @@ class LavagesList extends Component
     public function exporterPdf()
     {
         $cleaner = auth()->user()->cleaner;
+
+        if (!$cleaner) {
+            session()->flash('error', 'Profil laveur non trouvé.');
+            return;
+        }
 
         $lavages = Lavage::where('cleaner_id', $cleaner->id)
             ->with('moto.proprietaire.user')
