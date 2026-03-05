@@ -77,6 +77,71 @@
         </div>
     </div>
 
+    <!-- Section Arriérés / Manquants des Motards -->
+    <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);">
+        <div class="card-body text-white">
+            <div class="row align-items-center">
+                <div class="col-lg-3 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-exclamation-triangle fs-2"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold">Arriérés Motards</h5>
+                            <small class="opacity-75">{{ $motardsAvecArrieres ?? 0 }} motard(s) concerné(s)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="row g-3 text-center">
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Aujourd'hui</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($arrieresJour ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Cette semaine</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($arrieresSemaine ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Ce mois</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($arrieresMois ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-25 rounded p-3">
+                                <small class="d-block opacity-75">Total cumulé</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($arrieresCumules ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if(count($topMotardsArrieres ?? []) > 0)
+            <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <small class="opacity-75 fw-bold">
+                        <i class="bi bi-person-exclamation me-1"></i>
+                        Top 5 Motards avec Arriérés
+                    </small>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach($topMotardsArrieres as $motardArr)
+                    <span class="badge bg-white bg-opacity-25 px-3 py-2">
+                        {{ $motardArr['nom'] }}: <strong>{{ number_format($motardArr['total_arrieres']) }} FC</strong>
+                    </span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+
     <!-- Solde OKAMI (Part 1/6) -->
     <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #00838f 0%, #006064 100%);">
         <div class="card-body text-white">

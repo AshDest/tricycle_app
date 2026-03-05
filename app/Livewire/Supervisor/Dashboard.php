@@ -21,6 +21,13 @@ class Dashboard extends Component
     public $arrieresCumules = 0;
     public $tourneesAujourdhui = [];
 
+    // Détails des arriérés
+    public $arrieresJour = 0;
+    public $arrieresSemaine = 0;
+    public $arrieresMois = 0;
+    public $motardsAvecArrieres = 0;
+    public $topMotardsArrieres = [];
+
     // Solde OKAMI des versements
     public $soldeOkamiTotal = 0;
     public $soldeOkamiSemaine = 0;
@@ -50,8 +57,45 @@ class Dashboard extends Component
         $this->versementsAttenduAujourdhui = $versementsToday->sum('montant_attendu');
 
         // Arriérés cumulés (total de tous les arriérés)
-        $this->arrieresCumules = Versement::selectRaw('COALESCE(SUM(GREATEST(0, COALESCE(montant_attendu, 0) - COALESCE(montant, 0))), 0) as total')
-            ->value('total') ?? 0;
+        $this->arrieresCumules = Versement::where('arrieres', '>', 0)->sum('arrieres') ?? 0;
+
+        // Arriérés du jour
+        $this->arrieresJour = Versement::whereDate('date_versement', $today)
+            ->where('arrieres', '>', 0)
+            ->sum('arrieres') ?? 0;
+
+        // Arriérés de la semaine
+        $this->arrieresSemaine = Versement::whereBetween('date_versement', [$startOfWeek, $today])
+            ->where('arrieres', '>', 0)
+            ->sum('arrieres') ?? 0;
+
+        // Arriérés du mois
+        $this->arrieresMois = Versement::whereBetween('date_versement', [$startOfMonth, $today])
+            ->where('arrieres', '>', 0)
+            ->sum('arrieres') ?? 0;
+
+        // Nombre de motards avec arriérés
+        $this->motardsAvecArrieres = Versement::where('arrieres', '>', 0)
+            ->distinct('motard_id')
+            ->count('motard_id');
+
+        // Top 5 motards avec le plus d'arriérés
+        $this->topMotardsArrieres = Versement::select('motard_id')
+            ->selectRaw('SUM(arrieres) as total_arrieres')
+            ->where('arrieres', '>', 0)
+            ->groupBy('motard_id')
+            ->orderByDesc('total_arrieres')
+            ->limit(5)
+            ->with('motard.user')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'motard_id' => $item->motard_id,
+                    'nom' => $item->motard?->user?->name ?? 'N/A',
+                    'total_arrieres' => $item->total_arrieres,
+                ];
+            })
+            ->toArray();
 
         // Tournées du jour
         $this->tourneesAujourdhui = Tournee::whereDate('date', $today)
