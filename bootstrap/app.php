@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
+
+        // Ajouter le middleware pour suivre l'activité des utilisateurs
+        $middleware->appendToGroup('web', \App\Http\Middleware\UpdateLastActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

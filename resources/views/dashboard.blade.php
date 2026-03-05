@@ -2,6 +2,10 @@
     @section('title', 'Tableau de bord')
 
     {{-- Redirection vers le dashboard approprié selon le rôle --}}
+    @role('super-admin')
+        <livewire:super-admin.dashboard />
+    @endrole
+
     @role('admin')
         <livewire:admin.dashboard />
     @endrole

@@ -195,7 +195,7 @@
                 </table>
             </div>
         </div>
-        @if($lavages->hasPages())
+        @if($lavages instanceof \Illuminate\Pagination\LengthAwarePaginator && $lavages->hasPages())
         <div class="card-footer bg-white">
             {{ $lavages->links() }}
         </div>

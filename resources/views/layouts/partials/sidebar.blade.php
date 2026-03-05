@@ -20,6 +20,23 @@
                 </a>
             </li>
 
+            {{-- Super Admin Menu --}}
+            @role('super-admin')
+            <li class="sidebar-heading text-danger">Super Admin</li>
+            <li class="{{ request()->is('super-admin') ? 'active' : '' }}">
+                <a href="{{ route('super-admin.dashboard') }}">
+                    <i class="bi bi-shield-lock text-danger"></i>
+                    <span>Dashboard Système</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('super-admin/database*') ? 'active' : '' }}">
+                <a href="{{ route('super-admin.database') }}">
+                    <i class="bi bi-database text-danger"></i>
+                    <span>Gestion BDD</span>
+                </a>
+            </li>
+            @endrole
+
             {{-- Admin Menu --}}
             @role('admin')
             <li class="sidebar-heading">Administration</li>
