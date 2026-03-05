@@ -8,6 +8,7 @@ use App\Models\Motard;
 use App\Models\Moto;
 use App\Models\Versement;
 use App\Models\Tournee;
+use App\Models\Lavage;
 use App\Services\RepartitionService;
 use Carbon\Carbon;
 
@@ -20,11 +21,17 @@ class Dashboard extends Component
     public $arrieresCumules = 0;
     public $tourneesAujourdhui = [];
 
-    // Solde OKAMI
+    // Solde OKAMI des versements
     public $soldeOkamiTotal = 0;
     public $soldeOkamiSemaine = 0;
     public $soldeOkamiMois = 0;
     public $repartitionHebdo = [];
+
+    // Solde OKAMI des lavages (20% des lavages internes)
+    public $soldeOkamiLavageTotal = 0;
+    public $soldeOkamiLavageSemaine = 0;
+    public $soldeOkamiLavageMois = 0;
+    public $soldeOkamiLavageJour = 0;
 
     public function mount()
     {
@@ -51,7 +58,7 @@ class Dashboard extends Component
             ->with('collecteur.user')
             ->get();
 
-        // Calcul du solde OKAMI (part 1/6)
+        // Calcul du solde OKAMI des versements (part 1/6)
         // Total historique (part_okami stockée dans les versements)
         $this->soldeOkamiTotal = Versement::sum('part_okami') ?? 0;
 
@@ -61,7 +68,7 @@ class Dashboard extends Component
             $this->soldeOkamiTotal = RepartitionService::getPartOkami($totalVersements);
         }
 
-        // Solde OKAMI cette semaine
+        // Solde OKAMI cette semaine (versements)
         $versementsSemaine = Versement::whereBetween('date_versement', [$startOfWeek, $today])->get();
         $this->soldeOkamiSemaine = $versementsSemaine->sum('part_okami') ?? 0;
         if ($this->soldeOkamiSemaine == 0) {
@@ -69,13 +76,38 @@ class Dashboard extends Component
             $this->soldeOkamiSemaine = RepartitionService::getPartOkami($totalSemaine);
         }
 
-        // Solde OKAMI ce mois
+        // Solde OKAMI ce mois (versements)
         $versementsMois = Versement::whereBetween('date_versement', [$startOfMonth, $today])->get();
         $this->soldeOkamiMois = $versementsMois->sum('part_okami') ?? 0;
         if ($this->soldeOkamiMois == 0) {
             $totalMois = $versementsMois->sum('montant') ?? 0;
             $this->soldeOkamiMois = RepartitionService::getPartOkami($totalMois);
         }
+
+        // ===== Calcul du solde OKAMI des lavages (20% des lavages internes) =====
+
+        // Total historique des lavages OKAMI
+        $this->soldeOkamiLavageTotal = Lavage::where('is_externe', false)
+            ->where('statut_paiement', 'payé')
+            ->sum('part_okami') ?? 0;
+
+        // Solde OKAMI lavages cette semaine
+        $this->soldeOkamiLavageSemaine = Lavage::where('is_externe', false)
+            ->where('statut_paiement', 'payé')
+            ->whereBetween('date_lavage', [$startOfWeek, $today->endOfDay()])
+            ->sum('part_okami') ?? 0;
+
+        // Solde OKAMI lavages ce mois
+        $this->soldeOkamiLavageMois = Lavage::where('is_externe', false)
+            ->where('statut_paiement', 'payé')
+            ->whereBetween('date_lavage', [$startOfMonth, $today->endOfDay()])
+            ->sum('part_okami') ?? 0;
+
+        // Solde OKAMI lavages aujourd'hui
+        $this->soldeOkamiLavageJour = Lavage::where('is_externe', false)
+            ->where('statut_paiement', 'payé')
+            ->whereDate('date_lavage', $today)
+            ->sum('part_okami') ?? 0;
 
         // Répartition hebdomadaire globale
         $this->repartitionHebdo = RepartitionService::getResumeHebdomadaireGlobal();

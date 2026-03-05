@@ -129,6 +129,65 @@
         </div>
     </div>
 
+    <!-- Solde OKAMI des Lavages (Part 20%) -->
+    <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0288d1 0%, #01579b 100%);">
+        <div class="card-body text-white">
+            <div class="row align-items-center">
+                <div class="col-lg-4 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-droplet-half fs-2"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold">Solde OKAMI - Lavages</h5>
+                            <small class="opacity-75">Part de 20% sur chaque lavage interne</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="row g-3 text-center">
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Aujourd'hui</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiLavageJour ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Cette semaine</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiLavageSemaine ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-10 rounded p-3">
+                                <small class="d-block opacity-75">Ce mois</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiLavageMois ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="bg-white bg-opacity-25 rounded p-3">
+                                <small class="d-block opacity-75">Total cumulé</small>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiLavageTotal ?? 0) }} FC</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="opacity-75">
+                        <i class="bi bi-info-circle me-1"></i>
+                        20% du prix de chaque lavage des motos du système revient à OKAMI
+                    </small>
+                    <span class="badge bg-white text-primary px-3 py-2">
+                        <i class="bi bi-calculator me-1"></i>
+                        Total Global: {{ number_format(($soldeOkamiTotal ?? 0) + ($soldeOkamiLavageTotal ?? 0)) }} FC
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="row g-3 mb-4">
         <div class="col-12">
