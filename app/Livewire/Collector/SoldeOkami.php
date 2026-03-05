@@ -8,6 +8,7 @@ use App\Models\Versement;
 use App\Models\Payment;
 use App\Models\Lavage;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 /**
  * Vue du solde OKAMI disponible
@@ -44,7 +45,7 @@ class SoldeOkami extends Component
         }
     }
 
-    public function render()
+    private function getOkamiData()
     {
         $collecteur = auth()->user()->collecteur;
 
@@ -130,7 +131,7 @@ class SoldeOkami extends Component
             $semaineCourante->addWeek();
         }
 
-        return view('livewire.collector.solde-okami', [
+        return [
             'soldeOkamiCollecteur' => $soldeOkamiCollecteur,
             'totalPartOkamiVersements' => $totalPartOkamiVersements,
             'totalPartOkamiLavages' => $totalPartOkamiLavages,
@@ -142,7 +143,33 @@ class SoldeOkami extends Component
             'derniersVersements' => $derniersVersements,
             'derniersPaiements' => $derniersPaiements,
             'statsParSemaine' => $statsParSemaine,
-        ]);
+        ];
+    }
+
+    public function render()
+    {
+        return view('livewire.collector.solde-okami', $this->getOkamiData());
+    }
+
+    /**
+     * Exporter le rapport Solde OKAMI en PDF
+     */
+    public function exporterPdf()
+    {
+        $data = $this->getOkamiData();
+        $data['dateDebut'] = $this->dateDebut;
+        $data['dateFin'] = $this->dateFin;
+        $data['periodeFilter'] = $this->periodeFilter;
+        $data['dateGeneration'] = now();
+
+        $pdf = Pdf::loadView('pdf.solde-okami', $data);
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'solde_okami_' . now()->format('Y-m-d_His') . '.pdf';
+
+        return response()->streamDownload(function() use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 }
 

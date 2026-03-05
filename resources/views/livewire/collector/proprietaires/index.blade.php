@@ -7,9 +7,19 @@
             </h4>
             <p class="text-muted mb-0">Visualiser le solde disponible de chaque propriétaire</p>
         </div>
-        <button wire:click="$refresh" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
-        </button>
+        <div class="d-flex gap-2">
+            <button wire:click="exporterPdf" class="btn btn-outline-danger" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="exporterPdf">
+                    <i class="bi bi-file-pdf me-1"></i>Export PDF
+                </span>
+                <span wire:loading wire:target="exporterPdf">
+                    <span class="spinner-border spinner-border-sm me-1"></span>...
+                </span>
+            </button>
+            <button wire:click="$refresh" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+            </button>
+        </div>
     </div>
 
     <!-- Stats -->

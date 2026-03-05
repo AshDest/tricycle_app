@@ -8,6 +8,14 @@
             <p class="text-muted mb-0">Vue détaillée des fonds OKAMI (1/6 des versements + 20% lavages)</p>
         </div>
         <div class="d-flex gap-2">
+            <button wire:click="exporterPdf" class="btn btn-outline-danger" wire:loading.attr="disabled">
+                <span wire:loading.remove wire:target="exporterPdf">
+                    <i class="bi bi-file-pdf me-1"></i>Export PDF
+                </span>
+                <span wire:loading wire:target="exporterPdf">
+                    <span class="spinner-border spinner-border-sm me-1"></span>...
+                </span>
+            </button>
             <select wire:model.live="periodeFilter" class="form-select" style="width: auto;">
                 <option value="semaine">Cette semaine</option>
                 <option value="mois">Ce mois</option>
