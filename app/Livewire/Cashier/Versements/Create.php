@@ -18,28 +18,20 @@ class Create extends Component
     public $montant = '';
     public $mode_paiement = 'cash';
     public $notes = '';
+    public $date_versement = '';
 
-    // Type de versement: 'semaine' ou 'arrieres'
-    public $type_versement = 'semaine';
-
-    // Sélection de la semaine
-    public $semaine_selectionnee = '';
-    public $semaines = [];
+    // Type de versement: 'journalier' ou 'arrieres'
+    public $type_versement = 'journalier';
 
     public $motardSelectionne = null;
-    public $montantAttendu = 0;
-    public $montantHebdomadaireAttendu = 0;
-    public $montantJournalier = 0;
-    public $joursEcoules = 6;
+    public $montantJournalierAttendu = 0;
     public $soldeActuel = 0;
     public $arrieresCumules = 0;
-    public $tauxPaiement = 0;
 
-    // Infos sur la semaine sélectionnée
-    public $semaineDejaVersee = false;
-    public $versementExistant = null;
-    public $montantDejaVerse = 0;
-    public $montantRestantSemaine = 0;
+    // Infos sur le jour sélectionné
+    public $versementExistantJour = null;
+    public $montantDejaVerseJour = 0;
+    public $montantRestantJour = 0;
 
     // Historique des arriérés détaillés
     public $arrieresDetails = [];
@@ -57,13 +49,10 @@ class Create extends Component
             'motard_id' => 'required|exists:motards,id',
             'montant' => 'required|numeric|min:1',
             'mode_paiement' => 'required|in:cash,mobile_money,depot',
-            'type_versement' => 'required|in:semaine,arrieres',
+            'type_versement' => 'required|in:journalier,arrieres',
+            'date_versement' => 'required|date',
             'notes' => 'nullable|string',
         ];
-
-        if ($this->type_versement === 'semaine') {
-            $rules['semaine_selectionnee'] = 'required';
-        }
 
         return $rules;
     }
@@ -73,102 +62,33 @@ class Create extends Component
         'montant.required' => 'Le montant est obligatoire.',
         'montant.min' => 'Le montant doit être supérieur à 0.',
         'mode_paiement.required' => 'Veuillez choisir un mode de paiement.',
-        'semaine_selectionnee.required' => 'Veuillez sélectionner la semaine concernée.',
+        'date_versement.required' => 'Veuillez sélectionner la date du versement.',
     ];
 
     public function mount()
     {
         $caissier = auth()->user()->caissier;
         $this->soldeActuel = $caissier?->solde_actuel ?? 0;
-        $this->loadSemaines();
-
-        // Sélectionner la semaine courante par défaut
-        if (count($this->semaines) > 0) {
-            $this->semaine_selectionnee = 0;
-        }
-    }
-
-    /**
-     * Charger les semaines disponibles selon le calendrier civil
-     * Semaine de travail = Lundi à Samedi (6 jours)
-     */
-    public function loadSemaines()
-    {
-        $this->semaines = [];
-        $today = Carbon::now();
-
-        // Semaine courante - Commence le lundi
-        $debutSemaine = $today->copy()->startOfWeek(Carbon::MONDAY);
-
-        // Ajouter la semaine courante et les 4 semaines précédentes
-        for ($i = 0; $i < 5; $i++) {
-            $debut = $debutSemaine->copy()->subWeeks($i);
-            $fin = $debut->copy()->addDays(5); // Samedi (6 jours: Lun-Sam)
-
-            // Calculer les jours travaillés dans cette semaine
-            $joursEcoules = $this->getJoursTravaillesEcoules($debut, $fin, $today);
-            $estSemaineCourante = $i === 0;
-
-            // Numéro de semaine selon ISO
-            $numeroSemaine = $debut->weekOfYear;
-            $annee = $debut->year;
-
-            // Libellé de la semaine
-            if ($estSemaineCourante) {
-                $label = 'Semaine courante';
-                if ($joursEcoules < 6) {
-                    $label .= ' (' . $joursEcoules . '/6 jours)';
-                }
-            } else {
-                $label = 'Semaine ' . $numeroSemaine;
-            }
-
-            $this->semaines[] = [
-                'index' => $i,
-                'debut' => $debut->format('Y-m-d'),
-                'fin' => $fin->format('Y-m-d'),
-                'debut_formatted' => $debut->format('d/m'),
-                'fin_formatted' => $fin->format('d/m/Y'),
-                'numero' => $numeroSemaine,
-                'annee' => $annee,
-                'jours_ecoules' => $joursEcoules,
-                'est_courante' => $estSemaineCourante,
-                'est_complete' => $joursEcoules === 6 || $fin->isPast(),
-                'label' => $label . ' du ' . $debut->format('d/m') . ' au ' . $fin->format('d/m/Y'),
-            ];
-        }
-    }
-
-    /**
-     * Calculer le nombre de jours de travail écoulés dans une semaine
-     */
-    protected function getJoursTravaillesEcoules(Carbon $debut, Carbon $fin, Carbon $today): int
-    {
-        if ($today->isAfter($fin)) {
-            return 6;
-        }
-
-        if ($today->isBefore($debut)) {
-            return 0;
-        }
-
-        $joursEcoules = $today->diffInDays($debut) + 1;
-        return min(6, max(0, $joursEcoules));
+        $this->date_versement = Carbon::today()->format('Y-m-d');
     }
 
     public function updatedMotardId($value)
     {
         if ($value) {
             $this->motardSelectionne = Motard::with(['user', 'moto'])->find($value);
-            $this->montantJournalier = $this->motardSelectionne?->moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
-            $this->tauxPaiement = $this->motardSelectionne?->taux_paiement ?? 100;
+            $this->montantJournalierAttendu = $this->motardSelectionne?->moto?->montant_journalier_attendu
+                ?? SystemSetting::getMontantJournalierDefaut();
 
             // Charger les arriérés détaillés
             $this->loadArrieresDetails();
 
-            // Recalculer les montants avec la semaine sélectionnée
-            $this->calculerMontantsSelonSemaine();
+            // Vérifier le versement existant pour le jour sélectionné
             $this->verifierVersementExistant();
+
+            // Pré-remplir le montant avec le montant journalier
+            if ($this->type_versement === 'journalier' && empty($this->montant)) {
+                $this->montant = $this->montantRestantJour > 0 ? $this->montantRestantJour : $this->montantJournalierAttendu;
+            }
         } else {
             $this->resetMotardData();
         }
@@ -181,23 +101,23 @@ class Create extends Component
             $this->loadArrieresDetails();
             // Pré-remplir avec le total des arriérés si versement arriérés
             $this->montant = $this->arrieresCumules;
-        } elseif ($value === 'semaine') {
+        } elseif ($value === 'journalier') {
             $this->verifierVersementExistant();
+            $this->montant = $this->montantRestantJour > 0 ? $this->montantRestantJour : $this->montantJournalierAttendu;
         }
         $this->updateRepartitionPreview();
     }
 
-    public function updatedSemaineSelectionnee($value)
+    public function updatedDateVersement($value)
     {
         if ($this->motardSelectionne) {
-            $this->calculerMontantsSelonSemaine();
             $this->verifierVersementExistant();
             $this->updateRepartitionPreview();
         }
     }
 
     /**
-     * Charger les détails des arriérés par semaine
+     * Charger les détails des arriérés par jour
      */
     protected function loadArrieresDetails()
     {
@@ -209,19 +129,16 @@ class Create extends Component
 
         $versementsAvecArrieres = Versement::where('motard_id', $this->motardSelectionne->id)
             ->where('arrieres', '>', 0)
-            ->orderBy('semaine_debut', 'desc')
+            ->orderBy('date_versement', 'desc')
             ->get();
 
         $this->arrieresDetails = $versementsAvecArrieres->map(function ($v) {
             return [
                 'id' => $v->id,
-                'semaine_numero' => $v->numero_semaine,
-                'semaine_debut' => $v->semaine_debut?->format('d/m'),
-                'semaine_fin' => $v->semaine_fin?->format('d/m/Y'),
+                'date' => $v->date_versement?->format('d/m/Y'),
                 'montant_attendu' => $v->montant_attendu,
                 'montant_verse' => $v->montant,
                 'arrieres' => $v->arrieres,
-                'date_versement' => $v->date_versement?->format('d/m/Y'),
             ];
         })->toArray();
 
@@ -229,57 +146,37 @@ class Create extends Component
     }
 
     /**
-     * Vérifier si un versement existe déjà pour cette semaine
+     * Vérifier si un versement existe déjà pour ce jour
      */
     protected function verifierVersementExistant()
     {
-        $this->semaineDejaVersee = false;
-        $this->versementExistant = null;
-        $this->montantDejaVerse = 0;
-        $this->montantRestantSemaine = $this->montantHebdomadaireAttendu;
+        $this->versementExistantJour = null;
+        $this->montantDejaVerseJour = 0;
+        $this->montantRestantJour = $this->montantJournalierAttendu;
 
-        if (!$this->motardSelectionne || !isset($this->semaines[$this->semaine_selectionnee])) {
+        if (!$this->motardSelectionne || !$this->date_versement) {
             return;
         }
 
-        $semaineData = $this->semaines[$this->semaine_selectionnee];
-        $semaineDebut = Carbon::parse($semaineData['debut']);
-        $semaineFin = Carbon::parse($semaineData['fin']);
+        $dateVersement = Carbon::parse($this->date_versement);
 
-        // Chercher un versement existant pour cette semaine
+        // Chercher un versement existant pour ce jour
         $versementExistant = Versement::where('motard_id', $this->motardSelectionne->id)
-            ->where(function ($q) use ($semaineDebut, $semaineFin) {
-                $q->where('semaine_debut', $semaineDebut->format('Y-m-d'))
-                  ->orWhereBetween('date_versement', [$semaineDebut, $semaineFin]);
-            })
+            ->whereDate('date_versement', $dateVersement)
+            ->whereNull('semaine_debut') // Versement journalier uniquement
             ->first();
 
         if ($versementExistant) {
-            $this->semaineDejaVersee = true;
-            $this->versementExistant = $versementExistant;
-            $this->montantDejaVerse = $versementExistant->montant;
-            $this->montantRestantSemaine = max(0, $this->montantHebdomadaireAttendu - $versementExistant->montant);
+            $this->versementExistantJour = $versementExistant;
+            $this->montantDejaVerseJour = $versementExistant->montant;
+            $this->montantRestantJour = max(0, $this->montantJournalierAttendu - $versementExistant->montant);
 
-            // Si la semaine est complètement payée, basculer automatiquement vers arriérés
-            if ($this->montantRestantSemaine <= 0 && $this->arrieresCumules > 0) {
+            // Si le jour est complètement payé, basculer automatiquement vers arriérés
+            if ($this->montantRestantJour <= 0 && $this->arrieresCumules > 0) {
                 $this->type_versement = 'arrieres';
+                $this->montant = $this->arrieresCumules;
             }
         }
-    }
-
-    /**
-     * Calculer les montants attendus selon la semaine civile sélectionnée
-     */
-    protected function calculerMontantsSelonSemaine()
-    {
-        if (!$this->motardSelectionne || !isset($this->semaines[$this->semaine_selectionnee])) {
-            return;
-        }
-
-        $semaineData = $this->semaines[$this->semaine_selectionnee];
-        $this->joursEcoules = $semaineData['jours_ecoules'];
-        $this->montantAttendu = $this->montantJournalier;
-        $this->montantHebdomadaireAttendu = $this->montantJournalier * RepartitionService::JOURS_SEMAINE;
     }
 
     public function updatedMontant($value)
@@ -290,19 +187,14 @@ class Create extends Component
     protected function resetMotardData()
     {
         $this->motardSelectionne = null;
-        $this->montantAttendu = 0;
-        $this->montantHebdomadaireAttendu = 0;
-        $this->montantJournalier = 0;
-        $this->joursEcoules = 6;
+        $this->montantJournalierAttendu = 0;
         $this->arrieresCumules = 0;
         $this->arrieresDetails = [];
-        $this->tauxPaiement = 0;
         $this->partProprietairePreview = 0;
         $this->partOkamiPreview = 0;
-        $this->semaineDejaVersee = false;
-        $this->versementExistant = null;
-        $this->montantDejaVerse = 0;
-        $this->montantRestantSemaine = 0;
+        $this->versementExistantJour = null;
+        $this->montantDejaVerseJour = 0;
+        $this->montantRestantJour = 0;
     }
 
     protected function updateRepartitionPreview()
@@ -320,9 +212,9 @@ class Create extends Component
     /**
      * Remplir automatiquement le montant selon le type
      */
-    public function remplirMontantSemaine()
+    public function remplirMontantJournalier()
     {
-        $this->montant = $this->montantRestantSemaine;
+        $this->montant = $this->montantRestantJour > 0 ? $this->montantRestantJour : $this->montantJournalierAttendu;
         $this->updateRepartitionPreview();
     }
 
@@ -334,7 +226,7 @@ class Create extends Component
 
     public function remplirTotalDu()
     {
-        $this->montant = $this->montantRestantSemaine + $this->arrieresCumules;
+        $this->montant = $this->montantRestantJour + $this->arrieresCumules;
         $this->updateRepartitionPreview();
     }
 
@@ -356,30 +248,20 @@ class Create extends Component
             return $this->enregistrerVersementArrieres($caissier, $motard, $moto, $montantVerse, $partProprietaire, $partOkami);
         }
 
-        // Versement pour une semaine
-        return $this->enregistrerVersementSemaine($caissier, $motard, $moto, $montantVerse, $partProprietaire, $partOkami);
+        // Versement journalier
+        return $this->enregistrerVersementJournalier($caissier, $motard, $moto, $montantVerse, $partProprietaire, $partOkami);
     }
 
     /**
-     * Enregistrer un versement pour une semaine
+     * Enregistrer un versement journalier
      */
-    protected function enregistrerVersementSemaine($caissier, $motard, $moto, $montantVerse, $partProprietaire, $partOkami)
+    protected function enregistrerVersementJournalier($caissier, $motard, $moto, $montantVerse, $partProprietaire, $partOkami)
     {
-        $semaineData = $this->semaines[$this->semaine_selectionnee] ?? null;
-        if (!$semaineData) {
-            session()->flash('error', 'Semaine invalide.');
-            return;
-        }
+        $dateVersement = Carbon::parse($this->date_versement);
+        $montantJournalierAttendu = $moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
 
-        $semaineDebut = Carbon::parse($semaineData['debut']);
-        $semaineFin = Carbon::parse($semaineData['fin']);
-        $numeroSemaine = $semaineData['numero'];
-
-        $montantJournalier = $moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
-        $montantHebdomadaireAttendu = $montantJournalier * RepartitionService::JOURS_SEMAINE;
-
-        // Si un versement existe déjà pour cette semaine, le compléter
-        if ($this->semaineDejaVersee && $this->versementExistant) {
+        // Si un versement existe déjà pour ce jour, le compléter
+        if ($this->versementExistantJour) {
             return $this->completerVersementExistant($caissier, $montantVerse, $partProprietaire, $partOkami, $motard);
         }
 
@@ -387,9 +269,9 @@ class Create extends Component
         $arrieresDuJour = 0;
         $notesSupplementaires = '';
 
-        if ($montantVerse >= $montantHebdomadaireAttendu) {
+        if ($montantVerse >= $montantJournalierAttendu) {
             $statut = 'payé';
-            $excedent = $montantVerse - $montantHebdomadaireAttendu;
+            $excedent = $montantVerse - $montantJournalierAttendu;
             if ($excedent > 0 && $this->arrieresCumules > 0) {
                 $remboursementArrieres = min($excedent, $this->arrieresCumules);
                 $notesSupplementaires = "Excédent de " . number_format($excedent) . " FC → " . number_format($remboursementArrieres) . " FC pour arriérés.";
@@ -397,8 +279,8 @@ class Create extends Component
             }
         } else {
             $statut = 'partiellement_payé';
-            $arrieresDuJour = $montantHebdomadaireAttendu - $montantVerse;
-            $notesSupplementaires = "Arriéré semaine: " . number_format($arrieresDuJour) . " FC";
+            $arrieresDuJour = $montantJournalierAttendu - $montantVerse;
+            $notesSupplementaires = "Arriéré du jour: " . number_format($arrieresDuJour) . " FC";
         }
 
         $versement = Versement::create([
@@ -406,14 +288,11 @@ class Create extends Component
             'moto_id' => $moto?->id,
             'caissier_id' => $caissier->id,
             'montant' => $montantVerse,
-            'montant_attendu' => $montantHebdomadaireAttendu,
+            'montant_attendu' => $montantJournalierAttendu,
             'arrieres' => $arrieresDuJour,
             'mode_paiement' => $this->mode_paiement,
             'statut' => $statut,
-            'date_versement' => Carbon::today(),
-            'semaine_debut' => $semaineDebut,
-            'semaine_fin' => $semaineFin,
-            'numero_semaine' => $numeroSemaine,
+            'date_versement' => $dateVersement,
             'part_proprietaire' => $partProprietaire,
             'part_okami' => $partOkami,
             'validated_by_caissier_at' => Carbon::now(),
@@ -422,26 +301,25 @@ class Create extends Component
 
         $caissier->increment('solde_actuel', $montantVerse);
 
-        session()->flash('success', 'Versement de ' . number_format($montantVerse) . ' FC enregistré pour la semaine ' . $numeroSemaine . '.');
+        session()->flash('success', 'Versement journalier de ' . number_format($montantVerse) . ' FC enregistré pour le ' . $dateVersement->format('d/m/Y') . '.');
         session()->flash('dernierVersementId', $versement->id);
 
         return redirect()->route('cashier.versements.index');
     }
 
     /**
-     * Compléter un versement existant (ajout à une semaine déjà versée)
+     * Compléter un versement existant (ajout au même jour)
      */
     protected function completerVersementExistant($caissier, $montantVerse, $partProprietaire, $partOkami, $motard)
     {
-        $versement = $this->versementExistant;
-        $montantJournalier = $motard->moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
-        $montantHebdomadaireAttendu = $montantJournalier * RepartitionService::JOURS_SEMAINE;
+        $versement = $this->versementExistantJour;
+        $montantJournalierAttendu = $motard->moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
 
         $nouveauMontant = $versement->montant + $montantVerse;
-        $nouveauxArrieres = max(0, $montantHebdomadaireAttendu - $nouveauMontant);
+        $nouveauxArrieres = max(0, $montantJournalierAttendu - $nouveauMontant);
 
         // Déterminer le nouveau statut
-        if ($nouveauMontant >= $montantHebdomadaireAttendu) {
+        if ($nouveauMontant >= $montantJournalierAttendu) {
             $nouveauStatut = 'payé';
         } else {
             $nouveauStatut = 'partiellement_payé';
@@ -465,12 +343,12 @@ class Create extends Component
         $caissier->increment('solde_actuel', $montantVerse);
 
         // Si excédent, rembourser les arriérés
-        $excedent = $nouveauMontant - $montantHebdomadaireAttendu;
+        $excedent = $nouveauMontant - $montantJournalierAttendu;
         if ($excedent > 0 && $this->arrieresCumules > 0) {
             $this->rembourserArrieres($motard, min($excedent, $this->arrieresCumules));
         }
 
-        session()->flash('success', 'Complément de ' . number_format($montantVerse) . ' FC ajouté à la semaine ' . $versement->numero_semaine . '. Total: ' . number_format($nouveauMontant) . ' FC');
+        session()->flash('success', 'Complément de ' . number_format($montantVerse) . ' FC ajouté. Total du jour: ' . number_format($nouveauMontant) . ' FC');
         session()->flash('dernierVersementId', $versement->id);
 
         return redirect()->route('cashier.versements.index');
@@ -499,10 +377,7 @@ class Create extends Component
             'arrieres' => 0,
             'mode_paiement' => $this->mode_paiement,
             'statut' => 'payé',
-            'date_versement' => Carbon::today(),
-            'semaine_debut' => null,
-            'semaine_fin' => null,
-            'numero_semaine' => null,
+            'date_versement' => Carbon::parse($this->date_versement),
             'part_proprietaire' => $partProprietaire,
             'part_okami' => $partOkami,
             'validated_by_caissier_at' => Carbon::now(),

@@ -3,9 +3,9 @@
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h4 class="page-title mb-1">
-                <i class="bi bi-plus-circle me-2 text-success"></i>Nouvelle Demande de Paiement
+                <i class="bi bi-plus-circle me-2 text-success"></i>Nouvelle Demande de Paiement Hebdomadaire
             </h4>
-            <p class="text-muted mb-0">Soumettre une demande de paiement</p>
+            <p class="text-muted mb-0">Soumettre une demande de paiement pour une semaine de versements</p>
         </div>
         <a href="{{ route('supervisor.payments.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Retour
@@ -16,6 +16,27 @@
         <!-- Formulaire -->
         <div class="col-lg-8">
             <form wire:submit="submit">
+                <!-- Sélection de la semaine -->
+                <div class="card mb-4 border-primary">
+                    <div class="card-header py-3 bg-primary text-white">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-week me-2"></i>Période Hebdomadaire</h6>
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label fw-semibold">Sélectionner la semaine <span class="text-danger">*</span></label>
+                        <select wire:model.live="semaine_selectionnee" class="form-select form-select-lg @error('semaine_selectionnee') is-invalid @enderror">
+                            @foreach($semaines ?? [] as $semaine)
+                            <option value="{{ $semaine['index'] }}">
+                                {{ $semaine['label'] }} (Sem. {{ $semaine['numero'] }})
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('semaine_selectionnee')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <small class="text-muted">Les versements de cette semaine seront utilisés pour calculer le montant disponible.</small>
+                    </div>
+                </div>
+
                 <!-- Choix de la source de caisse -->
                 <div class="card mb-4">
                     <div class="card-header py-3">
@@ -44,7 +65,8 @@
                                             <strong class="d-block">Caisse OKAMI (1/6)</strong>
                                             <small class="text-muted">Paiement vers un bénéficiaire externe</small>
                                             <div class="mt-1">
-                                                <span class="badge bg-warning text-dark">Solde: {{ number_format($soldeOkamiDisponible) }} FC</span>
+                                                <span class="badge bg-warning text-dark">Solde total: {{ number_format($soldeOkamiDisponible) }} FC</span>
+                                                <span class="badge bg-secondary">Semaine: {{ number_format($soldeOkamiSemaine) }} FC</span>
                                             </div>
                                         </div>
                                     </label>
@@ -69,7 +91,7 @@
                                 <option value="{{ $prop->id }}">
                                     {{ $prop->user->name ?? $prop->raison_sociale }}
                                     - {{ $prop->motos_actives ?? 0 }} moto(s)
-                                    - Solde: {{ number_format($prop->solde_disponible ?? 0) }} FC
+                                    - Solde total: {{ number_format($prop->solde_disponible ?? 0) }} FC
                                 </option>
                                 @endforeach
                             </select>
@@ -79,19 +101,72 @@
                         </div>
 
                         @if($proprietaireSelectionne)
-                        <div class="alert alert-info mb-0">
+                        <div class="alert alert-info mb-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <strong>{{ $proprietaireSelectionne->user->name ?? 'N/A' }}</strong>
                                     <br><small>{{ $proprietaireSelectionne->motos->count() }} moto(s) enregistrée(s)</small>
                                 </div>
                                 <div class="text-end">
-                                    <span class="badge bg-success fs-6">
-                                        Solde disponible: {{ number_format($soldeDisponible) }} FC
-                                    </span>
+                                    <div class="mb-1">
+                                        <span class="badge bg-success fs-6">Solde total: {{ number_format($soldeDisponible) }} FC</span>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-primary">Semaine: {{ number_format($soldeHebdomadaire) }} FC</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Détail des versements de la semaine -->
+                        @if(count($versementsSemaine) > 0)
+                        <div class="card border-primary">
+                            <div class="card-header py-2 bg-light">
+                                <h6 class="mb-0 small fw-bold">
+                                    <i class="bi bi-list-check me-1"></i>
+                                    Versements de la semaine ({{ count($versementsSemaine) }})
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="bg-light sticky-top">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Motard</th>
+                                                <th>Moto</th>
+                                                <th class="text-end">Montant</th>
+                                                <th class="text-end">Part Prop.</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($versementsSemaine as $v)
+                                            <tr>
+                                                <td><small>{{ $v['date'] }}</small></td>
+                                                <td><small>{{ $v['motard'] }}</small></td>
+                                                <td><small>{{ $v['moto'] }}</small></td>
+                                                <td class="text-end"><small>{{ number_format($v['montant']) }} FC</small></td>
+                                                <td class="text-end"><small class="text-success fw-bold">{{ number_format($v['part_proprietaire']) }} FC</small></td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="bg-light">
+                                            <tr class="fw-bold">
+                                                <td colspan="3">Total</td>
+                                                <td class="text-end">{{ number_format($totalVersementsSemaine) }} FC</td>
+                                                <td class="text-end text-success">{{ number_format($partProprietaireSemaine) }} FC</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        @else
+                        <div class="alert alert-warning mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Aucun versement trouvé pour ce propriétaire durant cette semaine.
+                        </div>
+                        @endif
                         @endif
                     </div>
                 </div>
@@ -103,8 +178,16 @@
                     </div>
                     <div class="card-body">
                         <div class="alert alert-warning mb-4">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Solde OKAMI disponible:</strong> {{ number_format($soldeOkamiDisponible) }} FC
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Solde OKAMI</strong>
+                                </div>
+                                <div>
+                                    <span class="badge bg-warning text-dark me-2">Total: {{ number_format($soldeOkamiDisponible) }} FC</span>
+                                    <span class="badge bg-secondary">Semaine: {{ number_format($soldeOkamiSemaine) }} FC</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row g-3">
@@ -151,18 +234,34 @@
                                 <div class="input-group">
                                     <input type="number" wire:model="montant"
                                            class="form-control @error('montant') is-invalid @enderror"
-                                           placeholder="0" min="1" max="{{ $source_caisse === 'proprietaire' ? $soldeDisponible : $soldeOkamiDisponible }}">
+                                           placeholder="0" min="1">
                                     <span class="input-group-text">FC</span>
                                 </div>
                                 @error('montant')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
-                                @php
-                                    $maxSolde = $source_caisse === 'proprietaire' ? $soldeDisponible : $soldeOkamiDisponible;
-                                @endphp
-                                @if($maxSolde > 0)
-                                <small class="text-muted">Maximum: {{ number_format($maxSolde) }} FC</small>
-                                @endif
+
+                                <!-- Boutons de remplissage rapide -->
+                                <div class="mt-2 d-flex gap-2 flex-wrap">
+                                    @if($source_caisse === 'proprietaire' && $soldeHebdomadaire > 0)
+                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeHebdomadaire) }} FC)
+                                    </button>
+                                    @elseif($source_caisse === 'okami' && $soldeOkamiSemaine > 0)
+                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeOkamiSemaine) }} FC)
+                                    </button>
+                                    @endif
+
+                                    @php
+                                        $soldeTotal = $source_caisse === 'proprietaire' ? $soldeDisponible : $soldeOkamiDisponible;
+                                    @endphp
+                                    @if($soldeTotal > 0)
+                                    <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-wallet2 me-1"></i>Total ({{ number_format($soldeTotal) }} FC)
+                                    </button>
+                                    @endif
+                                </div>
                             </div>
 
                             <div class="col-md-6">
@@ -218,6 +317,25 @@
 
         <!-- Sidebar - Infos -->
         <div class="col-lg-4">
+            <!-- Résumé de la semaine sélectionnée -->
+            @if(isset($semaines[$semaine_selectionnee]))
+            @php $semaineActuelle = $semaines[$semaine_selectionnee]; @endphp
+            <div class="card mb-4 border-primary">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-week me-2"></i>Semaine {{ $semaineActuelle['numero'] }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Période:</span>
+                        <strong>{{ $semaineActuelle['debut_formatted'] }} - {{ $semaineActuelle['fin_formatted'] }}</strong>
+                    </div>
+                    @if($semaineActuelle['est_courante'])
+                    <span class="badge bg-info">Semaine en cours</span>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             <div class="card mb-4">
                 <div class="card-header py-3">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-info"></i>Informations</h6>
@@ -227,7 +345,7 @@
                     <div class="alert alert-success border-0 mb-3">
                         <i class="bi bi-people me-2"></i>
                         <strong>Caisse Propriétaires:</strong><br>
-                        <small>Les versements des motards sont répartis avec 5/6 pour les propriétaires.</small>
+                        <small>Les versements journaliers des motards sont cumulés par semaine. 5/6 revient aux propriétaires.</small>
                     </div>
                     @else
                     <div class="alert alert-warning border-0 mb-3">
@@ -240,10 +358,14 @@
                     <ul class="list-unstyled mb-0">
                         <li class="d-flex align-items-start gap-2 mb-3">
                             <i class="bi bi-1-circle text-primary mt-1"></i>
-                            <span>Choisissez la source de caisse</span>
+                            <span>Sélectionnez la semaine concernée</span>
                         </li>
                         <li class="d-flex align-items-start gap-2 mb-3">
                             <i class="bi bi-2-circle text-primary mt-1"></i>
+                            <span>Choisissez la source de caisse</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2 mb-3">
+                            <i class="bi bi-3-circle text-primary mt-1"></i>
                             <span>
                                 @if($source_caisse === 'proprietaire')
                                 Sélectionnez le propriétaire bénéficiaire
@@ -253,11 +375,11 @@
                             </span>
                         </li>
                         <li class="d-flex align-items-start gap-2 mb-3">
-                            <i class="bi bi-3-circle text-primary mt-1"></i>
+                            <i class="bi bi-4-circle text-primary mt-1"></i>
                             <span>Entrez le montant et le mode de paiement</span>
                         </li>
                         <li class="d-flex align-items-start gap-2">
-                            <i class="bi bi-4-circle text-primary mt-1"></i>
+                            <i class="bi bi-5-circle text-primary mt-1"></i>
                             <span>La demande sera traitée par le collecteur</span>
                         </li>
                     </ul>
@@ -272,7 +394,7 @@
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item d-flex align-items-center gap-2">
                             <span class="badge bg-warning">1</span>
-                            <span>OKAMI soumet la demande</span>
+                            <span>OKAMI soumet la demande hebdomadaire</span>
                         </li>
                         <li class="list-group-item d-flex align-items-center gap-2">
                             <span class="badge bg-info">2</span>
@@ -288,3 +410,4 @@
         </div>
     </div>
 </div>
+
