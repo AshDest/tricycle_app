@@ -107,7 +107,7 @@ class Index extends Component
                     $m->description ?? 'N/A',
                     $m->cout_pieces ?? 0,
                     $m->cout_main_oeuvre ?? 0,
-                    $m->cout_total ?? 0,
+                    ($m->cout_pieces ?? 0) + ($m->cout_main_oeuvre ?? 0),
                     $m->statut ?? 'N/A',
                 ]);
             }

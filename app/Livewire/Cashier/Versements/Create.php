@@ -235,9 +235,36 @@ class Create extends Component
         $this->validate();
 
         $caissier = auth()->user()->caissier;
+
+        // Vérifier que le caissier existe
+        if (!$caissier) {
+            session()->flash('error', 'Erreur: Votre compte n\'est pas associé à un caissier.');
+            return;
+        }
+
         $motard = Motard::with('moto')->find($this->motard_id);
+
+        // Vérifier que le motard existe
+        if (!$motard) {
+            session()->flash('error', 'Erreur: Motard introuvable.');
+            return;
+        }
+
         $moto = $motard->moto;
+
+        // Vérifier que la moto existe
+        if (!$moto) {
+            session()->flash('error', 'Erreur: Ce motard n\'a pas de moto assignée.');
+            return;
+        }
+
         $montantVerse = (float) $this->montant;
+
+        // Vérifier que le montant est valide
+        if ($montantVerse <= 0) {
+            $this->addError('montant', 'Le montant doit être supérieur à 0.');
+            return;
+        }
 
         // Calculer la répartition
         $partProprietaire = RepartitionService::getPartProprietaire($montantVerse);

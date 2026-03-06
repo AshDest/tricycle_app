@@ -60,7 +60,7 @@
                         {{ $types[$maintenance->type_maintenance] ?? ucfirst($maintenance->type_maintenance ?? '-') }}
                     </td>
                     <td style="font-size: 8px;">{{ \Str::limit($maintenance->description ?? '', 40) }}</td>
-                    <td class="amount">{{ number_format($maintenance->cout_total ?? 0) }} FC</td>
+                    <td class="amount">{{ number_format(($maintenance->cout_pieces ?? 0) + ($maintenance->cout_main_oeuvre ?? 0)) }} FC</td>
                     <td>
                         @php
                             $badgeClass = match($maintenance->statut) {
@@ -85,7 +85,7 @@
             <tfoot>
                 <tr class="total-row">
                     <td colspan="4"><strong>TOTAL</strong></td>
-                    <td class="amount"><strong>{{ number_format($maintenances->sum('cout_total') ?? 0) }} FC</strong></td>
+                    <td class="amount"><strong>{{ number_format($maintenances->sum(function($m) { return ($m->cout_pieces ?? 0) + ($m->cout_main_oeuvre ?? 0); })) }} FC</strong></td>
                     <td colspan="3"></td>
                 </tr>
             </tfoot>

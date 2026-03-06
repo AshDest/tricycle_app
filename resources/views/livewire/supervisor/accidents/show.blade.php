@@ -137,7 +137,7 @@
                         <p class="mb-2 small">
                             <strong>Date:</strong> {{ $accident->maintenance->date_intervention?->format('d/m/Y') }}<br>
                             <strong>Statut:</strong> {{ ucfirst(str_replace('_', ' ', $accident->maintenance->statut)) }}<br>
-                            <strong>Coût:</strong> {{ number_format($accident->maintenance->cout_total) }} FC
+                            <strong>Coût:</strong> {{ number_format(($accident->maintenance->cout_pieces ?? 0) + ($accident->maintenance->cout_main_oeuvre ?? 0)) }} FC
                         </p>
                         <a href="{{ route('supervisor.maintenances.show', $accident->maintenance) }}" class="btn btn-sm btn-success">
                             <i class="bi bi-eye me-1"></i>Voir la maintenance

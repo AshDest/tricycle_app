@@ -155,7 +155,9 @@ class ReportService
             'details_motards' => $detailsMotards,
             'maintenances' => [
                 'nombre' => $maintenances->count(),
-                'cout_total' => $maintenances->sum('cout_total'),
+                'cout_total' => $maintenances->sum(function ($m) {
+                    return ($m->cout_pieces ?? 0) + ($m->cout_main_oeuvre ?? 0);
+                }),
             ],
             'accidents' => [
                 'nombre' => $accidents->count(),

@@ -243,7 +243,9 @@ class Moto extends Model
      */
     public function getCoutTotalMaintenanceAttribute(): float
     {
-        return $this->maintenances->sum('cout_total');
+        return $this->maintenances->sum(function ($m) {
+            return ($m->cout_pieces ?? 0) + ($m->cout_main_oeuvre ?? 0);
+        });
     }
 
     /**

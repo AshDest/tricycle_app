@@ -47,8 +47,10 @@ class Show extends Component
             $this->arrieres = 0;
         }
 
-        // Coût maintenance
-        $this->coutMaintenance = $this->proprietaire->maintenances()->sum('cout_total');
+        // Coût maintenance (cout_pieces + cout_main_oeuvre)
+        $this->coutMaintenance = $this->proprietaire->maintenances()
+            ->selectRaw('COALESCE(SUM(COALESCE(cout_pieces, 0) + COALESCE(cout_main_oeuvre, 0)), 0) as total')
+            ->value('total') ?? 0;
 
         // Versements ce mois
         $this->versementsCeMois = $this->proprietaire->versements()

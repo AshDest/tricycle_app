@@ -121,7 +121,9 @@ class Proprietaire extends Model
                 ->whereMonth('versements.date_versement', now()->month)
                 ->whereYear('versements.date_versement', now()->year)
                 ->sum('versements.montant'),
-            'cout_maintenance' => $this->maintenances->sum('cout_total'),
+            'cout_maintenance' => $this->maintenances->sum(function ($m) {
+                return ($m->cout_pieces ?? 0) + ($m->cout_main_oeuvre ?? 0);
+            }),
             'cout_accidents' => $this->accidents->sum('estimation_cout'),
         ];
     }

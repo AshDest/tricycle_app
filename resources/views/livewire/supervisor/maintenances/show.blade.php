@@ -126,7 +126,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label text-muted small">Coût Total</label>
-                            <p class="fw-bold text-success fs-5 mb-0">{{ number_format($maintenance->cout_total) }} FC</p>
+                            <p class="fw-bold text-success fs-5 mb-0">{{ number_format(($maintenance->cout_pieces ?? 0) + ($maintenance->cout_main_oeuvre ?? 0)) }} FC</p>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small">Qui a payé ?</label>

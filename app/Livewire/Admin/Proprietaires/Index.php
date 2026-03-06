@@ -15,7 +15,8 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
-    public string $filterStatus = '';
+    public string $filterStatut = '';
+    public string $filterMotos = '';
     public string $sortBy = 'created_at';
     public string $sortDirection = 'desc';
     public int $perPage = 15;
@@ -25,7 +26,8 @@ class Index extends Component
 
     protected $queryString = [
         'search' => ['except' => ''],
-        'filterStatus' => ['except' => ''],
+        'filterStatut' => ['except' => ''],
+        'filterMotos' => ['except' => ''],
     ];
 
     public function updatingSearch(): void
@@ -33,8 +35,21 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function updatingFilterStatus(): void
+    public function updatingFilterStatut(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatingFilterMotos(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->filterStatut = '';
+        $this->filterMotos = '';
         $this->resetPage();
     }
 
@@ -46,6 +61,26 @@ class Index extends Component
             $this->sortBy = $column;
             $this->sortDirection = 'asc';
         }
+    }
+
+    /**
+     * Activer/Désactiver un propriétaire
+     */
+    public function toggleActive(int $id): void
+    {
+        $proprietaire = Proprietaire::findOrFail($id);
+        $proprietaire->update(['is_active' => !$proprietaire->is_active]);
+
+        $status = $proprietaire->is_active ? 'activé' : 'désactivé';
+        session()->flash('success', "Propriétaire {$status} avec succès.");
+    }
+
+    /**
+     * Voir les détails d'un propriétaire
+     */
+    public function voir(int $id)
+    {
+        return redirect()->route('admin.proprietaires.show', $id);
     }
 
     public function confirmDelete(int $id): void
@@ -85,6 +120,7 @@ class Index extends Component
     {
         return Proprietaire::query()
             ->with(['user', 'motos'])
+            ->withCount('motos')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('raison_sociale', 'like', '%' . $this->search . '%')
@@ -96,14 +132,14 @@ class Index extends Component
                       });
                 });
             })
-            ->when($this->filterStatus === 'avec_motos', function ($query) {
+            ->when($this->filterStatut !== '', function ($query) {
+                $query->where('is_active', $this->filterStatut === '1');
+            })
+            ->when($this->filterMotos === 'avec', function ($query) {
                 $query->has('motos');
             })
-            ->when($this->filterStatus === 'sans_motos', function ($query) {
+            ->when($this->filterMotos === 'sans', function ($query) {
                 $query->doesntHave('motos');
-            })
-            ->when($this->filterStatus === 'motos_actives', function ($query) {
-                $query->whereHas('motos', fn ($q) => $q->where('statut', 'actif'));
             })
             ->orderBy($this->sortBy, $this->sortDirection);
     }
