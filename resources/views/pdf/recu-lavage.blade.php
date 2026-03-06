@@ -5,6 +5,7 @@
     <title>Reçu Lavage {{ $lavage->numero_lavage }}</title>
     <style>
         @page {
+            size: 80mm auto;
             margin: 0;
             padding: 0;
         }
@@ -13,18 +14,21 @@
             padding: 0;
             box-sizing: border-box;
         }
+        html, body {
+            width: 80mm;
+            margin: 0 auto;
+            padding: 0;
+        }
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
             font-size: 10px;
             line-height: 1.3;
-            width: 100%;
-            max-width: 80mm;
-            margin: 0 auto;
-            padding: 5px 8px;
+            padding: 5mm;
         }
         .container {
             width: 100%;
             text-align: center;
+            margin: 0 auto;
         }
         .header {
             text-align: center;
@@ -40,6 +44,7 @@
         .header p {
             font-size: 9px;
             color: #666;
+            margin: 1px 0;
         }
         .numero-lavage {
             text-align: center;
@@ -51,7 +56,7 @@
         }
         .section {
             margin-bottom: 8px;
-            text-align: left;
+            text-align: center;
         }
         .section-title {
             font-weight: bold;
@@ -64,20 +69,22 @@
         .info {
             width: 100%;
             border-collapse: collapse;
+            margin: 0 auto;
         }
         .info td {
-            padding: 3px 0;
+            padding: 3px 2px;
             vertical-align: top;
+            font-size: 9px;
         }
         .info .label {
             color: #666;
-            width: 45%;
+            width: 40%;
             text-align: left;
         }
         .info .value {
             font-weight: 500;
             text-align: right;
-            width: 55%;
+            width: 60%;
         }
         .montant-box {
             background: #e8f4fd;
@@ -104,9 +111,10 @@
         .repartition td {
             width: 50%;
             text-align: center;
-            padding: 6px 4px;
+            padding: 6px 2px;
             background: #f8f9fa;
             vertical-align: top;
+            font-size: 9px;
         }
         .repartition td:first-child {
             border-right: 1px solid #ddd;
