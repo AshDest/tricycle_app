@@ -95,9 +95,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/versements', \App\Livewire\Admin\Versements\Index::class)->name('versements.index');
         Route::get('/versements/{versement}', \App\Livewire\Admin\Versements\Show::class)->name('versements.show');
 
-        // Paiements Propriétaires
+        // Paiements Propriétaires (visualisation uniquement)
         Route::get('/payments', \App\Livewire\Admin\Payments\Index::class)->name('payments.index');
-        Route::get('/payments/create', \App\Livewire\Admin\Payments\Create::class)->name('payments.create');
         Route::get('/payments/{payment}', \App\Livewire\Admin\Payments\Show::class)->name('payments.show');
 
         // Tournées

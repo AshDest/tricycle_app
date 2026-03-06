@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Sources de caisse:
  * - 'proprietaire': Paiement depuis la caisse des propriétaires (5/6)
  * - 'okami': Paiement depuis la caisse OKAMI (1/6)
+ * - 'lavage': Paiement depuis la caisse Lavage (80% du service de lavage)
  *
  * Modes supportés: M-PESA, Airtel Money, Orange Money, Virement bancaire, Cash
  */
@@ -173,6 +174,7 @@ class Payment extends Model
         return [
             'proprietaire' => 'Caisse Propriétaires (5/6)',
             'okami' => 'Caisse OKAMI (1/6)',
+            'lavage' => 'Caisse Lavage (80%)',
         ];
     }
 
@@ -182,6 +184,14 @@ class Payment extends Model
     public function getIsFromOkamiAttribute(): bool
     {
         return $this->source_caisse === 'okami';
+    }
+
+    /**
+     * Vérifier si le paiement provient de la caisse Lavage
+     */
+    public function getIsFromLavageAttribute(): bool
+    {
+        return $this->source_caisse === 'lavage';
     }
 
     /**

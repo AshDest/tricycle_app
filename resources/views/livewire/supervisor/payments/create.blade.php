@@ -44,29 +44,43 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-check card p-3 h-100 {{ $source_caisse === 'proprietaire' ? 'border-success bg-success bg-opacity-10' : '' }}">
                                     <input class="form-check-input" type="radio" wire:model.live="source_caisse" value="proprietaire" id="sourceProp">
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceProp">
                                         <i class="bi bi-people fs-3 text-success"></i>
                                         <div>
-                                            <strong class="d-block">Caisse Propriétaires (5/6)</strong>
-                                            <small class="text-muted">Paiement vers un propriétaire de moto</small>
+                                            <strong class="d-block">Caisse Propriétaires</strong>
+                                            <small class="text-muted">5/6 des versements</small>
                                         </div>
                                     </label>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-check card p-3 h-100 {{ $source_caisse === 'okami' ? 'border-warning bg-warning bg-opacity-10' : '' }}">
                                     <input class="form-check-input" type="radio" wire:model.live="source_caisse" value="okami" id="sourceOkami">
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceOkami">
                                         <i class="bi bi-building fs-3 text-warning"></i>
                                         <div>
-                                            <strong class="d-block">Caisse OKAMI (1/6)</strong>
-                                            <small class="text-muted">Paiement vers un bénéficiaire externe</small>
+                                            <strong class="d-block">Caisse OKAMI</strong>
+                                            <small class="text-muted">1/6 des versements</small>
                                             <div class="mt-1">
-                                                <span class="badge bg-warning text-dark">Solde total: {{ number_format($soldeOkamiDisponible) }} FC</span>
-                                                <span class="badge bg-secondary">Semaine: {{ number_format($soldeOkamiSemaine) }} FC</span>
+                                                <span class="badge bg-warning text-dark">{{ number_format($soldeOkamiDisponible) }} FC</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check card p-3 h-100 {{ $source_caisse === 'lavage' ? 'border-info bg-info bg-opacity-10' : '' }}">
+                                    <input class="form-check-input" type="radio" wire:model.live="source_caisse" value="lavage" id="sourceLavage">
+                                    <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceLavage">
+                                        <i class="bi bi-droplet fs-3 text-info"></i>
+                                        <div>
+                                            <strong class="d-block">Caisse Lavage</strong>
+                                            <small class="text-muted">80% du service lavage</small>
+                                            <div class="mt-1">
+                                                <span class="badge bg-info">{{ number_format($soldeLavageDisponible) }} FC</span>
                                             </div>
                                         </div>
                                     </label>
@@ -170,7 +184,7 @@
                         @endif
                     </div>
                 </div>
-                @else
+                @elseif($source_caisse === 'okami')
                 <!-- Section Bénéficiaire OKAMI -->
                 <div class="card mb-4">
                     <div class="card-header py-3">
@@ -221,6 +235,102 @@
                         </div>
                     </div>
                 </div>
+                @elseif($source_caisse === 'lavage')
+                <!-- Section Bénéficiaire Lavage -->
+                <div class="card mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-droplet me-2 text-info"></i>Bénéficiaire (Caisse Lavage)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Solde Lavage (80%)</strong>
+                                </div>
+                                <div>
+                                    <span class="badge bg-info me-2">Total: {{ number_format($soldeLavageDisponible) }} FC</span>
+                                    <span class="badge bg-secondary">Semaine: {{ number_format($soldeLavageSemaine) }} FC</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Détail des lavages de la semaine -->
+                        @if(count($lavagesSemaine ?? []) > 0)
+                        <div class="card border-info mb-4">
+                            <div class="card-header py-2 bg-light">
+                                <h6 class="mb-0 small fw-bold">
+                                    <i class="bi bi-list-check me-1"></i>
+                                    Lavages de la semaine ({{ count($lavagesSemaine) }})
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="bg-light sticky-top">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Moto</th>
+                                                <th>Laveur</th>
+                                                <th class="text-end">Montant</th>
+                                                <th class="text-end">Part Lavage</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($lavagesSemaine as $l)
+                                            <tr>
+                                                <td><small>{{ $l['date'] }}</small></td>
+                                                <td><small>{{ $l['moto'] }}</small></td>
+                                                <td><small>{{ $l['laveur'] }}</small></td>
+                                                <td class="text-end"><small>{{ number_format($l['montant']) }} FC</small></td>
+                                                <td class="text-end"><small class="text-info fw-bold">{{ number_format($l['part_lavage']) }} FC</small></td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="bg-light">
+                                            <tr class="fw-bold">
+                                                <td colspan="3">Total</td>
+                                                <td class="text-end">{{ number_format($totalLavagesSemaine) }} FC</td>
+                                                <td class="text-end text-info">{{ number_format($partLavageSemaine) }} FC</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nom du bénéficiaire <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="beneficiaire_nom"
+                                       class="form-control @error('beneficiaire_nom') is-invalid @enderror"
+                                       placeholder="Nom complet du bénéficiaire">
+                                @error('beneficiaire_nom')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Téléphone du bénéficiaire</label>
+                                <input type="text" wire:model="beneficiaire_telephone"
+                                       class="form-control @error('beneficiaire_telephone') is-invalid @enderror"
+                                       placeholder="+243 XXX XXX XXX">
+                                @error('beneficiaire_telephone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Motif du paiement <span class="text-danger">*</span></label>
+                                <textarea wire:model="beneficiaire_motif"
+                                          class="form-control @error('beneficiaire_motif') is-invalid @enderror"
+                                          rows="2" placeholder="Décrivez le motif de ce paiement (ex: Salaire laveur, Achat matériel...)"></textarea>
+                                @error('beneficiaire_motif')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 @endif
 
                 <div class="card mb-4">
@@ -251,10 +361,19 @@
                                     <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeOkamiSemaine) }} FC)
                                     </button>
+                                    @elseif($source_caisse === 'lavage' && $soldeLavageSemaine > 0)
+                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeLavageSemaine) }} FC)
+                                    </button>
                                     @endif
 
                                     @php
-                                        $soldeTotal = $source_caisse === 'proprietaire' ? $soldeDisponible : $soldeOkamiDisponible;
+                                        $soldeTotal = match($source_caisse) {
+                                            'proprietaire' => $soldeDisponible,
+                                            'okami' => $soldeOkamiDisponible,
+                                            'lavage' => $soldeLavageDisponible,
+                                            default => 0,
+                                        };
                                     @endphp
                                     @if($soldeTotal > 0)
                                     <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
@@ -296,7 +415,8 @@
                 <div class="d-flex gap-3">
                     @php
                         $canSubmit = ($source_caisse === 'proprietaire' && $proprietaire_id && $soldeDisponible > 0)
-                                  || ($source_caisse === 'okami' && $soldeOkamiDisponible > 0);
+                                  || ($source_caisse === 'okami' && $soldeOkamiDisponible > 0)
+                                  || ($source_caisse === 'lavage' && $soldeLavageDisponible > 0);
                     @endphp
                     <button type="submit" class="btn btn-success btn-lg flex-grow-1"
                             wire:loading.attr="disabled"
@@ -347,11 +467,17 @@
                         <strong>Caisse Propriétaires:</strong><br>
                         <small>Les versements journaliers des motards sont cumulés par semaine. 5/6 revient aux propriétaires.</small>
                     </div>
-                    @else
+                    @elseif($source_caisse === 'okami')
                     <div class="alert alert-warning border-0 mb-3">
                         <i class="bi bi-building me-2"></i>
                         <strong>Caisse OKAMI:</strong><br>
                         <small>1/6 des versements est conservé pour les frais de gestion OKAMI.</small>
+                    </div>
+                    @elseif($source_caisse === 'lavage')
+                    <div class="alert alert-info border-0 mb-3">
+                        <i class="bi bi-droplet me-2"></i>
+                        <strong>Caisse Lavage:</strong><br>
+                        <small>80% des recettes de lavage revient au service. 20% pour OKAMI (motos internes).</small>
                     </div>
                     @endif
 

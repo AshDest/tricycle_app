@@ -8,12 +8,15 @@ use App\Models\Payment;
 use App\Models\Proprietaire;
 use App\Models\Collecteur;
 use App\Models\Versement;
+use App\Models\Lavage;
+use App\Models\Cleaner;
 use App\Services\PaymentService;
 use Carbon\Carbon;
 
 /**
  * Formulaire de création de demande de paiement par OKAMI
  * Les demandes de paiement sont hebdomadaires (basées sur les versements journaliers de la semaine)
+ * Sources: Propriétaire (5/6), OKAMI (1/6), Lavage (80%)
  */
 #[Layout('components.dashlite-layout')]
 class Create extends Component
@@ -41,6 +44,13 @@ class Create extends Component
     public $soldeOkamiDisponible = 0;
     public $soldeOkamiSemaine = 0;
 
+    // Pour caisse Lavage
+    public $soldeLavageDisponible = 0;
+    public $soldeLavageSemaine = 0;
+    public $lavagesSemaine = [];
+    public $totalLavagesSemaine = 0;
+    public $partLavageSemaine = 0;
+
     // Commun
     public $montant = '';
     public $mode_paiement = 'cash';
@@ -50,7 +60,7 @@ class Create extends Component
     protected function rules()
     {
         $rules = [
-            'source_caisse' => 'required|in:proprietaire,okami',
+            'source_caisse' => 'required|in:proprietaire,okami,lavage',
             'semaine_selectionnee' => 'required|integer|min:0',
             'montant' => 'required|numeric|min:1',
             'mode_paiement' => 'required|in:cash,mpesa,airtel_money,orange_money,virement_bancaire',
@@ -60,7 +70,7 @@ class Create extends Component
 
         if ($this->source_caisse === 'proprietaire') {
             $rules['proprietaire_id'] = 'required|exists:proprietaires,id';
-        } else {
+        } elseif ($this->source_caisse === 'okami' || $this->source_caisse === 'lavage') {
             $rules['beneficiaire_nom'] = 'required|string|max:100';
             $rules['beneficiaire_telephone'] = 'nullable|string|max:20';
             $rules['beneficiaire_motif'] = 'required|string|max:500';
@@ -83,6 +93,7 @@ class Create extends Component
     {
         $this->loadSemaines();
         $this->calculerSoldeOkami();
+        $this->calculerSoldeLavage();
     }
 
     /**
@@ -134,6 +145,18 @@ class Create extends Component
     }
 
     /**
+     * Calculer le solde disponible dans la caisse Lavage (80% des lavages internes)
+     */
+    private function calculerSoldeLavage()
+    {
+        // Somme des soldes Lavage de tous les laveurs
+        $this->soldeLavageDisponible = Cleaner::sum('solde_caisse') ?? 0;
+
+        // Calculer aussi pour la semaine sélectionnée
+        $this->calculerSoldeLavageSemaine();
+    }
+
+    /**
      * Calculer le solde OKAMI pour la semaine sélectionnée
      */
     private function calculerSoldeOkamiSemaine()
@@ -154,11 +177,61 @@ class Create extends Component
     }
 
     /**
+     * Calculer le solde Lavage pour la semaine sélectionnée
+     */
+    private function calculerSoldeLavageSemaine()
+    {
+        if (!isset($this->semaines[$this->semaine_selectionnee])) {
+            $this->soldeLavageSemaine = 0;
+            $this->lavagesSemaine = [];
+            $this->totalLavagesSemaine = 0;
+            $this->partLavageSemaine = 0;
+            return;
+        }
+
+        $semaineData = $this->semaines[$this->semaine_selectionnee];
+        $debut = Carbon::parse($semaineData['debut']);
+        $fin = Carbon::parse($semaineData['fin'])->endOfDay();
+
+        // Lavages internes payés de la semaine
+        $lavages = Lavage::whereBetween('date_lavage', [$debut, $fin])
+            ->where('statut_paiement', 'payé')
+            ->with(['moto', 'cleaner.user'])
+            ->orderBy('date_lavage', 'desc')
+            ->get();
+
+        $this->lavagesSemaine = $lavages->map(function ($l) {
+            return [
+                'id' => $l->id,
+                'date' => $l->date_lavage?->format('d/m/Y'),
+                'moto' => $l->moto?->plaque_immatriculation ?? ($l->is_externe ? 'Externe' : 'N/A'),
+                'laveur' => $l->cleaner?->user?->name ?? 'N/A',
+                'montant' => $l->montant,
+                'part_lavage' => $l->part_lavage ?? ($l->montant * 0.8), // 80% pour le service
+                'part_okami' => $l->part_okami ?? ($l->is_externe ? 0 : $l->montant * 0.2),
+                'is_externe' => $l->is_externe,
+            ];
+        })->toArray();
+
+        $this->totalLavagesSemaine = $lavages->sum('montant');
+        $this->partLavageSemaine = $lavages->sum('part_lavage') ?? ($this->totalLavagesSemaine * 0.8);
+
+        // Vérifier si des paiements ont déjà été faits pour cette période depuis lavage
+        $paiementsDejaFaits = Payment::where('source_caisse', 'lavage')
+            ->whereBetween('periode_debut', [$debut, $fin])
+            ->whereIn('statut', ['en_attente', 'paye'])
+            ->sum('total_du');
+
+        $this->soldeLavageSemaine = max(0, $this->partLavageSemaine - $paiementsDejaFaits);
+    }
+
+    /**
      * Quand la semaine sélectionnée change
      */
     public function updatedSemaineSelectionnee($value)
     {
         $this->calculerSoldeOkamiSemaine();
+        $this->calculerSoldeLavageSemaine();
 
         if ($this->proprietaire_id) {
             $this->calculerSoldeProprietaireSemaine();
@@ -186,6 +259,8 @@ class Create extends Component
 
         if ($value === 'okami') {
             $this->calculerSoldeOkami();
+        } elseif ($value === 'lavage') {
+            $this->calculerSoldeLavage();
         }
     }
 
@@ -297,8 +372,10 @@ class Create extends Component
     {
         if ($this->source_caisse === 'proprietaire') {
             $this->montant = $this->soldeHebdomadaire;
-        } else {
+        } elseif ($this->source_caisse === 'okami') {
             $this->montant = $this->soldeOkamiSemaine;
+        } elseif ($this->source_caisse === 'lavage') {
+            $this->montant = $this->soldeLavageSemaine;
         }
     }
 
@@ -309,8 +386,10 @@ class Create extends Component
     {
         if ($this->source_caisse === 'proprietaire') {
             $this->montant = $this->soldeDisponible;
-        } else {
+        } elseif ($this->source_caisse === 'okami') {
             $this->montant = $this->soldeOkamiDisponible;
+        } elseif ($this->source_caisse === 'lavage') {
+            $this->montant = $this->soldeLavageDisponible;
         }
     }
 
@@ -322,7 +401,12 @@ class Create extends Component
         $this->validate();
 
         // Vérifier le solde disponible selon la source
-        $soldeMax = $this->source_caisse === 'proprietaire' ? $this->soldeDisponible : $this->soldeOkamiDisponible;
+        $soldeMax = match($this->source_caisse) {
+            'proprietaire' => $this->soldeDisponible,
+            'okami' => $this->soldeOkamiDisponible,
+            'lavage' => $this->soldeLavageDisponible,
+            default => 0,
+        };
 
         if ($this->montant > $soldeMax) {
             $this->addError('montant', "Le montant demandé dépasse le solde disponible (" . number_format($soldeMax) . " FC).");
@@ -353,8 +437,8 @@ class Create extends Component
                     'numero_semaine' => $semaineData['numero'],
                 ], auth()->id());
 
-                session()->flash('success', 'Demande de paiement pour la semaine ' . $semaineData['numero'] . ' soumise avec succès.');
-            } else {
+                session()->flash('success', 'Demande de paiement Propriétaire pour la semaine ' . $semaineData['numero'] . ' soumise avec succès.');
+            } elseif ($this->source_caisse === 'okami') {
                 // Paiement depuis caisse OKAMI
                 $paymentService->creerDemandePaiementDepuisOKAMI([
                     'source_caisse' => 'okami',
@@ -370,6 +454,22 @@ class Create extends Component
                 ], auth()->id());
 
                 session()->flash('success', 'Demande de paiement OKAMI pour la semaine ' . $semaineData['numero'] . ' soumise avec succès.');
+            } elseif ($this->source_caisse === 'lavage') {
+                // Paiement depuis caisse Lavage
+                $paymentService->creerDemandePaiementDepuisLavage([
+                    'source_caisse' => 'lavage',
+                    'beneficiaire_nom' => $this->beneficiaire_nom,
+                    'beneficiaire_telephone' => $this->beneficiaire_telephone,
+                    'beneficiaire_motif' => $this->beneficiaire_motif,
+                    'montant' => $this->montant,
+                    'mode_paiement' => $this->mode_paiement,
+                    'numero_compte' => $this->numero_compte ?: $this->beneficiaire_telephone,
+                    'notes' => $this->notes,
+                    'periode_debut' => $semaineData['debut'],
+                    'periode_fin' => $semaineData['fin'],
+                ], auth()->id());
+
+                session()->flash('success', 'Demande de paiement Lavage pour la semaine ' . $semaineData['numero'] . ' soumise avec succès.');
             }
 
             return redirect()->route('supervisor.payments.index');

@@ -5,15 +5,12 @@
             <h4 class="page-title mb-1">
                 <i class="bi bi-wallet2 me-2 text-success"></i>Paiements Propriétaires
             </h4>
-            <p class="text-muted mb-0">Gestion des paiements aux propriétaires de motos</p>
+            <p class="text-muted mb-0">Historique des paiements aux propriétaires de motos</p>
         </div>
         <div class="d-flex gap-2">
             <button wire:click="exportPdf" class="btn btn-danger">
                 <i class="bi bi-file-pdf me-1"></i> PDF
             </button>
-            <a href="{{ route('admin.payments.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-1"></i>Nouveau Paiement
-            </a>
         </div>
     </div>
 
@@ -178,9 +175,6 @@
                             <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="bi bi-wallet fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucun paiement trouvé</p>
-                                <a href="{{ route('admin.payments.create') }}" class="btn btn-sm btn-primary mt-3">
-                                    <i class="bi bi-plus-lg me-1"></i>Nouveau paiement
-                                </a>
                             </td>
                         </tr>
                         @endforelse
