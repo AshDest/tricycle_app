@@ -24,11 +24,20 @@
     <!-- Stats -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-3">
+            <div class="card bg-info bg-opacity-10 border-0">
+                <div class="card-body py-3 text-center">
+                    <i class="bi bi-wallet2 fs-3 text-info"></i>
+                    <h4 class="fw-bold text-info mb-1">{{ number_format($soldeCaisse) }} FC</h4>
+                    <small class="text-muted">Solde Caisse</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
             <div class="card bg-danger bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <i class="bi bi-arrow-up-circle fs-3 text-danger"></i>
                     <h4 class="fw-bold text-danger mb-1">{{ number_format($totalEnvois) }} FC</h4>
-                    <small class="text-muted">Total Envois</small>
+                    <small class="text-muted">Envois Mobile</small>
                 </div>
             </div>
         </div>
@@ -37,16 +46,7 @@
                 <div class="card-body py-3 text-center">
                     <i class="bi bi-arrow-down-circle fs-3 text-success"></i>
                     <h4 class="fw-bold text-success mb-1">{{ number_format($totalRetraits) }} FC</h4>
-                    <small class="text-muted">Total Retraits</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card bg-{{ $soldeNet >= 0 ? 'info' : 'warning' }} bg-opacity-10 border-0">
-                <div class="card-body py-3 text-center">
-                    <i class="bi bi-wallet2 fs-3 text-{{ $soldeNet >= 0 ? 'info' : 'warning' }}"></i>
-                    <h4 class="fw-bold text-{{ $soldeNet >= 0 ? 'info' : 'warning' }} mb-1">{{ number_format($soldeNet) }} FC</h4>
-                    <small class="text-muted">Solde Net</small>
+                    <small class="text-muted">Retraits Mobile</small>
                 </div>
             </div>
         </div>

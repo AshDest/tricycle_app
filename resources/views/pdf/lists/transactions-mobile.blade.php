@@ -36,16 +36,16 @@
     </div>
     <div class="stats">
         <div class="stat-box">
+            <h4>{{ number_format($stats['soldeCaisse'] ?? $stats['soldeCaisseGlobal'] ?? 0) }} FC</h4>
+            <p>Solde Caisse</p>
+        </div>
+        <div class="stat-box">
             <h4 class="text-danger">{{ number_format($stats['totalEnvois'] ?? 0) }} FC</h4>
-            <p>Total Envois</p>
+            <p>Envois Mobile</p>
         </div>
         <div class="stat-box">
             <h4 class="text-success">{{ number_format($stats['totalRetraits'] ?? 0) }} FC</h4>
-            <p>Total Retraits</p>
-        </div>
-        <div class="stat-box">
-            <h4>{{ number_format($stats['soldeNet'] ?? 0) }} FC</h4>
-            <p>Solde Net</p>
+            <p>Retraits Mobile</p>
         </div>
         <div class="stat-box">
             <h4>{{ $transactions->count() }}</h4>
