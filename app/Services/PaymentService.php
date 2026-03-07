@@ -9,6 +9,8 @@ use App\Models\Proprietaire;
 use App\Models\Payment;
 use App\Models\Moto;
 use App\Models\SystemSetting;
+use App\Models\TransactionMobile;
+use App\Models\Collecteur;
 use Carbon\Carbon;
 
 /**
@@ -271,6 +273,9 @@ class PaymentService
 
     /**
      * Traiter un paiement (par Collecteur/Admin)
+     *
+     * Si le paiement est via Mobile Money, enregistre automatiquement
+     * une transaction Mobile sortante (envoi)
      */
     public function traiterPaiement(Payment $payment, array $data, int $collecteurUserId): Payment
     {
@@ -284,7 +289,47 @@ class PaymentService
             'notes' => $data['notes'] ?? $payment->notes,
         ]);
 
+        // Enregistrer automatiquement une transaction Mobile Money si non-cash
+        if ($payment->mode_paiement !== 'cash' && in_array($payment->mode_paiement, ['mpesa', 'airtel_money', 'orange_money', 'afrimoney'])) {
+            $this->enregistrerTransactionMobileSortante($payment, $collecteurUserId);
+        }
+
         return $payment;
+    }
+
+    /**
+     * Enregistrer une transaction Mobile Money sortante (envoi)
+     * Appelée automatiquement lors d'un paiement via mobile money
+     */
+    protected function enregistrerTransactionMobileSortante(Payment $payment, int $collecteurUserId): ?TransactionMobile
+    {
+        // Trouver le collecteur associé à l'utilisateur
+        $collecteur = Collecteur::where('user_id', $collecteurUserId)->first();
+        if (!$collecteur) {
+            return null;
+        }
+
+        // Déterminer le bénéficiaire
+        $beneficiaire = $payment->proprietaire?->user?->name
+            ?? $payment->beneficiaire_nom
+            ?? 'Bénéficiaire';
+
+        // Créer la transaction mobile
+        return TransactionMobile::create([
+            'collecteur_id' => $collecteur->id,
+            'type' => 'envoi',
+            'montant' => $payment->total_paye,
+            'frais' => 0, // Les frais peuvent être ajoutés manuellement si nécessaire
+            'montant_net' => $payment->total_paye,
+            'operateur' => $payment->mode_paiement,
+            'numero_telephone' => $payment->numero_compte ?? '',
+            'nom_beneficiaire' => $beneficiaire,
+            'reference_operateur' => $payment->numero_envoi,
+            'statut' => 'complete',
+            'motif' => 'Paiement #' . $payment->id . ' - ' . ($payment->source_caisse === 'proprietaire' ? 'Paiement Propriétaire' : ($payment->source_caisse === 'okami' ? 'Paiement OKAMI' : 'Paiement Lavage')),
+            'notes' => 'Transaction automatique - Paiement validé',
+            'date_transaction' => now(),
+        ]);
     }
 
     /**

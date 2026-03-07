@@ -21,6 +21,8 @@ class Depot extends Component
     public $montant = '';
     public $collecte_id = '';
     public $notes = '';
+    public $mode_paiement = 'cash';
+    public $numero_transaction = '';
 
     // Données
     public $soldeActuel = 0;
@@ -34,14 +36,26 @@ class Depot extends Component
     // Modal
     public $showModal = false;
 
-    protected $rules = [
-        'montant' => 'required|numeric|min:1',
-        'notes' => 'nullable|string|max:500',
-    ];
+    protected function rules()
+    {
+        $rules = [
+            'montant' => 'required|numeric|min:1',
+            'mode_paiement' => 'required|in:cash,mpesa,airtel_money,orange_money,afrimoney',
+            'notes' => 'nullable|string|max:500',
+        ];
+
+        // Le numéro de transaction est obligatoire pour les paiements mobile money
+        if ($this->mode_paiement !== 'cash') {
+            $rules['numero_transaction'] = 'required|string|max:100';
+        }
+
+        return $rules;
+    }
 
     protected $messages = [
         'montant.required' => 'Le montant est obligatoire.',
         'montant.min' => 'Le montant doit être supérieur à 0.',
+        'numero_transaction.required' => 'Le numéro de transaction est obligatoire pour les paiements mobile money.',
     ];
 
     public function mount()
@@ -69,6 +83,8 @@ class Depot extends Component
             ->firstOrFail();
 
         $this->montant = $this->soldeActuel;
+        $this->mode_paiement = 'cash';
+        $this->numero_transaction = '';
         $this->notes = '';
         $this->showModal = true;
     }
@@ -77,7 +93,7 @@ class Depot extends Component
     {
         $this->showModal = false;
         $this->collecteEnCours = null;
-        $this->reset(['montant', 'notes']);
+        $this->reset(['montant', 'notes', 'mode_paiement', 'numero_transaction']);
     }
 
     /**
@@ -107,11 +123,13 @@ class Depot extends Component
         }
 
         try {
-            // Mettre à jour la collecte
+            // Mettre à jour la collecte avec le mode de paiement
             $this->collecteEnCours->update([
                 'montant_collecte' => $montant,
                 'ecart' => $montant - ($this->collecteEnCours->montant_attendu ?? 0),
                 'statut' => 'reussie',
+                'mode_paiement' => $this->mode_paiement,
+                'numero_transaction_mobile' => $this->mode_paiement !== 'cash' ? $this->numero_transaction : null,
                 'heure_depart' => now(),
                 'commentaire_caissier' => $this->notes,
             ]);
@@ -124,7 +142,8 @@ class Depot extends Component
 
             $this->fermerModal();
 
-            $this->message = "Dépôt de " . number_format($montant) . " FC effectué avec succès. En attente de validation par le collecteur.";
+            $modeLabel = $this->mode_paiement === 'cash' ? 'en cash' : 'via ' . strtoupper(str_replace('_', ' ', $this->mode_paiement));
+            $this->message = "Dépôt de " . number_format($montant) . " FC effectué avec succès {$modeLabel}. En attente de validation par le collecteur.";
             $this->messageType = 'success';
 
         } catch (\Exception $e) {

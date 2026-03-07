@@ -25,6 +25,8 @@ class Collecte extends Model
         'part_proprietaire',
         'ecart',
         'statut',
+        'mode_paiement',
+        'numero_transaction_mobile',
         'valide_par_collecteur',
         'valide_collecteur_at',
         'notes_collecteur',

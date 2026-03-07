@@ -174,6 +174,29 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
+                            <select wire:model.live="mode_paiement" class="form-select @error('mode_paiement') is-invalid @enderror">
+                                <option value="cash">Cash (Espèces)</option>
+                                <option value="mpesa">M-PESA</option>
+                                <option value="airtel_money">Airtel Money</option>
+                                <option value="orange_money">Orange Money</option>
+                                <option value="afrimoney">Afrimoney</option>
+                            </select>
+                            @error('mode_paiement') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+
+                        @if($mode_paiement !== 'cash')
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Numéro de transaction <span class="text-danger">*</span></label>
+                            <input type="text" wire:model="numero_transaction"
+                                   class="form-control @error('numero_transaction') is-invalid @enderror"
+                                   placeholder="Ex: TXN123456789">
+                            @error('numero_transaction') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <small class="text-muted">Code de confirmation reçu de l'opérateur</small>
+                        </div>
+                        @endif
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Notes (optionnel)</label>
                             <textarea wire:model="notes" class="form-control" rows="2" placeholder="Remarques éventuelles..."></textarea>
                         </div>

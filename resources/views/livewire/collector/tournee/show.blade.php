@@ -106,6 +106,13 @@
                             <td>{{ number_format($collecte->montant_attendu ?? 0) }} FC</td>
                             <td class="fw-semibold {{ $collecte->montant_collecte > 0 ? 'text-success' : 'text-muted' }}">
                                 {{ number_format($collecte->montant_collecte ?? 0) }} FC
+                                @if($collecte->mode_paiement && $collecte->mode_paiement !== 'cash')
+                                <small class="d-block">
+                                    <span class="badge badge-soft-primary">
+                                        {{ strtoupper(str_replace('_', ' ', $collecte->mode_paiement)) }}
+                                    </span>
+                                </small>
+                                @endif
                             </td>
                             <td>
                                 @if($collecte->valide_par_collecteur)

@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Tournee;
 use App\Models\Collecte;
+use App\Models\TransactionMobile;
 
 #[Layout('components.dashlite-layout')]
 class Show extends Component
@@ -26,11 +27,13 @@ class Show extends Component
 
     /**
      * Valider la réception d'un dépôt
+     * Si le dépôt a été fait via mobile money, enregistre automatiquement une transaction entrante
      */
     public function validerCollecte($collecteId)
     {
         $collecte = Collecte::where('id', $collecteId)
             ->where('tournee_id', $this->tournee->id)
+            ->with('caissier.user')
             ->firstOrFail();
 
         // Vérifier que le caissier a déjà déposé
@@ -48,11 +51,41 @@ class Show extends Component
         $collecteur = auth()->user()->collecteur;
         if ($collecteur) {
             $collecteur->increment('solde_caisse', $collecte->montant_collecte);
+
+            // Si le dépôt a été fait via mobile money, créer automatiquement une transaction entrante
+            if ($collecte->mode_paiement !== 'cash' && in_array($collecte->mode_paiement, ['mpesa', 'airtel_money', 'orange_money', 'afrimoney'])) {
+                $this->enregistrerTransactionMobileEntrante($collecte, $collecteur);
+            }
         }
 
         $this->tournee->refresh();
 
-        session()->flash('success', 'Collecte validée. ' . number_format($collecte->montant_collecte) . ' FC ajoutés à votre caisse.');
+        $modeLabel = $collecte->mode_paiement === 'cash' ? '' : ' (via ' . strtoupper(str_replace('_', ' ', $collecte->mode_paiement)) . ')';
+        session()->flash('success', 'Collecte validée. ' . number_format($collecte->montant_collecte) . " FC ajoutés à votre caisse{$modeLabel}.");
+    }
+
+    /**
+     * Enregistrer une transaction Mobile Money entrante (retrait/réception)
+     */
+    protected function enregistrerTransactionMobileEntrante(Collecte $collecte, $collecteur): ?TransactionMobile
+    {
+        $caissierNom = $collecte->caissier?->user?->name ?? 'Caissier';
+
+        return TransactionMobile::create([
+            'collecteur_id' => $collecteur->id,
+            'type' => 'retrait', // Retrait = argent reçu
+            'montant' => $collecte->montant_collecte,
+            'frais' => 0,
+            'montant_net' => $collecte->montant_collecte,
+            'operateur' => $collecte->mode_paiement,
+            'numero_telephone' => $collecte->caissier?->user?->telephone ?? '',
+            'nom_beneficiaire' => $caissierNom,
+            'reference_operateur' => $collecte->numero_transaction_mobile,
+            'statut' => 'complete',
+            'motif' => 'Collecte #' . $collecte->id . ' - Dépôt du caissier ' . $caissierNom,
+            'notes' => 'Transaction automatique - Collecte validée',
+            'date_transaction' => now(),
+        ]);
     }
 
     /**
