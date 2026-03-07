@@ -172,9 +172,9 @@ class Payment extends Model
     public static function getSourcesCaisse(): array
     {
         return [
-            'proprietaire' => 'Caisse Propriétaires (5/6)',
-            'okami' => 'Caisse OKAMI (1/6)',
-            'lavage' => 'Caisse Lavage (80%)',
+            'proprietaire' => 'Part Propriétaires (5/6 versements)',
+            'okami' => 'Part OKAMI Versements (1/6)',
+            'lavage' => 'Part OKAMI Lavage (20%)',
         ];
     }
 

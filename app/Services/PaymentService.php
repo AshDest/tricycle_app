@@ -227,20 +227,30 @@ class PaymentService
     }
 
     /**
-     * Créer une demande de paiement depuis la caisse Lavage (vers un bénéficiaire)
+     * Créer une demande de paiement depuis la caisse Lavage (Part OKAMI = 20% des lavages internes)
      */
     public function creerDemandePaiementDepuisLavage(array $data, int $okamUserId): Payment
     {
         $montantDemande = $data['montant'];
 
-        // Vérifier que le montant ne dépasse pas le solde Lavage disponible
-        $soldeLavage = \App\Models\Cleaner::sum('solde_caisse') ?? 0;
-        if ($montantDemande > $soldeLavage) {
-            throw new \Exception("Le montant demandé (" . number_format($montantDemande) . " FC) dépasse le solde Lavage disponible (" . number_format($soldeLavage) . " FC).");
+        // Calculer le solde Part OKAMI disponible des lavages internes
+        $totalPartOkami = \App\Models\Lavage::where('is_externe', false)
+            ->where('statut_paiement', 'payé')
+            ->sum('part_okami') ?? 0;
+
+        // Soustraire les paiements déjà effectués depuis la caisse lavage
+        $paiementsEffectues = Payment::where('source_caisse', 'lavage')
+            ->whereIn('statut', ['en_attente', 'paye', 'approuve'])
+            ->sum('total_du');
+
+        $soldeLavageOkami = max(0, $totalPartOkami - $paiementsEffectues);
+
+        if ($montantDemande > $soldeLavageOkami) {
+            throw new \Exception("Le montant demandé (" . number_format($montantDemande) . " FC) dépasse la Part OKAMI Lavage disponible (" . number_format($soldeLavageOkami) . " FC).");
         }
 
         return Payment::create([
-            'proprietaire_id' => null, // Pas de propriétaire, c'est un bénéficiaire externe
+            'proprietaire_id' => null,
             'source_caisse' => 'lavage',
             'beneficiaire_nom' => $data['beneficiaire_nom'],
             'beneficiaire_telephone' => $data['beneficiaire_telephone'] ?? null,

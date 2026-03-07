@@ -44,12 +44,12 @@ class Create extends Component
     public $soldeOkamiDisponible = 0;
     public $soldeOkamiSemaine = 0;
 
-    // Pour caisse Lavage
-    public $soldeLavageDisponible = 0;
-    public $soldeLavageSemaine = 0;
+    // Pour caisse Lavage (Part OKAMI = 20% des lavages internes)
+    public $soldeLavageOkamiDisponible = 0;
+    public $soldeLavageOkamiSemaine = 0;
     public $lavagesSemaine = [];
     public $totalLavagesSemaine = 0;
-    public $partLavageSemaine = 0;
+    public $partOkamiLavageSemaine = 0;
 
     // Commun
     public $montant = '';
@@ -145,12 +145,21 @@ class Create extends Component
     }
 
     /**
-     * Calculer le solde disponible dans la caisse Lavage (80% des lavages internes)
+     * Calculer le solde disponible dans la caisse Lavage (Part OKAMI = 20% des lavages internes)
      */
     private function calculerSoldeLavage()
     {
-        // Somme des soldes Lavage de tous les laveurs
-        $this->soldeLavageDisponible = Cleaner::sum('solde_caisse') ?? 0;
+        // Total des parts OKAMI des lavages internes (non encore payés)
+        $this->soldeLavageOkamiDisponible = Lavage::where('is_externe', false)
+            ->where('statut_paiement', 'payé')
+            ->sum('part_okami') ?? 0;
+
+        // Soustraire les paiements déjà effectués depuis la caisse lavage
+        $paiementsEffectues = Payment::where('source_caisse', 'lavage')
+            ->whereIn('statut', ['en_attente', 'paye', 'approuve'])
+            ->sum('total_du');
+
+        $this->soldeLavageOkamiDisponible = max(0, $this->soldeLavageOkamiDisponible - $paiementsEffectues);
 
         // Calculer aussi pour la semaine sélectionnée
         $this->calculerSoldeLavageSemaine();
@@ -177,15 +186,15 @@ class Create extends Component
     }
 
     /**
-     * Calculer le solde Lavage pour la semaine sélectionnée
+     * Calculer le solde Lavage OKAMI pour la semaine sélectionnée (20% des lavages internes)
      */
     private function calculerSoldeLavageSemaine()
     {
         if (!isset($this->semaines[$this->semaine_selectionnee])) {
-            $this->soldeLavageSemaine = 0;
+            $this->soldeLavageOkamiSemaine = 0;
             $this->lavagesSemaine = [];
             $this->totalLavagesSemaine = 0;
-            $this->partLavageSemaine = 0;
+            $this->partOkamiLavageSemaine = 0;
             return;
         }
 
@@ -193,9 +202,10 @@ class Create extends Component
         $debut = Carbon::parse($semaineData['debut']);
         $fin = Carbon::parse($semaineData['fin'])->endOfDay();
 
-        // Lavages internes payés de la semaine
+        // Lavages internes payés de la semaine (seulement les motos du système)
         $lavages = Lavage::whereBetween('date_lavage', [$debut, $fin])
             ->where('statut_paiement', 'payé')
+            ->where('is_externe', false) // Seulement les motos du système
             ->with(['moto', 'cleaner.user'])
             ->orderBy('date_lavage', 'desc')
             ->get();
@@ -204,25 +214,23 @@ class Create extends Component
             return [
                 'id' => $l->id,
                 'date' => $l->date_lavage?->format('d/m/Y'),
-                'moto' => $l->moto?->plaque_immatriculation ?? ($l->is_externe ? 'Externe' : 'N/A'),
+                'moto' => $l->moto?->plaque_immatriculation ?? 'N/A',
                 'laveur' => $l->cleaner?->user?->name ?? 'N/A',
                 'montant' => $l->montant,
-                'part_lavage' => $l->part_lavage ?? ($l->montant * 0.8), // 80% pour le service
-                'part_okami' => $l->part_okami ?? ($l->is_externe ? 0 : $l->montant * 0.2),
-                'is_externe' => $l->is_externe,
+                'part_okami' => $l->part_okami ?? ($l->montant * 0.2), // 20% pour OKAMI
             ];
         })->toArray();
 
         $this->totalLavagesSemaine = $lavages->sum('montant');
-        $this->partLavageSemaine = $lavages->sum('part_lavage') ?? ($this->totalLavagesSemaine * 0.8);
+        $this->partOkamiLavageSemaine = $lavages->sum('part_okami') ?? ($this->totalLavagesSemaine * 0.2);
 
         // Vérifier si des paiements ont déjà été faits pour cette période depuis lavage
         $paiementsDejaFaits = Payment::where('source_caisse', 'lavage')
             ->whereBetween('periode_debut', [$debut, $fin])
-            ->whereIn('statut', ['en_attente', 'paye'])
+            ->whereIn('statut', ['en_attente', 'paye', 'approuve'])
             ->sum('total_du');
 
-        $this->soldeLavageSemaine = max(0, $this->partLavageSemaine - $paiementsDejaFaits);
+        $this->soldeLavageOkamiSemaine = max(0, $this->partOkamiLavageSemaine - $paiementsDejaFaits);
     }
 
     /**
@@ -375,7 +383,7 @@ class Create extends Component
         } elseif ($this->source_caisse === 'okami') {
             $this->montant = $this->soldeOkamiSemaine;
         } elseif ($this->source_caisse === 'lavage') {
-            $this->montant = $this->soldeLavageSemaine;
+            $this->montant = $this->soldeLavageOkamiSemaine;
         }
     }
 
@@ -389,7 +397,7 @@ class Create extends Component
         } elseif ($this->source_caisse === 'okami') {
             $this->montant = $this->soldeOkamiDisponible;
         } elseif ($this->source_caisse === 'lavage') {
-            $this->montant = $this->soldeLavageDisponible;
+            $this->montant = $this->soldeLavageOkamiDisponible;
         }
     }
 
@@ -404,7 +412,7 @@ class Create extends Component
         $soldeMax = match($this->source_caisse) {
             'proprietaire' => $this->soldeDisponible,
             'okami' => $this->soldeOkamiDisponible,
-            'lavage' => $this->soldeLavageDisponible,
+            'lavage' => $this->soldeLavageOkamiDisponible,
             default => 0,
         };
 

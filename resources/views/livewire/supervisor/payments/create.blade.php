@@ -50,8 +50,8 @@
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceProp">
                                         <i class="bi bi-people fs-3 text-success"></i>
                                         <div>
-                                            <strong class="d-block">Caisse Propriétaires</strong>
-                                            <small class="text-muted">5/6 des versements</small>
+                                            <strong class="d-block">Part Propriétaires</strong>
+                                            <small class="text-muted">5/6 des versements (hebdo)</small>
                                         </div>
                                     </label>
                                 </div>
@@ -62,7 +62,7 @@
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceOkami">
                                         <i class="bi bi-building fs-3 text-warning"></i>
                                         <div>
-                                            <strong class="d-block">Caisse OKAMI</strong>
+                                            <strong class="d-block">Part OKAMI Versements</strong>
                                             <small class="text-muted">1/6 des versements</small>
                                             <div class="mt-1">
                                                 <span class="badge bg-warning text-dark">{{ number_format($soldeOkamiDisponible) }} FC</span>
@@ -77,10 +77,10 @@
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceLavage">
                                         <i class="bi bi-droplet fs-3 text-info"></i>
                                         <div>
-                                            <strong class="d-block">Caisse Lavage</strong>
-                                            <small class="text-muted">80% du service lavage</small>
+                                            <strong class="d-block">Part OKAMI Lavage</strong>
+                                            <small class="text-muted">20% des lavages internes</small>
                                             <div class="mt-1">
-                                                <span class="badge bg-info">{{ number_format($soldeLavageDisponible) }} FC</span>
+                                                <span class="badge bg-info">{{ number_format($soldeLavageOkamiDisponible) }} FC</span>
                                             </div>
                                         </div>
                                     </label>
@@ -239,18 +239,18 @@
                 <!-- Section Bénéficiaire Lavage -->
                 <div class="card mb-4">
                     <div class="card-header py-3">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-droplet me-2 text-info"></i>Bénéficiaire (Caisse Lavage)</h6>
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-droplet me-2 text-info"></i>Bénéficiaire (Part OKAMI Lavage)</h6>
                     </div>
                     <div class="card-body">
                         <div class="alert alert-info mb-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <i class="bi bi-info-circle me-2"></i>
-                                    <strong>Solde Lavage (80%)</strong>
+                                    <strong>Part OKAMI Lavage (20%)</strong>
                                 </div>
                                 <div>
-                                    <span class="badge bg-info me-2">Total: {{ number_format($soldeLavageDisponible) }} FC</span>
-                                    <span class="badge bg-secondary">Semaine: {{ number_format($soldeLavageSemaine) }} FC</span>
+                                    <span class="badge bg-info me-2">Total: {{ number_format($soldeLavageOkamiDisponible) }} FC</span>
+                                    <span class="badge bg-secondary">Semaine: {{ number_format($soldeLavageOkamiSemaine) }} FC</span>
                                 </div>
                             </div>
                         </div>
@@ -261,7 +261,7 @@
                             <div class="card-header py-2 bg-light">
                                 <h6 class="mb-0 small fw-bold">
                                     <i class="bi bi-list-check me-1"></i>
-                                    Lavages de la semaine ({{ count($lavagesSemaine) }})
+                                    Lavages internes de la semaine ({{ count($lavagesSemaine) }})
                                 </h6>
                             </div>
                             <div class="card-body p-0">
@@ -272,8 +272,7 @@
                                                 <th>Date</th>
                                                 <th>Moto</th>
                                                 <th>Laveur</th>
-                                                <th class="text-end">Montant</th>
-                                                <th class="text-end">Part Lavage</th>
+                                                <th class="text-end">Part OKAMI (20%)</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -282,16 +281,14 @@
                                                 <td><small>{{ $l['date'] }}</small></td>
                                                 <td><small>{{ $l['moto'] }}</small></td>
                                                 <td><small>{{ $l['laveur'] }}</small></td>
-                                                <td class="text-end"><small>{{ number_format($l['montant']) }} FC</small></td>
-                                                <td class="text-end"><small class="text-info fw-bold">{{ number_format($l['part_lavage']) }} FC</small></td>
+                                                <td class="text-end"><small class="text-info fw-bold">{{ number_format($l['part_okami']) }} FC</small></td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot class="bg-light">
                                             <tr class="fw-bold">
-                                                <td colspan="3">Total</td>
-                                                <td class="text-end">{{ number_format($totalLavagesSemaine) }} FC</td>
-                                                <td class="text-end text-info">{{ number_format($partLavageSemaine) }} FC</td>
+                                                <td colspan="3">Total Part OKAMI</td>
+                                                <td class="text-end text-info">{{ number_format($partOkamiLavageSemaine) }} FC</td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -361,9 +358,9 @@
                                     <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeOkamiSemaine) }} FC)
                                     </button>
-                                    @elseif($source_caisse === 'lavage' && $soldeLavageSemaine > 0)
+                                    @elseif($source_caisse === 'lavage' && $soldeLavageOkamiSemaine > 0)
                                     <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-info">
-                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeLavageSemaine) }} FC)
+                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeLavageOkamiSemaine) }} FC)
                                     </button>
                                     @endif
 
@@ -371,7 +368,7 @@
                                         $soldeTotal = match($source_caisse) {
                                             'proprietaire' => $soldeDisponible,
                                             'okami' => $soldeOkamiDisponible,
-                                            'lavage' => $soldeLavageDisponible,
+                                            'lavage' => $soldeLavageOkamiDisponible,
                                             default => 0,
                                         };
                                     @endphp
@@ -416,7 +413,7 @@
                     @php
                         $canSubmit = ($source_caisse === 'proprietaire' && $proprietaire_id && $soldeDisponible > 0)
                                   || ($source_caisse === 'okami' && $soldeOkamiDisponible > 0)
-                                  || ($source_caisse === 'lavage' && $soldeLavageDisponible > 0);
+                                  || ($source_caisse === 'lavage' && $soldeLavageOkamiDisponible > 0);
                     @endphp
                     <button type="submit" class="btn btn-success btn-lg flex-grow-1"
                             wire:loading.attr="disabled"
@@ -464,20 +461,20 @@
                     @if($source_caisse === 'proprietaire')
                     <div class="alert alert-success border-0 mb-3">
                         <i class="bi bi-people me-2"></i>
-                        <strong>Caisse Propriétaires:</strong><br>
-                        <small>Les versements journaliers des motards sont cumulés par semaine. 5/6 revient aux propriétaires.</small>
+                        <strong>Part Propriétaires (5/6):</strong><br>
+                        <small>Les versements journaliers sont cumulés par semaine. 5/6 revient aux propriétaires de motos.</small>
                     </div>
                     @elseif($source_caisse === 'okami')
                     <div class="alert alert-warning border-0 mb-3">
                         <i class="bi bi-building me-2"></i>
-                        <strong>Caisse OKAMI:</strong><br>
-                        <small>1/6 des versements est conservé pour les frais de gestion OKAMI.</small>
+                        <strong>Part OKAMI Versements (1/6):</strong><br>
+                        <small>1/6 des versements journaliers est conservé pour les frais de gestion OKAMI.</small>
                     </div>
                     @elseif($source_caisse === 'lavage')
                     <div class="alert alert-info border-0 mb-3">
                         <i class="bi bi-droplet me-2"></i>
-                        <strong>Caisse Lavage:</strong><br>
-                        <small>80% des recettes de lavage revient au service. 20% pour OKAMI (motos internes).</small>
+                        <strong>Part OKAMI Lavage (20%):</strong><br>
+                        <small>20% des recettes de lavage des motos internes revient à OKAMI.</small>
                     </div>
                     @endif
 
