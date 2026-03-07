@@ -117,6 +117,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/accidents', \App\Livewire\Admin\Accidents\Index::class)->name('accidents.index');
         Route::get('/accidents/{accident}', \App\Livewire\Admin\Accidents\Show::class)->name('accidents.show');
 
+        // Transactions Mobile Money (vue admin)
+        Route::get('/transactions-mobile', \App\Livewire\Admin\TransactionsMobile\Index::class)->name('transactions-mobile.index');
+
         // Rapports
         Route::get('/reports/daily', \App\Livewire\Admin\Reports\Daily::class)->name('reports.daily');
         Route::get('/reports/weekly', \App\Livewire\Admin\Reports\Weekly::class)->name('reports.weekly');
@@ -239,6 +242,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Solde OKAMI
         Route::get('/solde-okami', \App\Livewire\Collector\SoldeOkami::class)->name('solde-okami');
+
+        // Transactions Mobile Money
+        Route::get('/transactions-mobile', \App\Livewire\Collector\TransactionsMobile\Index::class)->name('transactions-mobile.index');
+        Route::get('/transactions-mobile/create', \App\Livewire\Collector\TransactionsMobile\Create::class)->name('transactions-mobile.create');
     });
 
     /*

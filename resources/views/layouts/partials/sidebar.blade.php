@@ -150,6 +150,12 @@
                     <span>Accidents</span>
                 </a>
             </li>
+            <li class="{{ request()->is('admin/transactions-mobile*') ? 'active' : '' }}">
+                <a href="{{ route('admin.transactions-mobile.index') }}">
+                    <i class="bi bi-phone"></i>
+                    <span>Transactions Mobile</span>
+                </a>
+            </li>
 
             <li class="sidebar-heading">Rapports</li>
             <li class="has-submenu {{ request()->is('admin/reports*') ? 'active' : '' }}">
@@ -398,6 +404,13 @@
                 <a href="{{ route('collector.solde-okami') }}">
                     <i class="bi bi-building"></i>
                     <span>Solde OKAMI</span>
+                </a>
+            </li>
+            <li class="sidebar-heading">Mobile Money</li>
+            <li class="{{ request()->is('collector/transactions-mobile*') ? 'active' : '' }}">
+                <a href="{{ route('collector.transactions-mobile.index') }}">
+                    <i class="bi bi-phone"></i>
+                    <span>Transactions Mobile</span>
                 </a>
             </li>
             <li class="{{ request()->is('collector/historique*') ? 'active' : '' }}">
