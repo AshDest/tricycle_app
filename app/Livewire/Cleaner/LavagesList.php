@@ -112,7 +112,7 @@ class LavagesList extends Component
         $lavage = Lavage::with(['cleaner.user', 'moto.proprietaire.user'])->findOrFail($lavageId);
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.recu-lavage', compact('lavage'));
-        $pdf->setPaper([0, 0, 226.77, 400], 'portrait');
+        $pdf->setPaper([0, 0, 204, 400], 'portrait'); // 72mm = 204 points
 
         $filename = 'recu_lavage_' . $lavage->numero_lavage . '.pdf';
 
