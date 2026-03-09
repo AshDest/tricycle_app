@@ -33,6 +33,9 @@ class Create extends Component
     public $montantDejaVerseJour = 0;
     public $montantRestantJour = 0;
 
+    // Vérification dimanche
+    public $estDimanche = false;
+
     // Historique des arriérés détaillés
     public $arrieresDetails = [];
 
@@ -85,9 +88,18 @@ class Create extends Component
             // Vérifier le versement existant pour le jour sélectionné
             $this->verifierVersementExistant();
 
-            // Pré-remplir le montant avec le montant journalier
-            if ($this->type_versement === 'journalier' && empty($this->montant)) {
+            // Vérifier si c'est un dimanche
+            if ($this->date_versement) {
+                $this->estDimanche = Carbon::parse($this->date_versement)->isSunday();
+            }
+
+            // Pré-remplir le montant avec le montant journalier (sauf si dimanche)
+            if ($this->type_versement === 'journalier' && empty($this->montant) && !$this->estDimanche) {
                 $this->montant = $this->montantRestantJour > 0 ? $this->montantRestantJour : $this->montantJournalierAttendu;
+            } elseif ($this->estDimanche && $this->arrieresCumules > 0) {
+                // Si dimanche avec arriérés, basculer automatiquement
+                $this->type_versement = 'arrieres';
+                $this->montant = $this->arrieresCumules;
             }
         } else {
             $this->resetMotardData();
@@ -110,6 +122,21 @@ class Create extends Component
 
     public function updatedDateVersement($value)
     {
+        // Vérifier si la date est un dimanche
+        if ($value) {
+            $this->estDimanche = Carbon::parse($value)->isSunday();
+
+            // Si c'est dimanche et qu'on est en mode journalier, basculer vers arriérés si disponible
+            if ($this->estDimanche && $this->type_versement === 'journalier') {
+                if ($this->arrieresCumules > 0) {
+                    $this->type_versement = 'arrieres';
+                    $this->montant = $this->arrieresCumules;
+                }
+            }
+        } else {
+            $this->estDimanche = false;
+        }
+
         if ($this->motardSelectionne) {
             $this->verifierVersementExistant();
             $this->updateRepartitionPreview();
@@ -242,6 +269,13 @@ class Create extends Component
             return;
         }
 
+        // Vérifier si c'est un dimanche pour les versements journaliers
+        $dateVersement = Carbon::parse($this->date_versement);
+        if ($dateVersement->isSunday() && $this->type_versement === 'journalier') {
+            session()->flash('error', 'Les versements journaliers ne sont pas autorisés le dimanche. Seuls les remboursements d\'arriérés sont acceptés.');
+            return;
+        }
+
         $motard = Motard::with('moto')->find($this->motard_id);
 
         // Vérifier que le motard existe
@@ -287,9 +321,10 @@ class Create extends Component
         $dateVersement = Carbon::parse($this->date_versement);
         $montantJournalierAttendu = $moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
 
-        // Si un versement existe déjà pour ce jour, le compléter
+        // Si un versement existe déjà pour ce jour, ne pas permettre un nouveau - rediriger vers la liste
         if ($this->versementExistantJour) {
-            return $this->completerVersementExistant($caissier, $montantVerse, $partProprietaire, $partOkami, $motard);
+            session()->flash('error', 'Un versement existe déjà pour ce motard à cette date. Veuillez utiliser le bouton "Compléter" dans la liste des versements.');
+            return redirect()->route('cashier.versements.index');
         }
 
         // Déterminer le statut et les arriérés

@@ -106,6 +106,22 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
 
+                            <!-- Alerte Dimanche -->
+                            @if($estDimanche)
+                            <div class="alert alert-danger mt-3 mb-0 border-danger">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-calendar-x fs-3 text-danger"></i>
+                                    <div>
+                                        <strong class="d-block mb-1">Dimanche - Jour de repos</strong>
+                                        <small>Les versements journaliers ne sont pas autorisés le dimanche.</small>
+                                        @if($arrieresCumules > 0)
+                                        <br><small class="text-muted">Seuls les <strong>remboursements d'arriérés</strong> sont acceptés.</small>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
                             <!-- Statut du jour sélectionné -->
                             @if($versementExistantJour)
                             <div class="alert alert-info mt-3 mb-0">
@@ -149,14 +165,20 @@
                             <label class="form-label fw-semibold">Type de versement <span class="text-danger">*</span></label>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'journalier' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="journalier" id="typeJournalier">
+                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'journalier' ? 'border-primary bg-primary bg-opacity-10' : '' }} {{ $estDimanche ? 'opacity-50' : '' }}">
+                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="journalier" id="typeJournalier" {{ $estDimanche ? 'disabled' : '' }}>
                                         <label class="form-check-label d-block" for="typeJournalier">
                                             <div class="d-flex align-items-center gap-2 mb-2">
                                                 <i class="bi bi-calendar-day fs-4 text-primary"></i>
                                                 <strong>Versement Journalier</strong>
                                             </div>
-                                            <small class="text-muted">Payer la journée sélectionnée</small>
+                                            <small class="text-muted">
+                                                @if($estDimanche)
+                                                <span class="text-danger"><i class="bi bi-x-circle me-1"></i>Non disponible le dimanche</span>
+                                                @else
+                                                Payer la journée sélectionnée
+                                                @endif
+                                            </small>
                                         </label>
                                     </div>
                                 </div>
@@ -171,6 +193,9 @@
                                             <small class="text-muted">
                                                 @if($arrieresCumules > 0)
                                                 Total: <strong class="text-danger">{{ number_format($arrieresCumules) }} FC</strong>
+                                                @if($estDimanche)
+                                                <span class="badge bg-success ms-1">Disponible</span>
+                                                @endif
                                                 @else
                                                 Aucun arriéré
                                                 @endif
@@ -256,7 +281,22 @@
 
                         <!-- Bouton de soumission -->
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled">
+                            @if($estDimanche && $type_versement === 'journalier')
+                            <div class="alert alert-danger mb-0">
+                                <i class="bi bi-calendar-x me-2"></i>
+                                <strong>Enregistrement bloqué</strong> - Les versements journaliers ne sont pas autorisés le dimanche.
+                                @if($arrieresCumules > 0)
+                                <br><small>Vous pouvez uniquement enregistrer un <strong>remboursement d'arriérés</strong>.</small>
+                                @endif
+                            </div>
+                            @elseif($versementExistantJour && $type_versement === 'journalier' && $montantRestantJour > 0)
+                            <div class="alert alert-warning mb-0">
+                                <i class="bi bi-lock me-2"></i>
+                                <strong>Enregistrement bloqué</strong> - Un versement existe déjà pour ce jour.
+                                <a href="{{ route('cashier.versements.index') }}" class="alert-link">Compléter via la liste</a>
+                            </div>
+                            @else
+                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled" {{ (($versementExistantJour && $type_versement === 'journalier') || ($estDimanche && $type_versement === 'journalier')) ? 'disabled' : '' }}>
                                 <span wire:loading.remove wire:target="enregistrer">
                                     <i class="bi bi-check-circle me-2"></i>Enregistrer le Versement
                                 </span>
@@ -264,6 +304,7 @@
                                     <span class="spinner-border spinner-border-sm me-2"></span>Enregistrement...
                                 </span>
                             </button>
+                            @endif
                         </div>
                         @endif
                     </form>

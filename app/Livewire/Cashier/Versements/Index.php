@@ -92,9 +92,14 @@ class Index extends Component
         $montantComplement = (float) $this->montantComplement;
         $versement = $this->versementACompleter;
 
-        // Mettre à jour le versement existant
-        $nouveauMontant = ($versement->montant ?? 0) + $montantComplement;
-        $montantAttendu = $versement->montant_attendu ?? 0;
+        // Calculer le montant actuel et le manquant
+        $montantActuel = (float) ($versement->montant ?? 0);
+        $montantAttendu = (float) ($versement->montant_attendu ?? 0);
+        $montantManquantReel = max(0, $montantAttendu - $montantActuel);
+
+        // Limiter le complément au montant manquant réel pour ne pas dépasser l'attendu
+        // Sauf si l'utilisateur veut explicitement verser plus (pour rembourser les arriérés d'autres jours)
+        $nouveauMontant = $montantActuel + $montantComplement;
 
         // Calculer le nouveau statut
         if ($nouveauMontant >= $montantAttendu) {
@@ -111,7 +116,7 @@ class Index extends Component
             'arrieres' => $nouveauxArrieres,
             'statut' => $nouveauStatut,
             'notes' => ($versement->notes ? $versement->notes . "\n" : '') .
-                       "[Complément de " . number_format($montantComplement) . " FC le " . now()->format('d/m/Y H:i') . "]",
+                       "[Complément de " . number_format($montantComplement) . " FC le " . now()->format('d/m/Y H:i') . " - Total: " . number_format($nouveauMontant) . " FC]",
         ]);
 
         // Mettre à jour le solde du caissier
@@ -120,7 +125,7 @@ class Index extends Component
         // Fermer le modal
         $this->fermerComplement();
 
-        session()->flash('success', 'Complément de ' . number_format($montantComplement) . ' FC enregistré avec succès.');
+        session()->flash('success', 'Complément de ' . number_format($montantComplement) . ' FC enregistré. Nouveau total: ' . number_format($nouveauMontant) . ' FC.');
     }
 
     /**

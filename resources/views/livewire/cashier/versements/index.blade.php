@@ -125,7 +125,7 @@
                             <th>Écart</th>
                             <th>Mode</th>
                             <th>Statut</th>
-                            <th>Heure</th>
+                            <th>Date & Heure</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
@@ -187,7 +187,14 @@
                                 </span>
                             </td>
                             <td class="text-muted small">
-                                <i class="bi bi-clock me-1"></i>{{ $versement->created_at?->format('H:i') }}
+                                @if($versement->date_versement?->isToday())
+                                <span class="badge bg-success bg-opacity-10 text-success">Aujourd'hui</span>
+                                @elseif($versement->date_versement?->isYesterday())
+                                <span class="badge bg-warning bg-opacity-10 text-warning">Hier</span>
+                                @else
+                                <span class="text-dark">{{ $versement->date_versement?->format('d/m/Y') }}</span>
+                                @endif
+                                <br><i class="bi bi-clock me-1"></i>{{ $versement->created_at?->format('H:i') }}
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-flex gap-1 justify-content-end">
@@ -247,18 +254,17 @@
                         </div>
                     </div>
 
-                    <!-- Détails du versement -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <div class="text-center p-3 bg-light rounded">
-                                <small class="text-muted d-block">Montant versé</small>
-                                <span class="fw-bold text-primary">{{ number_format($versementACompleter->montant ?? 0) }} FC</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-center p-3 bg-light rounded">
+                    <!-- Détails du versement actuel -->
+                    <div class="alert alert-light border mb-3">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i>État actuel du versement</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
                                 <small class="text-muted d-block">Montant attendu</small>
                                 <span class="fw-bold">{{ number_format($versementACompleter->montant_attendu ?? 0) }} FC</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Déjà versé</small>
+                                <span class="fw-bold text-primary">{{ number_format($versementACompleter->montant ?? 0) }} FC</span>
                             </div>
                         </div>
                     </div>
@@ -266,7 +272,7 @@
                     <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
                         <i class="bi bi-exclamation-triangle fs-5"></i>
                         <div>
-                            <strong>Montant manquant:</strong> {{ number_format($montantManquant) }} FC
+                            <strong>Reste à payer:</strong> {{ number_format($montantManquant) }} FC
                         </div>
                     </div>
 
@@ -274,7 +280,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Montant du complément <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <input type="number" wire:model="montantComplement" class="form-control form-control-lg @error('montantComplement') is-invalid @enderror" placeholder="0" min="1">
+                            <input type="number" wire:model="montantComplement" class="form-control form-control-lg @error('montantComplement') is-invalid @enderror" placeholder="0" min="1" max="{{ $montantManquant }}">
                             <span class="input-group-text">FC</span>
                         </div>
                         @error('montantComplement')
@@ -282,18 +288,31 @@
                         @enderror
                         <div class="d-flex gap-2 mt-2">
                             <button type="button" wire:click="$set('montantComplement', {{ $montantManquant }})" class="btn btn-sm btn-outline-warning">
-                                Montant exact ({{ number_format($montantManquant) }} FC)
+                                Compléter exactement ({{ number_format($montantManquant) }} FC)
                             </button>
                         </div>
                     </div>
 
                     @if($montantComplement && $montantComplement > 0)
+                    @php
+                        $montantActuel = $versementACompleter->montant ?? 0;
+                        $montantAttendu = $versementACompleter->montant_attendu ?? 0;
+                        $nouveauTotal = $montantActuel + (float)$montantComplement;
+                    @endphp
                     <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>
-                        Nouveau total après complément: <strong>{{ number_format(($versementACompleter->montant ?? 0) + (float)$montantComplement) }} FC</strong>
-                        @if((float)$montantComplement >= $montantManquant)
-                        <span class="badge bg-success ms-2">Complet</span>
-                        @endif
+                        <i class="bi bi-calculator me-2"></i>
+                        <strong>Récapitulatif:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Déjà versé: {{ number_format($montantActuel) }} FC</li>
+                            <li>Complément: + {{ number_format((float)$montantComplement) }} FC</li>
+                            <li class="fw-bold">Nouveau total: {{ number_format($nouveauTotal) }} FC
+                                @if($nouveauTotal >= $montantAttendu)
+                                <span class="badge bg-success ms-1">Complet</span>
+                                @else
+                                <span class="badge bg-warning ms-1">Reste {{ number_format($montantAttendu - $nouveauTotal) }} FC</span>
+                                @endif
+                            </li>
+                        </ul>
                     </div>
                     @endif
                 </div>
