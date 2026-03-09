@@ -29,9 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('profile.settings');
 
     // Notifications
-    Route::get('/notifications', function () {
-        return view('notifications.index');
-    })->name('notifications.index');
+    Route::get('/notifications', \App\Livewire\NotificationsIndex::class)->name('notifications.index');
 
     /*
     |--------------------------------------------------------------------------

@@ -49,33 +49,55 @@
         @endif
 
         {{-- Notifications --}}
+        {{-- Notifications --}}
+        @php
+            $systemNotifications = \App\Models\SystemNotification::where('user_id', auth()->id())
+                ->nonLues()
+                ->nonExpirees()
+                ->orderBy('created_at', 'desc')
+                ->take(5)
+                ->get();
+            $notifCount = \App\Models\SystemNotification::where('user_id', auth()->id())
+                ->nonLues()
+                ->nonExpirees()
+                ->count();
+        @endphp
         <div class="dropdown">
             <button class="btn btn-light border-0 position-relative" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" style="padding: 0.5rem 0.75rem;">
-                <i class="bi bi-bell fs-5"></i>
-                @if(auth()->user()->unreadNotifications->count() > 0)
+                <i class="bi bi-bell fs-5 text-dark"></i>
+                @if($notifCount > 0)
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-pulse" style="font-size: 0.65rem; margin-left: -8px; margin-top: 4px;">
-                    {{ auth()->user()->unreadNotifications->count() > 9 ? '9+' : auth()->user()->unreadNotifications->count() }}
+                    {{ $notifCount > 9 ? '9+' : $notifCount }}
                 </span>
                 @endif
             </button>
             <div class="dropdown-menu dropdown-menu-end shadow p-0 mt-2" style="width: 360px; border-radius: 0.75rem;">
                 <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light" style="border-radius: 0.75rem 0.75rem 0 0;">
-                    <h6 class="mb-0 fw-bold">
+                    <h6 class="mb-0 fw-bold text-dark">
                         <i class="bi bi-bell me-2 text-primary"></i>Notifications
                     </h6>
-                    @if(auth()->user()->unreadNotifications->count() > 0)
-                    <a href="#" class="text-decoration-none small text-primary fw-medium">Tout marquer lu</a>
+                    @if($notifCount > 0)
+                    <span class="badge bg-primary">{{ $notifCount }}</span>
                     @endif
                 </div>
                 <div style="max-height: 350px; overflow-y: auto;">
-                    @forelse(auth()->user()->unreadNotifications->take(5) ?? [] as $notification)
-                    <div class="px-3 py-3 border-bottom" style="transition: background 0.2s;">
+                    @forelse($systemNotifications as $notification)
+                    @php
+                        $couleurs = [
+                            'success' => 'success', 'danger' => 'danger', 'warning' => 'warning',
+                            'info' => 'info', 'primary' => 'primary', 'green' => 'success',
+                            'red' => 'danger', 'orange' => 'warning', 'blue' => 'info',
+                        ];
+                        $couleur = $couleurs[$notification->couleur] ?? 'primary';
+                    @endphp
+                    <div class="px-3 py-3 border-bottom bg-light bg-opacity-50" style="transition: background 0.2s;">
                         <div class="d-flex gap-3 align-items-start">
-                            <div class="rounded-circle bg-{{ $notification->data['color'] ?? 'primary' }} bg-opacity-10 p-2 flex-shrink-0" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
-                                <i class="bi bi-{{ $notification->data['icon'] ?? 'bell' }} text-{{ $notification->data['color'] ?? 'primary' }} fs-5"></i>
+                            <div class="rounded-circle bg-{{ $couleur }} bg-opacity-10 p-2 flex-shrink-0" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-{{ $notification->icon ?? 'bell' }} text-{{ $couleur }} fs-5"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <p class="mb-1 small text-dark fw-medium">{{ $notification->data['message'] ?? '' }}</p>
+                                <p class="mb-1 small text-dark fw-semibold">{{ $notification->titre }}</p>
+                                <p class="mb-1 small text-muted" style="line-height: 1.3;">{{ Str::limit($notification->message, 80) }}</p>
                                 <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ $notification->created_at->diffForHumans() }}</small>
                             </div>
                         </div>
@@ -90,13 +112,11 @@
                     </div>
                     @endforelse
                 </div>
-                @if(auth()->user()->unreadNotifications->count() > 0)
                 <div class="p-3 border-top text-center bg-light" style="border-radius: 0 0 0.75rem 0.75rem;">
                     <a href="{{ route('notifications.index') }}" class="text-decoration-none small fw-semibold text-primary">
                         Voir toutes les notifications <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
-                @endif
             </div>
         </div>
 
