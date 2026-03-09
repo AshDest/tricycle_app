@@ -63,6 +63,18 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 # Redémarrer PHP-FPM
 sudo systemctl restart php8.2-fpm
+
+# Configurer le Scheduler (Cron Job)
+echo "⏰ Configuration du Scheduler..."
+CRON_JOB="* * * * * cd $APP_DIR && php artisan schedule:run >> /dev/null 2>&1"
+CRON_EXISTS=$(crontab -l 2>/dev/null | grep -F "tricycle_app" | grep -F "schedule:run" || true)
+if [ -z "$CRON_EXISTS" ]; then
+    (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+    echo "   ✅ Cron job ajouté pour le scheduler"
+else
+    echo "   ℹ️ Cron job déjà configuré"
+fi
+
 echo ""
 echo "✅ Premier déploiement terminé!"
 echo ""
