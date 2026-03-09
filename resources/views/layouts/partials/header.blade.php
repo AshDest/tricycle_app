@@ -103,7 +103,7 @@
         {{-- User Dropdown --}}
         <div class="dropdown">
             <button class="btn btn-light border-0 d-flex align-items-center gap-2 px-2" type="button" data-bs-toggle="dropdown" style="padding: 0.375rem 0.5rem;">
-                <div class="user-avatar-sm bg-gradient text-white" style="background: linear-gradient(135deg, var(--primary-color), #7c3aed);">
+                <div class="user-avatar-sm text-white" style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
                 <div class="d-none d-xl-block text-start lh-sm">
@@ -116,29 +116,32 @@
                             'driver' => 'Motard',
                             'cashier' => 'Caissier',
                             'collector' => 'Collecteur',
+                            'cleaner' => 'Laveur',
                         ];
-                        $roleColors = [
-                            'admin' => 'primary',
-                            'supervisor' => 'info',
-                            'owner' => 'warning',
-                            'driver' => 'success',
-                            'cashier' => 'danger',
-                            'collector' => 'secondary',
+                        $roleBgColors = [
+                            'admin' => '#4f46e5',
+                            'supervisor' => '#0891b2',
+                            'owner' => '#d97706',
+                            'driver' => '#059669',
+                            'cashier' => '#dc2626',
+                            'collector' => '#6366f1',
+                            'cleaner' => '#8b5cf6',
                         ];
+                        $roleName = $role ? $role->name : 'user';
                     @endphp
                     <span class="fw-semibold text-dark d-block" style="font-size: 0.875rem;">{{ auth()->user()->name }}</span>
-                    <span class="badge badge-soft-{{ $roleColors[$role->name] ?? 'secondary' }}" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">{{ $roleLabels[$role->name] ?? 'Utilisateur' }}</span>
+                    <span class="badge text-white" style="font-size: 0.65rem; padding: 0.2rem 0.5rem; background-color: {{ $roleBgColors[$roleName] ?? '#6b7280' }};">{{ $roleLabels[$roleName] ?? 'Utilisateur' }}</span>
                 </div>
-                <i class="bi bi-chevron-down d-none d-xl-block text-muted" style="font-size: 0.625rem;"></i>
+                <i class="bi bi-chevron-down d-none d-xl-block text-secondary" style="font-size: 0.625rem;"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow mt-2" style="min-width: 220px;">
                 <li class="px-3 py-3 border-bottom bg-light" style="border-radius: 0.75rem 0.75rem 0 0;">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="user-avatar-sm bg-gradient text-white flex-shrink-0" style="background: linear-gradient(135deg, var(--primary-color), #7c3aed); width: 44px; height: 44px; font-size: 1rem;">
+                        <div class="user-avatar-sm text-white flex-shrink-0" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); width: 44px; height: 44px; font-size: 1rem;">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>
                         <div class="min-w-0">
-                            <strong class="d-block text-truncate">{{ auth()->user()->name }}</strong>
+                            <strong class="d-block text-truncate text-dark">{{ auth()->user()->name }}</strong>
                             <small class="text-muted text-truncate d-block">{{ auth()->user()->email }}</small>
                         </div>
                     </div>

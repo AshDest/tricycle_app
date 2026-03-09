@@ -17,13 +17,13 @@
     <div class="row g-4">
         <!-- Profile Card -->
         <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <div class="avatar avatar-xl mx-auto mb-4" style="width: 100px; height: 100px; background: linear-gradient(135deg, #4f46e5, #7c3aed); font-size: 2.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5" style="background: linear-gradient(135deg, #1e3a5f 0%, #0d253f 100%); border-radius: 0.5rem;">
+                    <div class="avatar avatar-xl mx-auto mb-4" style="width: 100px; height: 100px; background: linear-gradient(135deg, #f59e0b, #d97706); font-size: 2.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; border: 4px solid rgba(255,255,255,0.3);">
                         {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
                     </div>
-                    <h4 class="fw-bold mb-1">{{ auth()->user()->name }}</h4>
-                    <p class="text-muted mb-3">{{ auth()->user()->email }}</p>
+                    <h4 class="fw-bold mb-1 text-white">{{ auth()->user()->name }}</h4>
+                    <p class="text-light mb-3">{{ auth()->user()->email }}</p>
 
                     @php
                         $role = auth()->user()->roles->first();
@@ -34,18 +34,21 @@
                             'driver' => 'Motard',
                             'cashier' => 'Caissier',
                             'collector' => 'Collecteur',
+                            'cleaner' => 'Laveur',
                         ];
-                        $roleColors = [
-                            'admin' => 'primary',
-                            'supervisor' => 'info',
-                            'owner' => 'warning',
-                            'driver' => 'success',
-                            'cashier' => 'danger',
-                            'collector' => 'secondary',
+                        $roleBgColors = [
+                            'admin' => '#4f46e5',
+                            'supervisor' => '#0891b2',
+                            'owner' => '#d97706',
+                            'driver' => '#059669',
+                            'cashier' => '#dc2626',
+                            'collector' => '#6366f1',
+                            'cleaner' => '#8b5cf6',
                         ];
+                        $roleName = $role ? $role->name : 'user';
                     @endphp
-                    <span class="badge badge-soft-{{ $roleColors[$role->name] ?? 'secondary' }} px-3 py-2">
-                        <i class="bi bi-shield-check me-1"></i>{{ $roleLabels[$role->name] ?? 'Utilisateur' }}
+                    <span class="badge px-3 py-2" style="background-color: {{ $roleBgColors[$roleName] ?? '#6b7280' }}; color: white; font-size: 0.875rem;">
+                        <i class="bi bi-shield-check me-1"></i>{{ $roleLabels[$roleName] ?? 'Utilisateur' }}
                     </span>
                 </div>
             </div>
@@ -53,49 +56,49 @@
 
         <!-- Info Cards -->
         <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-person me-2 text-primary"></i>Informations Personnelles</h6>
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header py-3 bg-white border-bottom">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-person me-2 text-primary"></i>Informations Personnelles</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-4">
                         <div class="col-md-6">
-                            <label class="form-label text-muted small">Nom complet</label>
-                            <p class="fw-semibold mb-0">{{ auth()->user()->name }}</p>
+                            <label class="form-label text-muted small mb-1">Nom complet</label>
+                            <p class="fw-semibold mb-0 text-dark fs-6">{{ auth()->user()->name }}</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-muted small">Adresse email</label>
-                            <p class="fw-semibold mb-0">{{ auth()->user()->email }}</p>
+                            <label class="form-label text-muted small mb-1">Adresse email</label>
+                            <p class="fw-semibold mb-0 text-dark fs-6">{{ auth()->user()->email }}</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-muted small">Rôle</label>
-                            <p class="fw-semibold mb-0">{{ $roleLabels[$role->name] ?? 'Utilisateur' }}</p>
+                            <label class="form-label text-muted small mb-1">Rôle</label>
+                            <p class="fw-semibold mb-0 text-dark fs-6">{{ $roleLabels[$roleName] ?? 'Utilisateur' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-muted small">Membre depuis</label>
-                            <p class="fw-semibold mb-0">{{ auth()->user()->created_at->translatedFormat('d F Y') }}</p>
+                            <label class="form-label text-muted small mb-1">Membre depuis</label>
+                            <p class="fw-semibold mb-0 text-dark fs-6">{{ auth()->user()->created_at->translatedFormat('d F Y') }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header py-3">
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-shield-lock me-2 text-warning"></i>Sécurité</h6>
+            <div class="card border-0 shadow-sm">
+                <div class="card-header py-3 bg-white border-bottom">
+                    <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-shield-lock me-2 text-warning"></i>Sécurité</h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
                         <div>
-                            <p class="fw-medium mb-1">Mot de passe</p>
+                            <p class="fw-semibold mb-1 text-dark">Mot de passe</p>
                             <small class="text-muted">Dernière modification: {{ auth()->user()->updated_at->diffForHumans() }}</small>
                         </div>
                         <a href="{{ route('profile.settings') }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-pencil me-1"></i>Modifier
                         </a>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center py-2">
+                    <div class="d-flex justify-content-between align-items-center py-3">
                         <div>
-                            <p class="fw-medium mb-1">Email vérifié</p>
+                            <p class="fw-semibold mb-1 text-dark">Email vérifié</p>
                             <small class="text-muted">
                                 @if(auth()->user()->email_verified_at)
                                     Vérifié le {{ auth()->user()->email_verified_at->translatedFormat('d F Y') }}
@@ -105,11 +108,11 @@
                             </small>
                         </div>
                         @if(auth()->user()->email_verified_at)
-                        <span class="badge badge-soft-success">
+                        <span class="badge bg-success px-3 py-2">
                             <i class="bi bi-check-circle me-1"></i>Vérifié
                         </span>
                         @else
-                        <span class="badge badge-soft-warning">
+                        <span class="badge bg-warning text-dark px-3 py-2">
                             <i class="bi bi-exclamation-circle me-1"></i>Non vérifié
                         </span>
                         @endif

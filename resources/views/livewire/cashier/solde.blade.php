@@ -15,11 +15,11 @@
     <!-- Solde Principal -->
     <div class="row g-4 mb-4">
         <div class="col-lg-6">
-            <div class="card bg-gradient text-white h-100" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <div class="card text-white h-100" style="background: linear-gradient(135deg, #1e3a5f, #0d253f);">
                 <div class="card-body text-center py-5">
-                    <i class="bi bi-wallet2 mb-3" style="font-size: 3rem;"></i>
-                    <h2 class="fw-bold display-5 mb-2">{{ number_format($solde_actuel ?? 0) }} FC</h2>
-                    <p class="mb-0 opacity-75">Solde actuel en caisse (non collecté)</p>
+                    <i class="bi bi-wallet2 mb-3 text-warning" style="font-size: 3rem;"></i>
+                    <h2 class="fw-bold display-5 mb-2 text-white">{{ number_format($solde_actuel ?? 0) }} FC</h2>
+                    <p class="mb-0 text-light">Solde actuel en caisse (non collecté)</p>
                 </div>
             </div>
         </div>
@@ -29,16 +29,16 @@
                     <div class="card h-100 border-start border-success border-4">
                         <div class="card-body text-center py-4">
                             <i class="bi bi-arrow-down-circle text-success fs-1 mb-2"></i>
-                            <h4 class="fw-bold text-success mb-1">{{ number_format($total_entrants ?? 0) }} FC</h4>
+                            <h4 class="fw-bold text-dark mb-1">{{ number_format($total_entrants ?? 0) }} FC</h4>
                             <small class="text-muted">Versements reçus (non collectés)</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="card h-100 border-start border-info border-4">
+                    <div class="card h-100 border-start border-primary border-4">
                         <div class="card-body text-center py-4">
-                            <i class="bi bi-arrow-up-circle text-info fs-1 mb-2"></i>
-                            <h4 class="fw-bold text-info mb-1">{{ number_format($total_collecte ?? 0) }} FC</h4>
+                            <i class="bi bi-arrow-up-circle text-primary fs-1 mb-2"></i>
+                            <h4 class="fw-bold text-dark mb-1">{{ number_format($total_collecte ?? 0) }} FC</h4>
                             <small class="text-muted">Remis aux collecteurs</small>
                         </div>
                     </div>

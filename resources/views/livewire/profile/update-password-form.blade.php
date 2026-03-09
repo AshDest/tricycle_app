@@ -45,7 +45,7 @@ new class extends Component
 
     <form wire:submit="updatePassword">
         <div class="mb-4">
-            <label for="current_password" class="form-label fw-semibold">Mot de passe actuel</label>
+            <label for="current_password" class="form-label fw-semibold text-dark">Mot de passe actuel</label>
             <input
                 wire:model="current_password"
                 type="password"
@@ -59,7 +59,7 @@ new class extends Component
         </div>
 
         <div class="mb-4">
-            <label for="password" class="form-label fw-semibold">Nouveau mot de passe</label>
+            <label for="password" class="form-label fw-semibold text-dark">Nouveau mot de passe</label>
             <input
                 wire:model="password"
                 type="password"
@@ -73,7 +73,7 @@ new class extends Component
         </div>
 
         <div class="mb-4">
-            <label for="password_confirmation" class="form-label fw-semibold">Confirmer le mot de passe</label>
+            <label for="password_confirmation" class="form-label fw-semibold text-dark">Confirmer le mot de passe</label>
             <input
                 wire:model="password_confirmation"
                 type="password"

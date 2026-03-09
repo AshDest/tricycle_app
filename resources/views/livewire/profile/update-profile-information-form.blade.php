@@ -48,7 +48,7 @@ new class extends Component
 
     <form wire:submit="updateProfileInformation">
         <div class="mb-4">
-            <label for="name" class="form-label fw-semibold">Nom complet</label>
+            <label for="name" class="form-label fw-semibold text-dark">Nom complet</label>
             <input
                 wire:model="name"
                 type="text"
@@ -62,7 +62,7 @@ new class extends Component
         </div>
 
         <div class="mb-4">
-            <label for="email" class="form-label fw-semibold">Adresse email</label>
+            <label for="email" class="form-label fw-semibold text-dark">Adresse email</label>
             <input
                 wire:model="email"
                 type="email"
