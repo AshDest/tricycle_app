@@ -120,6 +120,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Transactions Mobile Money (vue admin)
         Route::get('/transactions-mobile', \App\Livewire\Admin\TransactionsMobile\Index::class)->name('transactions-mobile.index');
 
+        // Commissions & Bénéfices (validation admin)
+        Route::get('/commissions-benefices', \App\Livewire\Admin\CommissionsBenefices\Index::class)->name('commissions-benefices.index');
+
         // Rapports
         Route::get('/reports/daily', \App\Livewire\Admin\Reports\Daily::class)->name('reports.daily');
         Route::get('/reports/weekly', \App\Livewire\Admin\Reports\Weekly::class)->name('reports.weekly');
@@ -246,6 +249,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Transactions Mobile Money
         Route::get('/transactions-mobile', \App\Livewire\Collector\TransactionsMobile\Index::class)->name('transactions-mobile.index');
         Route::get('/transactions-mobile/create', \App\Livewire\Collector\TransactionsMobile\Create::class)->name('transactions-mobile.create');
+
+        // Commissions Mobile Money
+        Route::get('/commissions', \App\Livewire\Collector\Commissions\Index::class)->name('commissions.index');
+
+        // Bénéfices de Change
+        Route::get('/benefices-change', \App\Livewire\Collector\BeneficesChange\Index::class)->name('benefices-change.index');
     });
 
     /*

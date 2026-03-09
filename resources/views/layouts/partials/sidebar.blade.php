@@ -85,15 +85,17 @@
                     <li><a href="{{ route('admin.caissiers.create') }}">Ajouter</a></li>
                 </ul>
             </li>
-            <li class="has-submenu {{ request()->is('admin/collecteurs*') ? 'active' : '' }}">
+            <li class="has-submenu {{ request()->is('admin/collecteurs*') || request()->is('admin/transactions-mobile*') || request()->is('admin/commissions-benefices*') ? 'active' : '' }}">
                 <a href="#" class="toggle-submenu">
                     <i class="bi bi-geo-alt"></i>
                     <span>Collecteurs</span>
                     <i class="bi bi-chevron-down submenu-icon"></i>
                 </a>
                 <ul class="submenu">
-                    <li><a href="{{ route('admin.collecteurs.index') }}">Liste</a></li>
-                    <li><a href="{{ route('admin.collecteurs.create') }}">Ajouter</a></li>
+                    <li><a href="{{ route('admin.collecteurs.index') }}"><i class="bi bi-list me-1"></i>Liste</a></li>
+                    <li><a href="{{ route('admin.collecteurs.create') }}"><i class="bi bi-plus me-1"></i>Ajouter</a></li>
+                    <li><a href="{{ route('admin.transactions-mobile.index') }}"><i class="bi bi-phone me-1"></i>Transactions Mobile</a></li>
+                    <li><a href="{{ route('admin.commissions-benefices.index') }}"><i class="bi bi-clipboard-check text-success me-1"></i>Commissions &amp; B&eacute;n&eacute;fices</a></li>
                 </ul>
             </li>
             <li class="has-submenu {{ request()->is('admin/cleaners*') || request()->is('admin/lavages*') ? 'active' : '' }}">
@@ -148,12 +150,6 @@
                 <a href="{{ route('admin.accidents.index') }}">
                     <i class="bi bi-exclamation-triangle"></i>
                     <span>Accidents</span>
-                </a>
-            </li>
-            <li class="{{ request()->is('admin/transactions-mobile*') ? 'active' : '' }}">
-                <a href="{{ route('admin.transactions-mobile.index') }}">
-                    <i class="bi bi-phone"></i>
-                    <span>Transactions Mobile</span>
                 </a>
             </li>
 
@@ -411,6 +407,18 @@
                 <a href="{{ route('collector.transactions-mobile.index') }}">
                     <i class="bi bi-phone"></i>
                     <span>Transactions Mobile</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('collector/commissions*') ? 'active' : '' }}">
+                <a href="{{ route('collector.commissions.index') }}">
+                    <i class="bi bi-percent text-success"></i>
+                    <span>Commissions (70/30)</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('collector/benefices-change*') ? 'active' : '' }}">
+                <a href="{{ route('collector.benefices-change.index') }}">
+                    <i class="bi bi-currency-exchange text-info"></i>
+                    <span>B&eacute;n&eacute;fices Change</span>
                 </a>
             </li>
             <li class="{{ request()->is('collector/historique*') ? 'active' : '' }}">
