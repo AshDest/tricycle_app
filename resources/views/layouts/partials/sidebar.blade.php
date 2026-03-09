@@ -35,6 +35,18 @@
                     <span>Gestion BDD</span>
                 </a>
             </li>
+            <li class="{{ request()->is('super-admin/email-settings*') ? 'active' : '' }}">
+                <a href="{{ route('super-admin.email-settings') }}">
+                    <i class="bi bi-envelope-gear text-danger"></i>
+                    <span>Emails &amp; Notifications</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('super-admin/notifications-history*') ? 'active' : '' }}">
+                <a href="{{ route('super-admin.notifications-history') }}">
+                    <i class="bi bi-bell-fill text-danger"></i>
+                    <span>Historique Notifications</span>
+                </a>
+            </li>
             @endrole
 
             {{-- Admin Menu --}}

@@ -41,6 +41,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/database', \App\Livewire\SuperAdmin\DatabaseManager::class)->name('database');
         Route::get('/logs', \App\Livewire\SuperAdmin\SystemLogs::class)->name('logs');
         Route::get('/activity', \App\Livewire\SuperAdmin\ActivityMonitor::class)->name('activity');
+
+        // Configuration Email & Notifications
+        Route::get('/email-settings', \App\Livewire\SuperAdmin\EmailSettings::class)->name('email-settings');
+        Route::get('/notifications-history', \App\Livewire\SuperAdmin\NotificationsHistory::class)->name('notifications-history');
     });
 
     /*

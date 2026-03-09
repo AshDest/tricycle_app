@@ -12,14 +12,52 @@ use App\Models\Moto;
 use App\Models\Motard;
 use App\Models\SystemNotification;
 use App\Models\Collecte;
+use App\Notifications\SystemEmailNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service de gestion des notifications
  * Selon le cahier des charges - Notifications pour tous les acteurs
+ * Envoie des notifications système ET des emails
  */
 class NotificationService
 {
+    /**
+     * Envoyer une notification par email à un utilisateur
+     */
+    protected static function envoyerEmail(
+        User $user,
+        string $type,
+        string $titre,
+        string $message,
+        string $couleur = 'info',
+        ?string $actionUrl = null,
+        ?string $actionText = null
+    ): void {
+        try {
+            // Vérifier que l'utilisateur a un email valide
+            if (!$user->email) {
+                return;
+            }
+
+            $user->notify(new SystemEmailNotification(
+                $type,
+                $titre,
+                $message,
+                $couleur,
+                $actionUrl,
+                $actionText
+            ));
+        } catch (\Exception $e) {
+            // Logger l'erreur mais ne pas bloquer le processus
+            Log::error('Erreur envoi email notification: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'type' => $type,
+            ]);
+        }
+    }
+
     /**
      * =====================================================
      * NOTIFICATIONS MOTARD
@@ -34,18 +72,30 @@ class NotificationService
         if (!$motard->user) return;
 
         $dateVersement = $versement->date_versement ? $versement->date_versement->format('d/m/Y') : 'date inconnue';
+        $message = "Votre versement du {$dateVersement} est en retard. Montant dû: " . number_format($versement->arrieres ?? 0) . " FC";
 
         SystemNotification::create([
             'user_id' => $motard->user->id,
             'type' => 'retard_paiement',
             'titre' => 'Retard de versement',
-            'message' => "Votre versement du {$dateVersement} est en retard. Montant dû: " . number_format($versement->arrieres ?? 0) . " FC",
+            'message' => $message,
             'icon' => 'exclamation-triangle',
             'couleur' => 'danger',
             'notifiable_type' => Versement::class,
             'notifiable_id' => $versement->id,
             'priorite' => 'haute',
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $motard->user,
+            'retard_paiement',
+            'Retard de versement',
+            $message,
+            'danger',
+            url('/dashboard'),
+            'Voir mes versements'
+        );
     }
 
     /**
@@ -56,18 +106,30 @@ class NotificationService
         if (!$motard->user) return;
 
         $dateVersement = $versement->date_versement ? $versement->date_versement->format('d/m/Y') : 'date inconnue';
+        $message = "Votre versement de " . number_format($versement->montant ?? 0) . " FC du {$dateVersement} a été validé.";
 
         SystemNotification::create([
             'user_id' => $motard->user->id,
             'type' => 'versement_valide',
             'titre' => 'Versement validé',
-            'message' => "Votre versement de " . number_format($versement->montant ?? 0) . " FC du {$dateVersement} a été validé.",
+            'message' => $message,
             'icon' => 'check-circle',
             'couleur' => 'success',
             'notifiable_type' => Versement::class,
             'notifiable_id' => $versement->id,
             'priorite' => 'normale',
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $motard->user,
+            'versement_valide',
+            'Versement validé',
+            $message,
+            'success',
+            url('/dashboard'),
+            'Voir mon historique'
+        );
     }
 
     /**
@@ -85,15 +147,28 @@ class NotificationService
 
         if ($existante) return;
 
+        $message = "Attention! Vos arriérés cumulés ont atteint " . number_format($totalArrieres) . " FC. Veuillez régulariser votre situation rapidement.";
+
         SystemNotification::create([
             'user_id' => $motard->user->id,
             'type' => 'arrieres_critiques',
             'titre' => '⚠️ Arriérés critiques',
-            'message' => "Attention! Vos arriérés cumulés ont atteint " . number_format($totalArrieres) . " FC. Veuillez régulariser votre situation rapidement.",
+            'message' => $message,
             'icon' => 'exclamation-circle',
             'couleur' => 'danger',
             'priorite' => 'urgente',
         ]);
+
+        // Envoyer aussi par email (important car urgent)
+        self::envoyerEmail(
+            $motard->user,
+            'arrieres_critiques',
+            'Arriérés critiques - Action requise',
+            $message,
+            'danger',
+            url('/dashboard'),
+            'Régulariser ma situation'
+        );
     }
 
     /**
@@ -105,12 +180,13 @@ class NotificationService
 
         $dateTournee = $tournee->date ? $tournee->date->format('d/m/Y') : 'date inconnue';
         $expireAt = $tournee->date ? $tournee->date->endOfDay() : now()->endOfDay();
+        $message = "Un ramassage est prévu dans votre zone le {$dateTournee}. Préparez votre versement.";
 
         SystemNotification::create([
             'user_id' => $motard->user->id,
             'type' => 'ramassage_prevu',
             'titre' => 'Ramassage prévu',
-            'message' => "Un ramassage est prévu dans votre zone le {$dateTournee}. Préparez votre versement.",
+            'message' => $message,
             'icon' => 'truck',
             'couleur' => 'info',
             'notifiable_type' => Tournee::class,
@@ -135,18 +211,30 @@ class NotificationService
         if (!$moto || !$moto->proprietaire || !$moto->proprietaire->user) return;
 
         $proprietaire = $moto->proprietaire;
+        $message = "Un versement de " . number_format($versement->montant ?? 0) . " FC a été effectué pour votre moto {$moto->plaque_immatriculation}.";
 
         SystemNotification::create([
             'user_id' => $proprietaire->user->id,
             'type' => 'versement_moto',
             'titre' => 'Versement reçu',
-            'message' => "Un versement de " . number_format($versement->montant) . " FC a été effectué pour votre moto {$moto->plaque_immatriculation}.",
+            'message' => $message,
             'icon' => 'cash',
             'couleur' => 'success',
             'notifiable_type' => Versement::class,
             'notifiable_id' => $versement->id,
             'priorite' => 'normale',
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $proprietaire->user,
+            'versement_moto',
+            'Versement reçu sur votre moto',
+            $message,
+            'success',
+            url('/owner/versements'),
+            'Voir mes versements'
+        );
     }
 
     /**
@@ -156,17 +244,30 @@ class NotificationService
     {
         if (!$payment->proprietaire || !$payment->proprietaire->user) return;
 
+        $message = "Vous avez reçu un paiement de " . number_format($payment->total_paye ?? 0) . " FC via {$payment->mode_paiement}.";
+
         SystemNotification::create([
             'user_id' => $payment->proprietaire->user->id,
             'type' => 'paiement_recu',
             'titre' => 'Paiement reçu',
-            'message' => "Vous avez reçu un paiement de " . number_format($payment->total_paye) . " FC via {$payment->mode_paiement}.",
+            'message' => $message,
             'icon' => 'wallet',
             'couleur' => 'success',
             'notifiable_type' => Payment::class,
             'notifiable_id' => $payment->id,
             'priorite' => 'normale',
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $payment->proprietaire->user,
+            'paiement_recu',
+            'Paiement reçu',
+            $message,
+            'success',
+            url('/owner/payments'),
+            'Voir mes paiements'
+        );
     }
 
     /**
@@ -178,18 +279,30 @@ class NotificationService
         if (!$moto || !$moto->proprietaire || !$moto->proprietaire->user) return;
 
         $dateAccident = $accident->date_heure ? $accident->date_heure->format('d/m/Y à H:i') : 'date inconnue';
+        $message = "Un accident impliquant votre moto {$moto->plaque_immatriculation} a été déclaré le {$dateAccident}.";
 
         SystemNotification::create([
             'user_id' => $moto->proprietaire->user->id,
             'type' => 'accident_moto',
             'titre' => '🚨 Accident déclaré',
-            'message' => "Un accident impliquant votre moto {$moto->plaque_immatriculation} a été déclaré le {$dateAccident}.",
+            'message' => $message,
             'icon' => 'exclamation-triangle',
             'couleur' => 'danger',
             'notifiable_type' => Accident::class,
             'notifiable_id' => $accident->id,
             'priorite' => 'urgente',
         ]);
+
+        // Envoyer aussi par email (urgent)
+        self::envoyerEmail(
+            $moto->proprietaire->user,
+            'accident_moto',
+            'Accident déclaré sur votre moto',
+            $message,
+            'danger',
+            url('/owner/motos'),
+            'Voir les détails'
+        );
     }
 
     /**
@@ -201,18 +314,30 @@ class NotificationService
         if (!$moto || !$moto->proprietaire || !$moto->proprietaire->user) return;
 
         $cout = ($maintenance->cout_pieces ?? 0) + ($maintenance->cout_main_oeuvre ?? 0);
+        $message = "Une maintenance ({$maintenance->type_maintenance}) a été effectuée sur votre moto {$moto->plaque_immatriculation}. Coût: " . number_format($cout) . " FC";
 
         SystemNotification::create([
             'user_id' => $moto->proprietaire->user->id,
             'type' => 'maintenance_moto',
             'titre' => 'Maintenance effectuée',
-            'message' => "Une maintenance ({$maintenance->type_maintenance}) a été effectuée sur votre moto {$moto->plaque_immatriculation}. Coût: " . number_format($cout) . " FC",
+            'message' => $message,
             'icon' => 'tools',
             'couleur' => 'warning',
             'notifiable_type' => Maintenance::class,
             'notifiable_id' => $maintenance->id,
             'priorite' => 'normale',
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $moto->proprietaire->user,
+            'maintenance_moto',
+            'Maintenance effectuée sur votre moto',
+            $message,
+            'warning',
+            url('/owner/motos'),
+            'Voir les détails'
+        );
     }
 
     /**
@@ -228,19 +353,33 @@ class NotificationService
     {
         $superviseurs = User::role('supervisor')->get();
         $nomMotard = $motard->user->name ?? $motard->numero_identifiant ?? 'Motard inconnu';
+        $message = "Le motard {$nomMotard} cumule " . number_format($totalArrieres) . " FC d'arriérés.";
 
         foreach ($superviseurs as $user) {
             SystemNotification::create([
                 'user_id' => $user->id,
                 'type' => 'arrieres_motard',
                 'titre' => 'Arriérés motard',
-                'message' => "Le motard {$nomMotard} cumule " . number_format($totalArrieres) . " FC d'arriérés.",
+                'message' => $message,
                 'icon' => 'exclamation-triangle',
                 'couleur' => 'warning',
                 'notifiable_type' => Motard::class,
                 'notifiable_id' => $motard->id,
                 'priorite' => $totalArrieres > 50000 ? 'urgente' : 'haute',
             ]);
+
+            // Envoyer aussi par email si arriérés > 50000
+            if ($totalArrieres > 50000) {
+                self::envoyerEmail(
+                    $user,
+                    'arrieres_motard',
+                    'Arriérés critiques - Motard',
+                    $message,
+                    'warning',
+                    url('/supervisor/motards'),
+                    'Voir les détails'
+                );
+            }
         }
     }
 
@@ -251,19 +390,31 @@ class NotificationService
     {
         $superviseurs = User::role('supervisor')->get();
         $dateAccident = $accident->date_heure ? $accident->date_heure->format('d/m/Y à H:i') : 'date inconnue';
+        $message = "Un accident grave a été déclaré à {$accident->lieu} le {$dateAccident}.";
 
         foreach ($superviseurs as $user) {
             SystemNotification::create([
                 'user_id' => $user->id,
                 'type' => 'accident_grave',
                 'titre' => '🚨 Accident grave',
-                'message' => "Un accident grave a été déclaré à {$accident->lieu} le {$dateAccident}.",
+                'message' => $message,
                 'icon' => 'exclamation-circle',
                 'couleur' => 'danger',
                 'notifiable_type' => Accident::class,
                 'notifiable_id' => $accident->id,
                 'priorite' => 'urgente',
             ]);
+
+            // Envoyer aussi par email (urgent)
+            self::envoyerEmail(
+                $user,
+                'accident_grave',
+                'Accident grave signalé',
+                $message,
+                'danger',
+                url('/supervisor/accidents'),
+                'Voir les détails'
+            );
         }
     }
 
@@ -273,19 +424,31 @@ class NotificationService
     public static function notifierOkamiDemandePaiement(Payment $payment): void
     {
         $superviseurs = User::role('supervisor')->get();
+        $message = "Une demande de paiement de " . number_format($payment->total_du ?? 0) . " FC a été soumise.";
 
         foreach ($superviseurs as $user) {
             SystemNotification::create([
                 'user_id' => $user->id,
                 'type' => 'demande_paiement',
                 'titre' => 'Nouvelle demande de paiement',
-                'message' => "Une demande de paiement de " . number_format($payment->total_du) . " FC a été soumise.",
+                'message' => $message,
                 'icon' => 'credit-card',
                 'couleur' => 'info',
                 'notifiable_type' => Payment::class,
                 'notifiable_id' => $payment->id,
                 'priorite' => 'normale',
             ]);
+
+            // Envoyer aussi par email
+            self::envoyerEmail(
+                $user,
+                'demande_paiement',
+                'Nouvelle demande de paiement',
+                $message,
+                'info',
+                url('/supervisor/payments'),
+                'Voir les demandes'
+            );
         }
     }
 
@@ -307,6 +470,7 @@ class NotificationService
             ->get();
 
         $nomCollecteur = $tournee->collecteur->user->name ?? 'Collecteur';
+        $message = "Le collecteur {$nomCollecteur} est en route pour collecter. Préparez votre caisse.";
 
         foreach ($caissiers as $caissier) {
             if (!$caissier->user) continue;
@@ -315,7 +479,7 @@ class NotificationService
                 'user_id' => $caissier->user->id,
                 'type' => 'tournee_confirmee',
                 'titre' => 'Collecteur en route',
-                'message' => "Le collecteur {$nomCollecteur} est en route pour collecter. Préparez votre caisse.",
+                'message' => $message,
                 'icon' => 'truck',
                 'couleur' => 'info',
                 'notifiable_type' => Tournee::class,
@@ -323,6 +487,17 @@ class NotificationService
                 'priorite' => 'haute',
                 'expire_at' => now()->endOfDay(),
             ]);
+
+            // Envoyer aussi par email
+            self::envoyerEmail(
+                $caissier->user,
+                'tournee_confirmee',
+                'Collecteur en route',
+                $message,
+                'info',
+                url('/cashier/depot'),
+                'Préparer le dépôt'
+            );
         }
     }
 
@@ -339,11 +514,13 @@ class NotificationService
     {
         if (!$tournee->collecteur || !$tournee->collecteur->user) return;
 
+        $message = "Vous avez une tournée prévue aujourd'hui dans la zone {$tournee->zone}.";
+
         SystemNotification::create([
             'user_id' => $tournee->collecteur->user->id,
             'type' => 'tournee_jour',
             'titre' => 'Tournée du jour',
-            'message' => "Vous avez une tournée prévue aujourd'hui dans la zone {$tournee->zone}.",
+            'message' => $message,
             'icon' => 'calendar-check',
             'couleur' => 'primary',
             'notifiable_type' => Tournee::class,
@@ -351,6 +528,17 @@ class NotificationService
             'priorite' => 'haute',
             'expire_at' => now()->endOfDay(),
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $tournee->collecteur->user,
+            'tournee_jour',
+            'Votre tournée du jour',
+            $message,
+            'primary',
+            url('/collector/tournees'),
+            'Voir ma tournée'
+        );
     }
 
     /**
@@ -361,18 +549,30 @@ class NotificationService
         if (!$tournee->collecteur || !$tournee->collecteur->user) return;
 
         $dateTournee = $tournee->date ? $tournee->date->format('d/m/Y') : 'date inconnue';
+        $message = "Votre tournée du {$dateTournee} a été modifiée. Vérifiez les détails.";
 
         SystemNotification::create([
             'user_id' => $tournee->collecteur->user->id,
             'type' => 'modification_tournee',
             'titre' => 'Tournée modifiée',
-            'message' => "Votre tournée du {$dateTournee} a été modifiée. Vérifiez les détails.",
+            'message' => $message,
             'icon' => 'pencil',
             'couleur' => 'warning',
             'notifiable_type' => Tournee::class,
             'notifiable_id' => $tournee->id,
             'priorite' => 'haute',
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $tournee->collecteur->user,
+            'modification_tournee',
+            'Modification de votre tournée',
+            $message,
+            'warning',
+            url('/collector/tournees'),
+            'Voir les modifications'
+        );
     }
 
     /**
@@ -382,19 +582,32 @@ class NotificationService
     {
         if (!$collecte->collecteur || !$collecte->collecteur->user) return;
 
+        $message = $valide
+            ? "Votre collecte de " . number_format($collecte->montant_collecte ?? 0) . " FC a été validée."
+            : "Votre collecte a été rejetée. Veuillez vérifier les détails.";
+
         SystemNotification::create([
             'user_id' => $collecte->collecteur->user->id,
             'type' => $valide ? 'collecte_validee' : 'collecte_rejetee',
             'titre' => $valide ? 'Collecte validée' : 'Collecte rejetée',
-            'message' => $valide
-                ? "Votre collecte de " . number_format($collecte->montant_collecte ?? 0) . " FC a été validée."
-                : "Votre collecte a été rejetée. Veuillez vérifier les détails.",
+            'message' => $message,
             'icon' => $valide ? 'check-circle' : 'x-circle',
             'couleur' => $valide ? 'success' : 'danger',
             'notifiable_type' => Collecte::class,
             'notifiable_id' => $collecte->id,
             'priorite' => $valide ? 'normale' : 'haute',
         ]);
+
+        // Envoyer aussi par email
+        self::envoyerEmail(
+            $collecte->collecteur->user,
+            $valide ? 'collecte_validee' : 'collecte_rejetee',
+            $valide ? 'Collecte validée' : 'Collecte rejetée',
+            $message,
+            $valide ? 'success' : 'danger',
+            url('/collector/collectes'),
+            'Voir les détails'
+        );
     }
 
     /**
@@ -490,6 +703,17 @@ class NotificationService
                 'notifiable_id' => $tournee->id,
                 'priorite' => 'normale',
             ]);
+
+            // Envoyer aussi par email
+            self::envoyerEmail(
+                $user,
+                'fin_ramassage',
+                'Tournée terminée',
+                $message,
+                'success',
+                url('/admin/tournees'),
+                'Voir les détails'
+            );
         }
     }
 
@@ -504,31 +728,45 @@ class NotificationService
      */
     public static function notifierContratExpire(Moto $moto): void
     {
+        $messageProprietaire = "Le contrat de votre moto {$moto->plaque_immatriculation} a expiré. Veuillez le renouveler.";
+
         // Notifier le propriétaire
         if ($moto->proprietaire && $moto->proprietaire->user) {
             SystemNotification::create([
                 'user_id' => $moto->proprietaire->user->id,
                 'type' => 'contrat_expire',
                 'titre' => 'Contrat expiré',
-                'message' => "Le contrat de votre moto {$moto->plaque_immatriculation} a expiré. Veuillez le renouveler.",
+                'message' => $messageProprietaire,
                 'icon' => 'calendar-x',
                 'couleur' => 'danger',
                 'notifiable_type' => Moto::class,
                 'notifiable_id' => $moto->id,
                 'priorite' => 'urgente',
             ]);
+
+            // Envoyer aussi par email au propriétaire
+            self::envoyerEmail(
+                $moto->proprietaire->user,
+                'contrat_expire',
+                'Contrat de moto expiré - Action requise',
+                $messageProprietaire,
+                'danger',
+                url('/owner/motos'),
+                'Renouveler le contrat'
+            );
         }
 
         // Notifier les admins
         $admins = User::role('admin')->get();
         $nomProprietaire = $moto->proprietaire->user->name ?? 'N/A';
+        $messageAdmin = "Le contrat de la moto {$moto->plaque_immatriculation} (Propriétaire: {$nomProprietaire}) a expiré.";
 
         foreach ($admins as $user) {
             SystemNotification::create([
                 'user_id' => $user->id,
                 'type' => 'contrat_expire',
                 'titre' => 'Contrat moto expiré',
-                'message' => "Le contrat de la moto {$moto->plaque_immatriculation} (Propriétaire: {$nomProprietaire}) a expiré.",
+                'message' => $messageAdmin,
                 'icon' => 'calendar-x',
                 'couleur' => 'warning',
                 'notifiable_type' => Moto::class,
