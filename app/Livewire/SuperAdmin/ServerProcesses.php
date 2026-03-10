@@ -194,20 +194,52 @@ class ServerProcesses extends Component
     }
 
     /**
+     * Exécuter une commande supervisorctl
+     * Essaie d'abord sans sudo, puis avec sudo
+     */
+    protected function executeSupervisorCommand(string $action): array
+    {
+        $command = "tricycle-queue-worker:*";
+        $output = '';
+        $success = false;
+
+        // Essayer d'abord sans sudo (si l'utilisateur est dans le groupe supervisor)
+        $output = shell_exec("supervisorctl {$action} {$command} 2>&1");
+
+        if ($output && !str_contains($output, 'error') && !str_contains($output, 'refused') && !str_contains($output, 'permission')) {
+            $success = true;
+        } else {
+            // Essayer avec sudo
+            $output = shell_exec("sudo -n supervisorctl {$action} {$command} 2>&1");
+
+            if ($output && !str_contains($output, 'password') && !str_contains($output, 'sorry')) {
+                $success = true;
+            }
+        }
+
+        return [
+            'success' => $success,
+            'output' => $output,
+            'command' => "sudo supervisorctl {$action} {$command}"
+        ];
+    }
+
+    /**
      * Redémarrer les workers de queue
      */
     public function restartQueueWorkers()
     {
         try {
-            $output = shell_exec('sudo supervisorctl restart tricycle-queue-worker:* 2>&1');
+            $result = $this->executeSupervisorCommand('restart');
 
-            if ($output) {
+            if ($result['success']) {
                 session()->flash('success', 'Workers de queue redémarrés avec succès');
-                Log::info('Queue workers redémarrés', ['by' => auth()->user()->email, 'output' => $output]);
+                Log::info('Queue workers redémarrés', ['by' => auth()->user()->email, 'output' => $result['output']]);
             } else {
-                session()->flash('warning', 'Commande exécutée mais pas de retour');
+                session()->flash('warning', "Permission refusée. Exécutez manuellement sur le serveur: {$result['command']}");
             }
 
+            sleep(1); // Attendre un peu pour que le statut se mette à jour
             $this->loadSupervisorStatus();
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur: ' . $e->getMessage());
@@ -220,9 +252,16 @@ class ServerProcesses extends Component
     public function stopQueueWorkers()
     {
         try {
-            $output = shell_exec('sudo supervisorctl stop tricycle-queue-worker:* 2>&1');
-            session()->flash('success', 'Workers de queue arrêtés');
-            Log::info('Queue workers arrêtés', ['by' => auth()->user()->email]);
+            $result = $this->executeSupervisorCommand('stop');
+
+            if ($result['success']) {
+                session()->flash('success', 'Workers de queue arrêtés');
+                Log::info('Queue workers arrêtés', ['by' => auth()->user()->email]);
+            } else {
+                session()->flash('warning', "Permission refusée. Exécutez manuellement sur le serveur: {$result['command']}");
+            }
+
+            sleep(1);
             $this->loadSupervisorStatus();
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur: ' . $e->getMessage());
@@ -235,9 +274,16 @@ class ServerProcesses extends Component
     public function startQueueWorkers()
     {
         try {
-            $output = shell_exec('sudo supervisorctl start tricycle-queue-worker:* 2>&1');
-            session()->flash('success', 'Workers de queue démarrés');
-            Log::info('Queue workers démarrés', ['by' => auth()->user()->email]);
+            $result = $this->executeSupervisorCommand('start');
+
+            if ($result['success']) {
+                session()->flash('success', 'Workers de queue démarrés');
+                Log::info('Queue workers démarrés', ['by' => auth()->user()->email]);
+            } else {
+                session()->flash('warning', "Permission refusée. Exécutez manuellement sur le serveur: {$result['command']}");
+            }
+
+            sleep(1);
             $this->loadSupervisorStatus();
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur: ' . $e->getMessage());

@@ -5,8 +5,9 @@
             <h4 class="mb-1">Processus Serveur</h4>
             <p class="text-muted mb-0">Gestion des workers, queues et tâches planifiées</p>
         </div>
-        <button wire:click="loadAllStatus" class="btn btn-outline-primary">
-            <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+        <button wire:click="loadAllStatus" class="btn btn-outline-primary" wire:loading.attr="disabled">
+            <span wire:loading.remove wire:target="loadAllStatus"><i class="bi bi-arrow-clockwise me-1"></i>Actualiser</span>
+            <span wire:loading wire:target="loadAllStatus"><i class="bi bi-hourglass-split me-1"></i>Chargement...</span>
         </button>
     </div>
 
@@ -24,6 +25,18 @@
         </div>
     @endif
 
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle me-2"></i>{!! session('warning') !!}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <hr class="my-2">
+            <small class="d-block">
+                <strong>Pour activer le contrôle depuis l'interface :</strong><br>
+                Exécutez sur le serveur : <code>sudo bash /var/www/tricycle_app/scripts/setup-supervisor-permissions.sh</code>
+            </small>
+        </div>
+    @endif
+
     <div class="row g-4">
         <!-- Supervisor Status -->
         <div class="col-lg-6">
@@ -36,26 +49,29 @@
                         <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                             <code>{{ $process['name'] }}</code>
                             @if($process['status'] === 'RUNNING')
-                                <span class="badge bg-success">En cours</span>
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>En cours</span>
                             @elseif($process['status'] === 'STOPPED')
-                                <span class="badge bg-secondary">Arrêté</span>
+                                <span class="badge bg-secondary"><i class="bi bi-stop-circle me-1"></i>Arrêté</span>
                             @elseif($process['status'] === 'NOT_INSTALLED')
-                                <span class="badge bg-danger">Non installé</span>
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Non installé</span>
                             @else
                                 <span class="badge bg-warning">{{ $process['status'] }}</span>
                             @endif
                         </div>
                     @endforeach
 
-                    <div class="d-flex gap-2 mt-3">
-                        <button wire:click="startQueueWorkers" class="btn btn-success btn-sm">
-                            <i class="bi bi-play-fill me-1"></i>Démarrer
+                    <div class="d-flex gap-2 mt-3 flex-wrap">
+                        <button wire:click="startQueueWorkers" class="btn btn-success btn-sm" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="startQueueWorkers"><i class="bi bi-play-fill me-1"></i>Démarrer</span>
+                            <span wire:loading wire:target="startQueueWorkers"><i class="bi bi-hourglass-split"></i></span>
                         </button>
-                        <button wire:click="stopQueueWorkers" class="btn btn-danger btn-sm">
-                            <i class="bi bi-stop-fill me-1"></i>Arrêter
+                        <button wire:click="stopQueueWorkers" class="btn btn-danger btn-sm" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="stopQueueWorkers"><i class="bi bi-stop-fill me-1"></i>Arrêter</span>
+                            <span wire:loading wire:target="stopQueueWorkers"><i class="bi bi-hourglass-split"></i></span>
                         </button>
-                        <button wire:click="restartQueueWorkers" class="btn btn-warning btn-sm">
-                            <i class="bi bi-arrow-repeat me-1"></i>Redémarrer
+                        <button wire:click="restartQueueWorkers" class="btn btn-warning btn-sm" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="restartQueueWorkers"><i class="bi bi-arrow-repeat me-1"></i>Redémarrer</span>
+                            <span wire:loading wire:target="restartQueueWorkers"><i class="bi bi-hourglass-split"></i></span>
                         </button>
                     </div>
                 </div>
