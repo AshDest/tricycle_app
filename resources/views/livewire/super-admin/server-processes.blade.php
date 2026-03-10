@@ -185,14 +185,34 @@
         <!-- Logs -->
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-terminal me-2"></i>Logs Queue Worker</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-terminal me-2"></i>Logs Queue & Notifications</h5>
+                    <button wire:click="loadAllStatus" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-arrow-clockwise"></i> Rafraîchir
+                    </button>
                 </div>
                 <div class="card-body p-0">
-                    <div class="bg-dark text-light p-3" style="max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 0.7rem;">
-                        @foreach($queueLogs as $log)
-                            <div>{{ $log }}</div>
-                        @endforeach
+                    <div class="bg-dark text-light p-3" style="max-height: 350px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.75rem; line-height: 1.4;">
+                        @forelse($queueLogs as $log)
+                            @if(str_starts_with($log, '==='))
+                                <div class="text-warning fw-bold mt-2 mb-1">{{ $log }}</div>
+                            @elseif(str_contains($log, 'DONE') || str_contains($log, 'success'))
+                                <div class="text-success">{{ $log }}</div>
+                            @elseif(str_contains($log, 'FAILED') || str_contains($log, 'error') || str_contains($log, 'ERROR'))
+                                <div class="text-danger">{{ $log }}</div>
+                            @elseif(str_contains($log, 'RUNNING') || str_contains($log, 'Processing'))
+                                <div class="text-info">{{ $log }}</div>
+                            @elseif(str_contains($log, 'Conseil') || str_contains($log, 'logs apparaîtront'))
+                                <div class="text-muted fst-italic">{{ $log }}</div>
+                            @else
+                                <div class="text-light">{{ $log }}</div>
+                            @endif
+                        @empty
+                            <div class="text-muted text-center py-3">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                Aucun log disponible
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>

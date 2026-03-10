@@ -402,15 +402,65 @@ class ServerProcesses extends Component
     /**
      * Obtenir les logs du queue worker
      */
-    public function getQueueWorkerLogs()
+    public function getQueueWorkerLogs(): array
     {
-        $logFile = storage_path('logs/queue-worker.log');
+        $logs = [];
 
-        if (file_exists($logFile)) {
-            return array_slice(file($logFile), -50);
+        // 1. Essayer le fichier de log supervisor
+        $supervisorLog = storage_path('logs/queue-worker.log');
+        if (file_exists($supervisorLog) && filesize($supervisorLog) > 0) {
+            $lines = file($supervisorLog, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            if (!empty($lines)) {
+                $logs = array_merge($logs, ['=== SUPERVISOR LOGS ==='], array_slice($lines, -30));
+            }
         }
 
-        return ['Fichier de log non trouvé'];
+        // 2. Essayer les logs Laravel pour les jobs de queue
+        $laravelLog = storage_path('logs/laravel.log');
+        if (file_exists($laravelLog) && filesize($laravelLog) > 0) {
+            $lines = file($laravelLog, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            // Filtrer pour ne garder que les lignes liées aux jobs/queue/notifications
+            $queueLines = array_filter($lines, function($line) {
+                return str_contains($line, 'queue')
+                    || str_contains($line, 'Queue')
+                    || str_contains($line, 'job')
+                    || str_contains($line, 'Job')
+                    || str_contains($line, 'Notification')
+                    || str_contains($line, 'notification')
+                    || str_contains($line, 'email')
+                    || str_contains($line, 'Email')
+                    || str_contains($line, 'DONE')
+                    || str_contains($line, 'RUNNING')
+                    || str_contains($line, 'FAILED');
+            });
+
+            if (!empty($queueLines)) {
+                $logs = array_merge($logs, ['', '=== LARAVEL QUEUE LOGS ==='], array_slice($queueLines, -30));
+            }
+        }
+
+        // 3. Essayer d'obtenir les logs directement de supervisor
+        $supervisorOutput = shell_exec('sudo supervisorctl tail -100 tricycle-queue-worker:tricycle-queue-worker_00 2>&1');
+        if ($supervisorOutput && !str_contains($supervisorOutput, 'error') && !str_contains($supervisorOutput, 'ERROR')) {
+            $lines = array_filter(explode("\n", $supervisorOutput));
+            if (!empty($lines)) {
+                $logs = array_merge($logs, ['', '=== SUPERVISOR TAIL ==='], array_slice($lines, -20));
+            }
+        }
+
+        if (empty($logs)) {
+            return [
+                'Aucun log disponible pour le moment.',
+                '',
+                'Les logs apparaîtront quand :',
+                '- Des jobs seront traités par le queue worker',
+                '- Des emails de notification seront envoyés',
+                '',
+                'Conseil : Créez un accident ou un versement pour générer des notifications.'
+            ];
+        }
+
+        return $logs;
     }
 
     public function render()
