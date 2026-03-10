@@ -11,10 +11,12 @@ use App\Models\Payment;
 use App\Models\Moto;
 use App\Models\Motard;
 use App\Models\SystemNotification;
+use App\Models\SystemSetting;
 use App\Models\Collecte;
 use App\Notifications\SystemEmailNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Service de gestion des notifications
@@ -23,6 +25,48 @@ use Illuminate\Support\Facades\Log;
  */
 class NotificationService
 {
+    /**
+     * Vérifier si les emails sont activés
+     */
+    protected static function emailsActifs(): bool
+    {
+        return (bool) SystemSetting::get('emails_actifs', true);
+    }
+
+    /**
+     * Appliquer la configuration email depuis SystemSettings
+     */
+    protected static function appliquerConfigurationEmail(): void
+    {
+        $mailer = SystemSetting::get('mail_mailer', config('mail.default'));
+        Config::set('mail.default', $mailer);
+
+        if ($mailer === 'smtp') {
+            Config::set('mail.mailers.smtp.host', SystemSetting::get('mail_host', config('mail.mailers.smtp.host')));
+            Config::set('mail.mailers.smtp.port', SystemSetting::get('mail_port', config('mail.mailers.smtp.port')));
+            Config::set('mail.mailers.smtp.username', SystemSetting::get('mail_username', config('mail.mailers.smtp.username')));
+
+            // Décrypter le mot de passe si stocké en base
+            $password = SystemSetting::get('mail_password');
+            if ($password) {
+                try {
+                    $password = decrypt($password);
+                } catch (\Exception $e) {
+                    $password = config('mail.mailers.smtp.password');
+                }
+            } else {
+                $password = config('mail.mailers.smtp.password');
+            }
+            Config::set('mail.mailers.smtp.password', $password);
+
+            $encryption = SystemSetting::get('mail_encryption', config('mail.mailers.smtp.encryption'));
+            Config::set('mail.mailers.smtp.encryption', $encryption === 'null' ? null : $encryption);
+        }
+
+        Config::set('mail.from.address', SystemSetting::get('mail_from_address', config('mail.from.address')));
+        Config::set('mail.from.name', SystemSetting::get('mail_from_name', config('mail.from.name')));
+    }
+
     /**
      * Envoyer une notification par email à un utilisateur
      */
@@ -36,10 +80,22 @@ class NotificationService
         ?string $actionText = null
     ): void {
         try {
+            // Vérifier si les emails sont activés
+            if (!self::emailsActifs()) {
+                Log::info('Emails désactivés - notification non envoyée', [
+                    'user_id' => $user->id,
+                    'type' => $type,
+                ]);
+                return;
+            }
+
             // Vérifier que l'utilisateur a un email valide
             if (!$user->email) {
                 return;
             }
+
+            // Appliquer la configuration email depuis SystemSettings
+            self::appliquerConfigurationEmail();
 
             $user->notify(new SystemEmailNotification(
                 $type,
@@ -49,11 +105,18 @@ class NotificationService
                 $actionUrl,
                 $actionText
             ));
+
+            Log::info('Email notification envoyée', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'type' => $type,
+            ]);
         } catch (\Exception $e) {
             // Logger l'erreur mais ne pas bloquer le processus
             Log::error('Erreur envoi email notification: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'type' => $type,
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }
@@ -690,13 +753,14 @@ class NotificationService
     {
         $admins = User::role('admin')->get();
         $dateTournee = $tournee->date ? $tournee->date->format('d/m/Y') : 'date inconnue';
+        $message = "La tournée du {$dateTournee} est terminée. Total collecté: " . number_format($montantTotal) . " FC";
 
         foreach ($admins as $user) {
             SystemNotification::create([
                 'user_id' => $user->id,
                 'type' => 'fin_ramassage',
                 'titre' => 'Tournée terminée',
-                'message' => "La tournée du {$dateTournee} est terminée. Total collecté: " . number_format($montantTotal) . " FC",
+                'message' => $message,
                 'icon' => 'check-circle',
                 'couleur' => 'success',
                 'notifiable_type' => Tournee::class,

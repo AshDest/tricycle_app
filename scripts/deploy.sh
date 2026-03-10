@@ -33,6 +33,11 @@ php artisan optimize
 echo "🔄 Redémarrage des services..."
 sudo systemctl reload php8.2-fpm || true
 sudo systemctl reload nginx || true
+
+# Redémarrer le queue worker (pour prendre en compte les nouvelles notifications)
+echo "🔄 Redémarrage du queue worker..."
+sudo supervisorctl restart tricycle-queue-worker:* || echo "⚠️ Queue worker non configuré (optionnel)"
+
 # Désactiver le mode maintenance
 php artisan up
 echo "✅ Déploiement terminé avec succès!"

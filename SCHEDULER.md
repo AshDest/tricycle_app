@@ -1,8 +1,59 @@
-# Configuration du Scheduler Laravel - Tricycle App
+# Configuration du Scheduler et Queue Worker - Tricycle App
 
-## Fonctionnement
+## 1. Queue Worker avec Supervisor (Envoi des emails)
 
-Laravel utilise un système de planification de tâches (Scheduler) qui permet d'exécuter des commandes automatiquement à des heures précises.
+Le Queue Worker est essentiel pour l'envoi automatique des emails de notification. Sans lui, les emails restent en attente dans la base de données.
+
+### Installation automatique
+
+```bash
+# Se connecter au serveur
+ssh deploy@102.223.210.91
+
+# Exécuter le script d'installation
+cd /var/www/tricycle_app
+sudo bash scripts/install-supervisor-queue.sh
+```
+
+### Installation manuelle
+
+```bash
+# 1. Installer Supervisor
+sudo apt-get update
+sudo apt-get install -y supervisor
+
+# 2. Activer Supervisor
+sudo systemctl enable supervisor
+sudo systemctl start supervisor
+
+# 3. Copier la configuration
+sudo cp /var/www/tricycle_app/scripts/supervisor-tricycle.conf /etc/supervisor/conf.d/tricycle-queue.conf
+
+# 4. Recharger et démarrer
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start tricycle-queue-worker:*
+```
+
+### Commandes utiles Supervisor
+
+```bash
+# Voir le statut des workers
+sudo supervisorctl status
+
+# Redémarrer les workers (après un déploiement)
+sudo supervisorctl restart tricycle-queue-worker:*
+
+# Arrêter les workers
+sudo supervisorctl stop tricycle-queue-worker:*
+
+# Voir les logs des workers
+tail -f /var/www/tricycle_app/storage/logs/queue-worker.log
+```
+
+---
+
+## 2. Scheduler Laravel (Notifications quotidiennes)
 
 ### Tâches planifiées actuelles
 
@@ -10,11 +61,7 @@ Laravel utilise un système de planification de tâches (Scheduler) qui permet d
 |----------|-----------|-------------|
 | `notifications:quotidiennes` | Chaque jour à 7h00 | Envoie les notifications d'arriérés, contrats expirants, maintenances programmées |
 
-## Configuration sur le serveur
-
-### 1. Ajouter le cron job (une seule fois)
-
-Connectez-vous à votre serveur et exécutez :
+### Configuration du cron job
 
 ```bash
 # Ouvrir l'éditeur de cron
@@ -24,9 +71,7 @@ crontab -e
 * * * * * cd /var/www/tricycle_app && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Cette ligne exécute le scheduler Laravel **chaque minute**. Laravel vérifie ensuite quelles tâches doivent être exécutées selon leur configuration.
-
-### 2. Vérifier que le cron est actif
+### Vérification
 
 ```bash
 # Lister les crons actifs
@@ -34,61 +79,94 @@ crontab -l
 
 # Vérifier le service cron
 sudo systemctl status cron
-```
 
-### 3. Tester le scheduler manuellement
-
-```bash
 # Voir les tâches planifiées
-cd /var/www/tricycle_app
 php artisan schedule:list
 
-# Exécuter le scheduler manuellement (pour test)
+# Exécuter manuellement pour test
 php artisan schedule:run
-
-# Exécuter la commande de notifications directement
 php artisan notifications:quotidiennes
 ```
 
-## Logs
+---
 
-Les logs du scheduler sont enregistrés dans `storage/logs/laravel.log`.
+## 3. Configuration complète après déploiement
 
-Pour voir les logs en temps réel :
+Après chaque déploiement, exécutez :
+
 ```bash
-tail -f /var/www/tricycle_app/storage/logs/laravel.log
+cd /var/www/tricycle_app
+
+# Redémarrer les workers de queue (pour prendre en compte les changements)
+sudo supervisorctl restart tricycle-queue-worker:*
+
+# Vider le cache
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 ```
 
-## Ajout de nouvelles tâches planifiées
+---
 
-Pour ajouter une nouvelle tâche, modifiez le fichier `routes/console.php` :
+## 4. Dépannage
 
-```php
-use Illuminate\Support\Facades\Schedule;
+### Les emails ne sont pas envoyés
 
-// Exemples de fréquences disponibles :
-Schedule::command('ma:commande')->everyMinute();
-Schedule::command('ma:commande')->hourly();
-Schedule::command('ma:commande')->daily();
-Schedule::command('ma:commande')->dailyAt('13:00');
-Schedule::command('ma:commande')->weekly();
-Schedule::command('ma:commande')->monthly();
-Schedule::command('ma:commande')->weekdays();
-Schedule::command('ma:commande')->sundays();
-```
+1. Vérifiez que le Queue Worker est actif :
+   ```bash
+   sudo supervisorctl status
+   ```
 
-## Dépannage
+2. Vérifiez les jobs en attente :
+   ```bash
+   php artisan tinker
+   >>> DB::table('jobs')->count()
+   ```
+
+3. Vérifiez les jobs échoués :
+   ```bash
+   php artisan queue:failed
+   ```
+
+4. Relancer les jobs échoués :
+   ```bash
+   php artisan queue:retry all
+   ```
+
+5. Consultez les logs :
+   ```bash
+   tail -f storage/logs/queue-worker.log
+   tail -f storage/logs/laravel.log
+   ```
 
 ### Le scheduler ne s'exécute pas
 
 1. Vérifiez que le cron est configuré : `crontab -l`
 2. Vérifiez que le service cron est actif : `sudo systemctl status cron`
-3. Vérifiez les permissions : `ls -la /var/www/tricycle_app`
-4. Testez manuellement : `php artisan schedule:run`
+3. Testez manuellement : `php artisan schedule:run`
 
-### Les notifications ne sont pas envoyées
+### Vérifier la configuration email
 
-1. Vérifiez la table `system_notifications` dans la base de données
-2. Exécutez manuellement : `php artisan notifications:quotidiennes`
-3. Consultez les logs : `tail -f storage/logs/laravel.log`
+Dans l'interface SuperAdmin, allez dans **Configuration Emails** pour :
+- Tester l'envoi d'email
+- Voir les jobs en attente/échoués
+- Activer/désactiver les emails
+
+---
+
+## 5. Architecture des notifications
+
+```
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│   Action User   │      │  NotificationS. │      │   Queue (DB)    │
+│  (ex: Accident) │ ───▶ │   envoyerEmail  │ ───▶ │   jobs table    │
+└─────────────────┘      └─────────────────┘      └────────┬────────┘
+                                                          │
+                                                          ▼
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│  Email envoyé   │ ◀─── │   Mailer SMTP   │ ◀─── │  Queue Worker   │
+│   (Gmail...)    │      │                 │      │  (Supervisor)   │
+└─────────────────┘      └─────────────────┘      └─────────────────┘
+```
+
 
