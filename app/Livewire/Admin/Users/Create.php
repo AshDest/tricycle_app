@@ -22,12 +22,22 @@ class Create extends Component
         'email' => 'required|email|unique:users,email',
         'phone' => 'nullable|string|max:20',
         'password' => 'required|string|min:6|confirmed',
-        'role' => 'required|string',
+        'role' => 'required|string|not_in:super-admin',
+    ];
+
+    protected $messages = [
+        'role.not_in' => 'Vous ne pouvez pas créer un utilisateur avec le rôle Super Admin.',
     ];
 
     public function save()
     {
         $this->validate();
+
+        // Double vérification de sécurité
+        if ($this->role === 'super-admin') {
+            session()->flash('error', 'Création d\'un Super Admin non autorisée.');
+            return;
+        }
 
         $user = User::create([
             'name' => $this->name,
@@ -38,13 +48,14 @@ class Create extends Component
 
         $user->assignRole($this->role);
 
-        session()->flash('success', 'Utilisateur cree avec succes.');
+        session()->flash('success', 'Utilisateur créé avec succès.');
         return redirect()->route('admin.users.index');
     }
 
     public function render()
     {
-        $roles = \Spatie\Permission\Models\Role::all();
+        // Exclure le rôle super-admin de la liste
+        $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'super-admin')->get();
         return view('livewire.admin.users.create', compact('roles'));
     }
 }
