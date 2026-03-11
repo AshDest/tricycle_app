@@ -87,6 +87,33 @@ class Motard extends Model
     }
 
     /**
+     * Les récompenses reçues par ce motard
+     */
+    public function recompenses(): HasMany
+    {
+        return $this->hasMany(Recompense::class);
+    }
+
+    /**
+     * L'historique des performances mensuelles du motard
+     */
+    public function performances(): HasMany
+    {
+        return $this->hasMany(PerformanceMotard::class);
+    }
+
+    /**
+     * Obtenir la dernière performance mensuelle
+     */
+    public function dernierePerformance(): ?PerformanceMotard
+    {
+        return $this->performances()
+            ->orderByDesc('annee')
+            ->orderByDesc('mois')
+            ->first();
+    }
+
+    /**
      * Obtenir le statut du jour
      */
     public function getStatutDuJourAttribute(): string

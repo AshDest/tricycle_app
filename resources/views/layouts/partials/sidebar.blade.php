@@ -186,6 +186,19 @@
                 </ul>
             </li>
 
+            <li class="has-submenu {{ request()->is('admin/recompenses*') ? 'active' : '' }}">
+                <a href="#" class="toggle-submenu">
+                    <i class="bi bi-trophy"></i>
+                    <span>Récompenses</span>
+                    <i class="bi bi-chevron-down submenu-icon"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="{{ route('admin.recompenses.classement') }}"><i class="bi bi-bar-chart me-1"></i>Classement</a></li>
+                    <li><a href="{{ route('admin.recompenses.index') }}"><i class="bi bi-award me-1"></i>Liste Récompenses</a></li>
+                    <li><a href="{{ route('admin.recompenses.create') }}"><i class="bi bi-plus-circle me-1"></i>Nouvelle</a></li>
+                </ul>
+            </li>
+
             <li class="sidebar-heading">Param&egrave;tres</li>
             <li class="{{ request()->is('admin/users*') ? 'active' : '' }}">
                 <a href="{{ route('admin.users.index') }}">
@@ -288,6 +301,17 @@
                     <li><a href="{{ route('supervisor.reports.weekly') }}">Hebdomadaire</a></li>
                     <li><a href="{{ route('supervisor.reports.monthly') }}">Mensuel</a></li>
                     <li><a href="{{ route('supervisor.reports.repartition') }}"><i class="bi bi-pie-chart me-1"></i>Répartition (5/6 - 1/6)</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu {{ request()->is('supervisor/recompenses*') ? 'active' : '' }}">
+                <a href="#" class="toggle-submenu">
+                    <i class="bi bi-trophy"></i>
+                    <span>Récompenses</span>
+                    <i class="bi bi-chevron-down submenu-icon"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="{{ route('supervisor.recompenses.classement') }}"><i class="bi bi-bar-chart me-1"></i>Classement</a></li>
+                    <li><a href="{{ route('supervisor.recompenses.index') }}"><i class="bi bi-award me-1"></i>Historique</a></li>
                 </ul>
             </li>
             @endrole

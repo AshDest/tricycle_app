@@ -140,6 +140,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Paramètres
         Route::get('/settings', \App\Livewire\Admin\Settings\Index::class)->name('settings.index');
+
+        // Récompenses Motards
+        Route::get('/recompenses', \App\Livewire\Admin\Recompenses\Index::class)->name('recompenses.index');
+        Route::get('/recompenses/classement', \App\Livewire\Admin\Recompenses\Classement::class)->name('recompenses.classement');
+        Route::get('/recompenses/create', \App\Livewire\Admin\Recompenses\Create::class)->name('recompenses.create');
     });
 
     /*
@@ -188,6 +193,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/weekly', \App\Livewire\Supervisor\Reports\Weekly::class)->name('reports.weekly');
         Route::get('/reports/monthly', \App\Livewire\Supervisor\Reports\Monthly::class)->name('reports.monthly');
         Route::get('/reports/repartition', \App\Livewire\Supervisor\Reports\RepartitionHebdomadaire::class)->name('reports.repartition');
+
+        // Récompenses Motards (visualisation)
+        Route::get('/recompenses', \App\Livewire\Supervisor\Recompenses\Index::class)->name('recompenses.index');
+        Route::get('/recompenses/classement', \App\Livewire\Supervisor\Recompenses\Classement::class)->name('recompenses.classement');
     });
 
     /*
