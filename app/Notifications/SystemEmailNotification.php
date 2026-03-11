@@ -6,6 +6,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Config;
+use App\Models\SystemSetting;
 
 /**
  * Notification générique pour envoyer des emails
@@ -53,6 +55,40 @@ class SystemEmailNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * Appliquer la configuration email depuis SystemSetting
+     */
+    protected function applyMailConfiguration(): void
+    {
+        $mailer = SystemSetting::get('mail_mailer', config('mail.default'));
+        Config::set('mail.default', $mailer);
+
+        if ($mailer === 'smtp') {
+            Config::set('mail.mailers.smtp.host', SystemSetting::get('mail_host', config('mail.mailers.smtp.host')));
+            Config::set('mail.mailers.smtp.port', SystemSetting::get('mail_port', config('mail.mailers.smtp.port')));
+            Config::set('mail.mailers.smtp.username', SystemSetting::get('mail_username', config('mail.mailers.smtp.username')));
+
+            // Décrypter le mot de passe si stocké en base
+            $password = SystemSetting::get('mail_password');
+            if ($password) {
+                try {
+                    $password = decrypt($password);
+                } catch (\Exception $e) {
+                    $password = config('mail.mailers.smtp.password');
+                }
+            } else {
+                $password = config('mail.mailers.smtp.password');
+            }
+            Config::set('mail.mailers.smtp.password', $password);
+
+            $encryption = SystemSetting::get('mail_encryption', config('mail.mailers.smtp.encryption'));
+            Config::set('mail.mailers.smtp.encryption', $encryption === 'null' ? null : $encryption);
+        }
+
+        Config::set('mail.from.address', SystemSetting::get('mail_from_address', config('mail.from.address')));
+        Config::set('mail.from.name', SystemSetting::get('mail_from_name', config('mail.from.name')));
+    }
+
+    /**
      * Get the notification's delivery channels.
      */
     public function via(object $notifiable): array
@@ -65,6 +101,9 @@ class SystemEmailNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
+        // Appliquer la configuration email depuis la base de données
+        $this->applyMailConfiguration();
+
         $mail = (new MailMessage);
 
         // Définir le niveau selon la couleur (pour le style du bouton)
