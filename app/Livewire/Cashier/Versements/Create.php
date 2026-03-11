@@ -187,10 +187,14 @@ class Create extends Component
 
         $dateVersement = Carbon::parse($this->date_versement);
 
-        // Chercher un versement existant pour ce jour
+        // Chercher un versement existant pour ce jour (versement journalier uniquement, pas arrieres_only)
         $versementExistant = Versement::where('motard_id', $this->motardSelectionne->id)
             ->whereDate('date_versement', $dateVersement)
             ->whereNull('semaine_debut') // Versement journalier uniquement
+            ->where(function ($query) {
+                $query->where('type', 'journalier')
+                      ->orWhereNull('type'); // Pour compatibilité avec anciens enregistrements
+            })
             ->first();
 
         if ($versementExistant) {
@@ -353,6 +357,7 @@ class Create extends Component
             'montant_attendu' => $montantJournalierAttendu,
             'arrieres' => $arrieresDuJour,
             'mode_paiement' => $this->mode_paiement,
+            'type' => 'journalier', // Versement journalier
             'statut' => $statut,
             'date_versement' => $dateVersement,
             'part_proprietaire' => $partProprietaire,
@@ -426,18 +431,22 @@ class Create extends Component
             return;
         }
 
-        // Rembourser les arriérés
-        $this->rembourserArrieres($motard, $montantVerse);
+        // Limiter le montant au total des arriérés disponibles
+        $montantEffectif = min($montantVerse, $this->arrieresCumules);
 
-        // Créer un enregistrement de versement pour traçabilité
+        // Rembourser les arriérés
+        $this->rembourserArrieres($motard, $montantEffectif);
+
+        // Créer un enregistrement de versement pour traçabilité avec type arrieres_only
         $versement = Versement::create([
             'motard_id' => $motard->id,
             'moto_id' => $moto?->id,
             'caissier_id' => $caissier->id,
-            'montant' => $montantVerse,
+            'montant' => $montantEffectif,
             'montant_attendu' => 0,
             'arrieres' => 0,
             'mode_paiement' => $this->mode_paiement,
+            'type' => 'arrieres_only', // Marquer comme versement d'arriérés uniquement
             'statut' => 'payé',
             'date_versement' => Carbon::parse($this->date_versement),
             'part_proprietaire' => $partProprietaire,
@@ -446,9 +455,9 @@ class Create extends Component
             'notes' => "Remboursement arriérés" . ($this->notes ? ": " . $this->notes : ''),
         ]);
 
-        $caissier->increment('solde_actuel', $montantVerse);
+        $caissier->increment('solde_actuel', $montantEffectif);
 
-        session()->flash('success', 'Remboursement de ' . number_format($montantVerse) . ' FC effectué sur les arriérés.');
+        session()->flash('success', 'Remboursement de ' . number_format($montantEffectif) . ' FC effectué sur les arriérés.');
         session()->flash('dernierVersementId', $versement->id);
 
         return redirect()->route('cashier.versements.index');

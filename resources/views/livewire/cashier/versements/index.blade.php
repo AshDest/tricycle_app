@@ -133,9 +133,10 @@
                         @forelse($versements ?? [] as $versement)
                         @php
                             $ecart = ($versement->montant ?? 0) - ($versement->montant_attendu ?? 0);
-                            $peutCompleter = $ecart < 0 && $versement->date_versement?->isToday();
+                            $peutCompleter = $ecart < 0 && $versement->date_versement?->isToday() && $versement->type !== 'arrieres_only';
+                            $isArrieresOnly = $versement->type === 'arrieres_only';
                         @endphp
-                        <tr class="{{ $ecart < 0 ? 'table-warning' : '' }}">
+                        <tr class="{{ $ecart < 0 && !$isArrieresOnly ? 'table-warning' : '' }} {{ $isArrieresOnly ? 'table-info' : '' }}">
                             <td class="ps-4">
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="avatar avatar-sm bg-success bg-opacity-10 text-success rounded-circle">
@@ -144,6 +145,9 @@
                                     <div>
                                         <span class="fw-medium d-block">{{ $versement->motard->user->name ?? 'N/A' }}</span>
                                         <small class="text-muted">{{ $versement->motard->numero_identifiant ?? '' }}</small>
+                                        @if($isArrieresOnly)
+                                        <span class="badge bg-info text-white d-block mt-1" style="font-size: 0.65rem;">Arriérés</span>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
@@ -152,10 +156,18 @@
                                     <i class="bi bi-bicycle me-1"></i>{{ $versement->moto->plaque_immatriculation ?? 'N/A' }}
                                 </span>
                             </td>
-                            <td class="fw-bold {{ $ecart >= 0 ? 'text-success' : 'text-warning' }}">{{ number_format($versement->montant ?? 0) }} FC</td>
-                            <td class="text-muted">{{ number_format($versement->montant_attendu ?? 0) }} FC</td>
+                            <td class="fw-bold {{ $ecart >= 0 || $isArrieresOnly ? 'text-success' : 'text-warning' }}">{{ number_format($versement->montant ?? 0) }} FC</td>
+                            <td class="text-muted">
+                                @if($isArrieresOnly)
+                                <span class="text-info">Arriérés</span>
+                                @else
+                                {{ number_format($versement->montant_attendu ?? 0) }} FC
+                                @endif
+                            </td>
                             <td>
-                                @if($ecart >= 0)
+                                @if($isArrieresOnly)
+                                <span class="text-info"><i class="bi bi-arrow-repeat"></i> Remb.</span>
+                                @elseif($ecart >= 0)
                                 <span class="text-success"><i class="bi bi-check-circle"></i> OK</span>
                                 @else
                                 <span class="text-danger fw-bold">{{ number_format($ecart) }} FC</span>

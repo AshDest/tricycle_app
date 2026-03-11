@@ -23,6 +23,7 @@ class Versement extends Model
         'date_versement',
         'heure_versement',
         'mode_paiement',
+        'type', // journalier ou arrieres_only
         'statut',
         'caissier_id',
         'validated_by_caissier_at',
@@ -62,12 +63,16 @@ class Versement extends Model
         parent::boot();
 
         static::creating(function ($versement) {
-            $versement->calculerArrieres();
-            $versement->determinerStatut();
+            // Ne pas recalculer pour les versements de type arrieres_only
+            if ($versement->type !== 'arrieres_only') {
+                $versement->calculerArrieres();
+                $versement->determinerStatut();
+            }
         });
 
         static::updating(function ($versement) {
-            if ($versement->isDirty('montant') || $versement->isDirty('montant_attendu')) {
+            // Ne pas recalculer pour les versements de type arrieres_only
+            if ($versement->type !== 'arrieres_only' && ($versement->isDirty('montant') || $versement->isDirty('montant_attendu'))) {
                 $versement->calculerArrieres();
                 $versement->determinerStatut();
             }
@@ -79,6 +84,11 @@ class Versement extends Model
      */
     public function calculerArrieres(): void
     {
+        // Ne pas calculer pour les versements d'arriérés uniquement
+        if ($this->type === 'arrieres_only') {
+            return;
+        }
+
         $montantAttendu = $this->montant_attendu ?? 0;
         $montantVerse = $this->montant ?? 0;
 
@@ -91,6 +101,12 @@ class Versement extends Model
      */
     public function determinerStatut(): void
     {
+        // Pour les versements d'arriérés uniquement, toujours payé
+        if ($this->type === 'arrieres_only') {
+            $this->statut = 'payé';
+            return;
+        }
+
         $montantAttendu = $this->montant_attendu ?? 0;
         $montantVerse = $this->montant ?? 0;
 
