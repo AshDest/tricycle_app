@@ -272,6 +272,65 @@ class PaymentService
     }
 
     /**
+     * Créer une demande de paiement depuis la caisse Commission (Part OKAMI = 30% des commissions)
+     */
+    public function creerDemandePaiementDepuisCommission(array $data, int $okamUserId): Payment
+    {
+        $montantDemande = $data['montant'];
+
+        // Calculer le solde Part OKAMI disponible des commissions validées
+        $totalPartOkami = \App\Models\CommissionMobileMensuelle::where('statut', 'valide')
+            ->sum('part_okami') ?? 0;
+
+        // Soustraire les paiements déjà effectués depuis la caisse commission
+        $paiementsEffectues = Payment::where('source_caisse', 'commission')
+            ->whereIn('statut', ['en_attente', 'paye', 'approuve'])
+            ->sum('total_du');
+
+        $soldeCommissionOkami = max(0, $totalPartOkami - $paiementsEffectues);
+
+        if ($montantDemande > $soldeCommissionOkami) {
+            throw new \Exception("Le montant demandé (" . number_format($montantDemande) . " FC) dépasse la Part OKAMI Commission disponible (" . number_format($soldeCommissionOkami) . " FC).");
+        }
+
+        return Payment::create([
+            'proprietaire_id' => null,
+            'source_caisse' => 'commission',
+            'beneficiaire_nom' => $data['beneficiaire_nom'],
+            'beneficiaire_telephone' => $data['beneficiaire_telephone'] ?? null,
+            'beneficiaire_motif' => $data['beneficiaire_motif'],
+            'total_du' => $montantDemande,
+            'total_paye' => 0,
+            'mode_paiement' => $data['mode_paiement'],
+            'numero_compte' => $data['numero_compte'] ?? $data['beneficiaire_telephone'] ?? null,
+            'statut' => 'en_attente',
+            'date_demande' => now(),
+            'demande_par' => $okamUserId,
+            'demande_at' => now(),
+            'periode_debut' => $data['periode_debut'] ?? null,
+            'periode_fin' => $data['periode_fin'] ?? null,
+            'notes' => $data['notes'] ?? null,
+        ]);
+    }
+
+    /**
+     * Obtenir le solde OKAMI disponible depuis les commissions
+     */
+    public function getSoldeCommissionOkami(): float
+    {
+        // Total des parts OKAMI des commissions validées
+        $totalPartOkami = \App\Models\CommissionMobileMensuelle::where('statut', 'valide')
+            ->sum('part_okami') ?? 0;
+
+        // Soustraire les paiements déjà effectués depuis la caisse commission
+        $paiementsEffectues = Payment::where('source_caisse', 'commission')
+            ->whereIn('statut', ['en_attente', 'paye', 'approuve'])
+            ->sum('total_du');
+
+        return max(0, $totalPartOkami - $paiementsEffectues);
+    }
+
+    /**
      * Traiter un paiement (par Collecteur/Admin)
      *
      * Si le paiement est via Mobile Money, enregistre automatiquement

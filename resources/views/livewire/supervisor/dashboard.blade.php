@@ -246,10 +246,77 @@
                     </small>
                     <span class="badge bg-white text-primary px-3 py-2">
                         <i class="bi bi-calculator me-1"></i>
-                        Total Global: {{ number_format(($soldeOkamiTotal ?? 0) + ($soldeOkamiLavageTotal ?? 0)) }} FC
+                        Total Lavage: {{ number_format($soldeOkamiLavageTotal ?? 0) }} FC
                     </span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Solde OKAMI Commission -->
+    <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #6f42c1 0%, #9b6ed8 100%);">
+        <div class="card-body text-white">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-3 mb-lg-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3">
+                            <i class="bi bi-percent fs-2"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold">Solde OKAMI - Commissions</h5>
+                            <small class="opacity-75">Part de 30% sur chaque commission (70% NTH)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 text-center">
+                    <div class="bg-white bg-opacity-25 rounded p-3">
+                        <small class="d-block opacity-75">Disponible</small>
+                        <h3 class="fw-bold mb-0">{{ number_format($soldeOkamiCommissionTotal ?? 0) }} FC</h3>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    @if(count($commissionsParMois ?? []) > 0)
+                    <div class="small">
+                        <strong class="d-block mb-2">Dernières commissions validées:</strong>
+                        @foreach($commissionsParMois as $comm)
+                        <div class="d-flex justify-content-between py-1 border-bottom border-white border-opacity-25">
+                            <span>{{ $comm['periode'] }}</span>
+                            <span class="fw-bold">{{ number_format($comm['part_okami']) }} FC</span>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="text-center opacity-75">
+                        <i class="bi bi-inbox d-block fs-3"></i>
+                        <small>Aucune commission validée</small>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-top border-white border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="opacity-75">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Les commissions sont réparties: 70% pour NTH et 30% pour OKAMI
+                    </small>
+                    <a href="{{ route('supervisor.payments.create') }}" class="btn btn-sm btn-light">
+                        <i class="bi bi-plus-circle me-1"></i>Demande de paiement
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Global OKAMI -->
+    <div class="alert alert-warning mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-wallet2 me-2 fs-4"></i>
+                <strong>Total Global OKAMI disponible:</strong>
+            </div>
+            <span class="badge bg-warning text-dark fs-5 px-3 py-2">
+                {{ number_format(($soldeOkamiTotal ?? 0) + ($soldeOkamiLavageTotal ?? 0) + ($soldeOkamiCommissionTotal ?? 0)) }} FC
+            </span>
         </div>
     </div>
 

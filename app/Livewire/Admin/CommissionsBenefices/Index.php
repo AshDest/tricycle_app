@@ -34,7 +34,7 @@ class Index extends Component
         return CommissionMobileMensuelle::with('collecteur.user')
             ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
             ->when($this->filterAnnee, fn($q) => $q->where('annee', $this->filterAnnee))
-            ->when($this->search, fn($q) => $q->whereHas('collecteur.user', fn($q2) => 
+            ->when($this->search, fn($q) => $q->whereHas('collecteur.user', fn($q2) =>
                 $q2->where('name', 'like', "%{$this->search}%")
             ))
             ->orderBy('created_at', 'desc');
@@ -43,7 +43,7 @@ class Index extends Component
     {
         return BeneficeChange::with('collecteur.user')
             ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
-            ->when($this->search, fn($q) => $q->whereHas('collecteur.user', fn($q2) => 
+            ->when($this->search, fn($q) => $q->whereHas('collecteur.user', fn($q2) =>
                 $q2->where('name', 'like', "%{$this->search}%")
             ))
             ->orderBy('created_at', 'desc');
@@ -127,23 +127,32 @@ class Index extends Component
                 'title' => 'Bénéfices de Change - Administration',
             ]);
         }
-        return response()->streamDownload(fn() => print($pdf->output()), 
+        return response()->streamDownload(fn() => print($pdf->output()),
             $this->activeTab . '_' . now()->format('Y-m-d') . '.pdf');
     }
     public function render()
     {
-        $commissions = $this->activeTab === 'commissions' 
-            ? $this->getCommissionsQuery()->paginate(15) 
+        $commissions = $this->activeTab === 'commissions'
+            ? $this->getCommissionsQuery()->paginate(15)
             : collect();
-        $benefices = $this->activeTab === 'benefices' 
-            ? $this->getBeneficesQuery()->paginate(15) 
+        $benefices = $this->activeTab === 'benefices'
+            ? $this->getBeneficesQuery()->paginate(15)
             : collect();
         // Stats
         $statsCommissions = [
             'en_attente' => CommissionMobileMensuelle::where('statut', 'en_attente')->count(),
             'valide' => CommissionMobileMensuelle::where('statut', 'valide')->count(),
             'total' => CommissionMobileMensuelle::where('statut', 'valide')->sum('montant_total'),
+            'part_nth' => CommissionMobileMensuelle::where('statut', 'valide')->sum('part_nth'),
+            'part_okami' => CommissionMobileMensuelle::where('statut', 'valide')->sum('part_okami'),
         ];
+
+        // Solde OKAMI disponible (non encore payé)
+        $paiementsCommission = \App\Models\Payment::where('source_caisse', 'commission')
+            ->whereIn('statut', ['en_attente', 'paye', 'approuve'])
+            ->sum('total_du');
+        $statsCommissions['solde_okami_disponible'] = max(0, $statsCommissions['part_okami'] - $paiementsCommission);
+
         $statsBenefices = [
             'en_attente' => BeneficeChange::where('statut', 'en_attente')->count(),
             'valide' => BeneficeChange::where('statut', 'valide')->count(),

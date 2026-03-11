@@ -24,7 +24,7 @@
                     <h6 class="mb-0"><i class="bi bi-percent me-2"></i>Commissions Mobile Money</h6>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center">
+                    <div class="row text-center mb-3">
                         <div class="col-4">
                             <h4 class="text-warning mb-0">{{ $statsCommissions['en_attente'] }}</h4>
                             <small class="text-muted">En attente</small>
@@ -36,6 +36,24 @@
                         <div class="col-4">
                             <h4 class="text-primary mb-0">{{ number_format($statsCommissions['total']) }}</h4>
                             <small class="text-muted">Total FC</small>
+                        </div>
+                    </div>
+                    <!-- Répartition 70/30 -->
+                    <div class="alert alert-light border mb-0">
+                        <h6 class="mb-2"><i class="bi bi-pie-chart me-1"></i>Répartition des Commissions Validées</h6>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="text-success fw-bold">{{ number_format($statsCommissions['part_nth'] ?? 0) }} FC</div>
+                                <small class="text-muted">Part NTH (70%)</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="fw-bold" style="color: #6f42c1;">{{ number_format($statsCommissions['part_okami'] ?? 0) }} FC</div>
+                                <small class="text-muted">Part OKAMI (30%)</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-info fw-bold">{{ number_format($statsCommissions['solde_okami_disponible'] ?? 0) }} FC</div>
+                                <small class="text-muted">Disponible OKAMI</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -69,7 +87,7 @@
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
             <button class="nav-link {{ $activeTab === 'commissions' ? 'active' : '' }}" wire:click="$set('activeTab', 'commissions')">
-                <i class="bi bi-percent me-1"></i>Commissions 
+                <i class="bi bi-percent me-1"></i>Commissions
                 @if($statsCommissions['en_attente'] > 0)
                 <span class="badge bg-warning ms-1">{{ $statsCommissions['en_attente'] }}</span>
                 @endif
@@ -238,10 +256,10 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-light">
-                        <strong>{{ $itemType === 'commission' ? 'Commission' : 'Bénéfice' }}:</strong> 
+                        <strong>{{ $itemType === 'commission' ? 'Commission' : 'Bénéfice' }}:</strong>
                         {{ $itemToValidate->numero_reference ?? 'N/A' }}<br>
                         <strong>Collecteur:</strong> {{ $itemToValidate->collecteur->user->name ?? 'N/A' }}<br>
-                        <strong>Montant:</strong> 
+                        <strong>Montant:</strong>
                         <span class="text-success fw-bold">
                             {{ number_format($itemType === 'commission' ? $itemToValidate->montant_total : $itemToValidate->benefice) }} FC
                         </span>

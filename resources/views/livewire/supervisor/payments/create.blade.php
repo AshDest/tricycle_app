@@ -44,26 +44,26 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-check card p-3 h-100 {{ $source_caisse === 'proprietaire' ? 'border-success bg-success bg-opacity-10' : '' }}">
                                     <input class="form-check-input" type="radio" wire:model.live="source_caisse" value="proprietaire" id="sourceProp">
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceProp">
                                         <i class="bi bi-people fs-3 text-success"></i>
                                         <div>
                                             <strong class="d-block">Part Propriétaires</strong>
-                                            <small class="text-muted">5/6 des versements (hebdo)</small>
+                                            <small class="text-muted">5/6 des versements</small>
                                         </div>
                                     </label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-check card p-3 h-100 {{ $source_caisse === 'okami' ? 'border-warning bg-warning bg-opacity-10' : '' }}">
                                     <input class="form-check-input" type="radio" wire:model.live="source_caisse" value="okami" id="sourceOkami">
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceOkami">
                                         <i class="bi bi-building fs-3 text-warning"></i>
                                         <div>
-                                            <strong class="d-block">Part OKAMI Versements</strong>
-                                            <small class="text-muted">1/6 des versements</small>
+                                            <strong class="d-block">Part OKAMI</strong>
+                                            <small class="text-muted">1/6 versements</small>
                                             <div class="mt-1">
                                                 <span class="badge bg-warning text-dark">{{ number_format($soldeOkamiDisponible) }} FC</span>
                                             </div>
@@ -71,16 +71,31 @@
                                     </label>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="form-check card p-3 h-100 {{ $source_caisse === 'lavage' ? 'border-info bg-info bg-opacity-10' : '' }}">
                                     <input class="form-check-input" type="radio" wire:model.live="source_caisse" value="lavage" id="sourceLavage">
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceLavage">
                                         <i class="bi bi-droplet fs-3 text-info"></i>
                                         <div>
-                                            <strong class="d-block">Part OKAMI Lavage</strong>
-                                            <small class="text-muted">20% des lavages internes</small>
+                                            <strong class="d-block">Part Lavage</strong>
+                                            <small class="text-muted">20% lavages</small>
                                             <div class="mt-1">
                                                 <span class="badge bg-info">{{ number_format($soldeLavageOkamiDisponible) }} FC</span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check card p-3 h-100 {{ $source_caisse === 'commission' ? 'border-purple bg-purple bg-opacity-10' : '' }}" style="{{ $source_caisse === 'commission' ? 'border-color: #6f42c1 !important; background-color: rgba(111,66,193,0.1) !important;' : '' }}">
+                                    <input class="form-check-input" type="radio" wire:model.live="source_caisse" value="commission" id="sourceCommission">
+                                    <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceCommission">
+                                        <i class="bi bi-percent fs-3" style="color: #6f42c1;"></i>
+                                        <div>
+                                            <strong class="d-block">Part Commission</strong>
+                                            <small class="text-muted">30% commissions</small>
+                                            <div class="mt-1">
+                                                <span class="badge" style="background-color: #6f42c1;">{{ number_format($soldeCommissionOkamiDisponible) }} FC</span>
                                             </div>
                                         </div>
                                     </label>
@@ -328,6 +343,93 @@
                         </div>
                     </div>
                 </div>
+                @elseif($source_caisse === 'commission')
+                <!-- Section Bénéficiaire Commission -->
+                <div class="card mb-4">
+                    <div class="card-header py-3" style="background-color: rgba(111,66,193,0.1);">
+                        <h6 class="mb-0 fw-bold"><i class="bi bi-percent me-2" style="color: #6f42c1;"></i>Bénéficiaire (Part OKAMI Commission)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert mb-4" style="background-color: rgba(111,66,193,0.1); border-color: #6f42c1;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-info-circle me-2" style="color: #6f42c1;"></i>
+                                    <strong>Part OKAMI Commission (30%)</strong>
+                                    <br><small class="text-muted">70% va à New Technology Hub, 30% à OKAMI</small>
+                                </div>
+                                <div>
+                                    <span class="badge" style="background-color: #6f42c1;">Disponible: {{ number_format($soldeCommissionOkamiDisponible) }} FC</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Détail des commissions validées -->
+                        @if(count($commissionsValidees ?? []) > 0)
+                        <div class="card mb-4" style="border-color: #6f42c1;">
+                            <div class="card-header py-2 bg-light">
+                                <h6 class="mb-0 small fw-bold">
+                                    <i class="bi bi-list-check me-1"></i>
+                                    Commissions validées (derniers mois)
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover mb-0">
+                                        <thead class="bg-light sticky-top">
+                                            <tr>
+                                                <th>Période</th>
+                                                <th>Collecteur</th>
+                                                <th class="text-end">Part NTH (70%)</th>
+                                                <th class="text-end">Part OKAMI (30%)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($commissionsValidees as $c)
+                                            <tr>
+                                                <td><small>{{ $c['periode'] }}</small></td>
+                                                <td><small>{{ $c['collecteur'] }}</small></td>
+                                                <td class="text-end"><small class="text-success">{{ number_format($c['part_nth']) }} FC</small></td>
+                                                <td class="text-end"><small class="fw-bold" style="color: #6f42c1;">{{ number_format($c['part_okami']) }} FC</small></td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nom du bénéficiaire <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="beneficiaire_nom"
+                                       class="form-control @error('beneficiaire_nom') is-invalid @enderror"
+                                       placeholder="Nom complet du bénéficiaire">
+                                @error('beneficiaire_nom')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Téléphone du bénéficiaire</label>
+                                <input type="text" wire:model="beneficiaire_telephone"
+                                       class="form-control @error('beneficiaire_telephone') is-invalid @enderror"
+                                       placeholder="+243 XXX XXX XXX">
+                                @error('beneficiaire_telephone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Motif du paiement <span class="text-danger">*</span></label>
+                                <textarea wire:model="beneficiaire_motif"
+                                          class="form-control @error('beneficiaire_motif') is-invalid @enderror"
+                                          rows="2" placeholder="Décrivez le motif de ce paiement (ex: Prélèvement part OKAMI...)"></textarea>
+                                @error('beneficiaire_motif')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 @endif
 
                 <div class="card mb-4">
@@ -362,6 +464,10 @@
                                     <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-info">
                                         <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeLavageOkamiSemaine) }} FC)
                                     </button>
+                                    @elseif($source_caisse === 'commission' && $soldeCommissionOkamiDisponible > 0)
+                                    <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm" style="border-color: #6f42c1; color: #6f42c1;">
+                                        <i class="bi bi-wallet me-1"></i>Total ({{ number_format($soldeCommissionOkamiDisponible) }} FC)
+                                    </button>
                                     @endif
 
                                     @php
@@ -369,10 +475,11 @@
                                             'proprietaire' => $soldeDisponible,
                                             'okami' => $soldeOkamiDisponible,
                                             'lavage' => $soldeLavageOkamiDisponible,
+                                            'commission' => $soldeCommissionOkamiDisponible,
                                             default => 0,
                                         };
                                     @endphp
-                                    @if($soldeTotal > 0)
+                                    @if($soldeTotal > 0 && $source_caisse !== 'commission')
                                     <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
                                         <i class="bi bi-wallet2 me-1"></i>Total ({{ number_format($soldeTotal) }} FC)
                                     </button>
@@ -413,7 +520,8 @@
                     @php
                         $canSubmit = ($source_caisse === 'proprietaire' && $proprietaire_id && $soldeDisponible > 0)
                                   || ($source_caisse === 'okami' && $soldeOkamiDisponible > 0)
-                                  || ($source_caisse === 'lavage' && $soldeLavageOkamiDisponible > 0);
+                                  || ($source_caisse === 'lavage' && $soldeLavageOkamiDisponible > 0)
+                                  || ($source_caisse === 'commission' && $soldeCommissionOkamiDisponible > 0);
                     @endphp
                     <button type="submit" class="btn btn-success btn-lg flex-grow-1"
                             wire:loading.attr="disabled"

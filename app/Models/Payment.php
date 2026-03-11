@@ -175,6 +175,7 @@ class Payment extends Model
             'proprietaire' => 'Part Propriétaires (5/6 versements)',
             'okami' => 'Part OKAMI Versements (1/6)',
             'lavage' => 'Part OKAMI Lavage (20%)',
+            'commission' => 'Part OKAMI Commission (30%)',
         ];
     }
 
@@ -192,6 +193,14 @@ class Payment extends Model
     public function getIsFromLavageAttribute(): bool
     {
         return $this->source_caisse === 'lavage';
+    }
+
+    /**
+     * Vérifier si le paiement provient de la caisse Commission
+     */
+    public function getIsFromCommissionAttribute(): bool
+    {
+        return $this->source_caisse === 'commission';
     }
 
     /**

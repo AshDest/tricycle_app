@@ -51,6 +51,10 @@ class Create extends Component
     public $totalLavagesSemaine = 0;
     public $partOkamiLavageSemaine = 0;
 
+    // Pour caisse Commission (Part OKAMI = 30% des commissions)
+    public $soldeCommissionOkamiDisponible = 0;
+    public $commissionsValidees = [];
+
     // Commun
     public $montant = '';
     public $mode_paiement = 'cash';
@@ -60,7 +64,7 @@ class Create extends Component
     protected function rules()
     {
         $rules = [
-            'source_caisse' => 'required|in:proprietaire,okami,lavage',
+            'source_caisse' => 'required|in:proprietaire,okami,lavage,commission',
             'semaine_selectionnee' => 'required|integer|min:0',
             'montant' => 'required|numeric|min:1',
             'mode_paiement' => 'required|in:cash,mpesa,airtel_money,orange_money,virement_bancaire',
@@ -70,7 +74,7 @@ class Create extends Component
 
         if ($this->source_caisse === 'proprietaire') {
             $rules['proprietaire_id'] = 'required|exists:proprietaires,id';
-        } elseif ($this->source_caisse === 'okami' || $this->source_caisse === 'lavage') {
+        } elseif (in_array($this->source_caisse, ['okami', 'lavage', 'commission'])) {
             $rules['beneficiaire_nom'] = 'required|string|max:100';
             $rules['beneficiaire_telephone'] = 'nullable|string|max:20';
             $rules['beneficiaire_motif'] = 'required|string|max:500';
@@ -94,6 +98,7 @@ class Create extends Component
         $this->loadSemaines();
         $this->calculerSoldeOkami();
         $this->calculerSoldeLavage();
+        $this->calculerSoldeCommission();
     }
 
     /**
@@ -234,6 +239,34 @@ class Create extends Component
     }
 
     /**
+     * Calculer le solde disponible dans la caisse Commission (Part OKAMI = 30%)
+     */
+    private function calculerSoldeCommission()
+    {
+        // Utiliser le service pour obtenir le solde
+        $paymentService = new PaymentService();
+        $this->soldeCommissionOkamiDisponible = $paymentService->getSoldeCommissionOkami();
+
+        // Charger les commissions validées
+        $this->commissionsValidees = \App\Models\CommissionMobileMensuelle::where('statut', 'valide')
+            ->with('collecteur.user')
+            ->orderByDesc('annee')
+            ->orderByDesc('mois')
+            ->limit(12)
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'id' => $c->id,
+                    'periode' => $c->periode_label,
+                    'collecteur' => $c->collecteur?->user?->name ?? 'N/A',
+                    'montant_total' => $c->montant_total,
+                    'part_nth' => $c->part_nth,
+                    'part_okami' => $c->part_okami,
+                ];
+            })->toArray();
+    }
+
+    /**
      * Quand la semaine sélectionnée change
      */
     public function updatedSemaineSelectionnee($value)
@@ -269,6 +302,8 @@ class Create extends Component
             $this->calculerSoldeOkami();
         } elseif ($value === 'lavage') {
             $this->calculerSoldeLavage();
+        } elseif ($value === 'commission') {
+            $this->calculerSoldeCommission();
         }
     }
 
@@ -384,6 +419,8 @@ class Create extends Component
             $this->montant = $this->soldeOkamiSemaine;
         } elseif ($this->source_caisse === 'lavage') {
             $this->montant = $this->soldeLavageOkamiSemaine;
+        } elseif ($this->source_caisse === 'commission') {
+            $this->montant = $this->soldeCommissionOkamiDisponible;
         }
     }
 
@@ -398,6 +435,8 @@ class Create extends Component
             $this->montant = $this->soldeOkamiDisponible;
         } elseif ($this->source_caisse === 'lavage') {
             $this->montant = $this->soldeLavageOkamiDisponible;
+        } elseif ($this->source_caisse === 'commission') {
+            $this->montant = $this->soldeCommissionOkamiDisponible;
         }
     }
 
@@ -413,6 +452,7 @@ class Create extends Component
             'proprietaire' => $this->soldeDisponible,
             'okami' => $this->soldeOkamiDisponible,
             'lavage' => $this->soldeLavageOkamiDisponible,
+            'commission' => $this->soldeCommissionOkamiDisponible,
             default => 0,
         };
 
@@ -478,6 +518,22 @@ class Create extends Component
                 ], auth()->id());
 
                 session()->flash('success', 'Demande de paiement Lavage pour la semaine ' . $semaineData['numero'] . ' soumise avec succès.');
+            } elseif ($this->source_caisse === 'commission') {
+                // Paiement depuis caisse Commission
+                $paymentService->creerDemandePaiementDepuisCommission([
+                    'source_caisse' => 'commission',
+                    'beneficiaire_nom' => $this->beneficiaire_nom,
+                    'beneficiaire_telephone' => $this->beneficiaire_telephone,
+                    'beneficiaire_motif' => $this->beneficiaire_motif,
+                    'montant' => $this->montant,
+                    'mode_paiement' => $this->mode_paiement,
+                    'numero_compte' => $this->numero_compte ?: $this->beneficiaire_telephone,
+                    'notes' => $this->notes,
+                    'periode_debut' => $semaineData['debut'],
+                    'periode_fin' => $semaineData['fin'],
+                ], auth()->id());
+
+                session()->flash('success', 'Demande de paiement Commission pour la semaine ' . $semaineData['numero'] . ' soumise avec succès.');
             }
 
             return redirect()->route('supervisor.payments.index');

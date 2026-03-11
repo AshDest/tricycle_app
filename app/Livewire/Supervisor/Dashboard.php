@@ -40,6 +40,10 @@ class Dashboard extends Component
     public $soldeOkamiLavageMois = 0;
     public $soldeOkamiLavageJour = 0;
 
+    // Solde OKAMI des commissions (30% des commissions)
+    public $soldeOkamiCommissionTotal = 0;
+    public $commissionsParMois = [];
+
     public function mount()
     {
         $today = Carbon::today();
@@ -152,6 +156,26 @@ class Dashboard extends Component
             ->where('statut_paiement', 'payé')
             ->whereDate('date_lavage', $today)
             ->sum('part_okami') ?? 0;
+
+        // ===== Calcul du solde OKAMI des commissions (30%) =====
+        $paymentService = new \App\Services\PaymentService();
+        $this->soldeOkamiCommissionTotal = $paymentService->getSoldeCommissionOkami();
+
+        // Commissions validées par mois (3 derniers mois)
+        $this->commissionsParMois = \App\Models\CommissionMobileMensuelle::where('statut', 'valide')
+            ->orderByDesc('annee')
+            ->orderByDesc('mois')
+            ->limit(3)
+            ->get()
+            ->map(function ($c) {
+                return [
+                    'periode' => $c->periode_label,
+                    'total' => $c->montant_total,
+                    'part_nth' => $c->part_nth,
+                    'part_okami' => $c->part_okami,
+                ];
+            })
+            ->toArray();
 
         // Répartition hebdomadaire globale
         $this->repartitionHebdo = RepartitionService::getResumeHebdomadaireGlobal();
