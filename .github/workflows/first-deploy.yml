@@ -1,0 +1,97 @@
+name: 🌱 First Deploy (avec Seeds)
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_seeds:
+        description: 'Exécuter les seeders (db:seed)'
+        required: false
+        default: 'true'
+        type: boolean
+      fresh_migrate:
+        description: 'Fresh migrate (SUPPRIME toutes les tables!)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  first-deploy:
+    name: Premier déploiement
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚀 First Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script_stop: true
+          script: |
+            cd /var/www/tricycle_app
+
+            echo "🚀 Premier déploiement..."
+
+            # Pull des dernières modifications
+            echo "📥 Récupération du code..."
+            git pull origin main
+
+            # Installer les dépendances PHP
+            echo "📦 Installation Composer..."
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            # Build assets
+            echo "📦 Build des assets..."
+            npm ci && npm run build
+
+            # Lien storage
+            php artisan storage:link --force || true
+
+            # Migrations
+            if [ "${{ github.event.inputs.fresh_migrate }}" = "true" ]; then
+              echo "🗄️ Fresh Migrate (RESET)..."
+              php artisan migrate:fresh --force
+            else
+              echo "🗄️ Migrations..."
+              php artisan migrate --force
+            fi
+
+            # Seeds
+            if [ "${{ github.event.inputs.run_seeds }}" = "true" ]; then
+              echo "🌱 Exécution des seeders..."
+              php artisan db:seed --force
+            fi
+
+            # Cache et optimisation
+            echo "⚡ Optimisation..."
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+            php artisan optimize
+
+            # Permissions
+            echo "🔐 Permissions..."
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
+
+            # Redémarrer les services
+            echo "🔄 Redémarrage des services..."
+            sudo systemctl reload php8.2-fpm || true
+            sudo systemctl reload nginx || true
+
+            # Queue worker
+            sudo supervisorctl restart tricycle-queue-worker:* || echo "⚠️ Queue worker non configuré"
+
+            # Scheduler cron
+            CRON_JOB="* * * * * cd /var/www/tricycle_app && php artisan schedule:run >> /dev/null 2>&1"
+            CRON_EXISTS=$(crontab -l 2>/dev/null | grep -F "tricycle_app" | grep -F "schedule:run" || true)
+            if [ -z "$CRON_EXISTS" ]; then
+              (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+              echo "⏰ Cron job ajouté"
+            fi
+
+            echo "✅ Premier déploiement terminé!"
+            echo "   Commit: $(git rev-parse --short HEAD)"
+
