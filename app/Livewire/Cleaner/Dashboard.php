@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Lavage;
 use App\Models\DepenseLavage;
+use App\Models\KwadoService;
 use App\Models\SystemSetting;
 use Carbon\Carbon;
 
@@ -26,6 +27,13 @@ class Dashboard extends Component
     public $depensesJour = 0;
     public $depensesMois = 0;
     public $beneficeNetMois = 0;
+
+    // KWADO stats
+    public $kwadoJour = 0;
+    public $kwadoRecettesJour = 0;
+    public $kwadoMois = 0;
+    public $kwadoRecettesMois = 0;
+    public $derniersKwado = [];
 
     // Prix configurés
     public $prixSimple = 0;
@@ -79,6 +87,33 @@ class Dashboard extends Component
 
         // Bénéfice net du mois (recettes - dépenses)
         $this->beneficeNetMois = $this->chiffreAffairesMois - $this->depensesMois;
+
+        // KWADO stats
+        $kwadoJour = KwadoService::where('cleaner_id', $cleaner->id)
+            ->whereDate('date_service', $today)
+            ->where('statut_paiement', 'payé')
+            ->get();
+
+        $this->kwadoJour = $kwadoJour->count();
+        $this->kwadoRecettesJour = $kwadoJour->sum('montant_encaisse');
+
+        $kwadoMois = KwadoService::where('cleaner_id', $cleaner->id)
+            ->whereBetween('date_service', [$startOfMonth, now()])
+            ->where('statut_paiement', 'payé')
+            ->get();
+
+        $this->kwadoMois = $kwadoMois->count();
+        $this->kwadoRecettesMois = $kwadoMois->sum('montant_encaisse');
+
+        // Inclure KWADO dans le bénéfice net
+        $this->beneficeNetMois += $this->kwadoRecettesMois;
+
+        // Derniers KWADO
+        $this->derniersKwado = KwadoService::where('cleaner_id', $cleaner->id)
+            ->with('moto')
+            ->orderBy('date_service', 'desc')
+            ->limit(5)
+            ->get();
 
         // Derniers lavages
         $this->derniersLavages = Lavage::where('cleaner_id', $cleaner->id)

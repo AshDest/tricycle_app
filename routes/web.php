@@ -94,6 +94,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Lavages (Admin vue)
         Route::get('/lavages', \App\Livewire\Admin\Lavages\Index::class)->name('lavages.index');
 
+        // KWADO Services (Admin vue)
+        Route::get('/kwado', \App\Livewire\Admin\Kwado\Index::class)->name('kwado.index');
+
         // Versements
         Route::get('/versements', \App\Livewire\Admin\Versements\Index::class)->name('versements.index');
         Route::get('/versements/{versement}', \App\Livewire\Admin\Versements\Show::class)->name('versements.show');
@@ -279,6 +282,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/lavages', \App\Livewire\Cleaner\LavagesList::class)->name('lavages.index');
         Route::get('/lavages/create', \App\Livewire\Cleaner\EnregistrerLavage::class)->name('lavages.create');
         Route::get('/lavages/{lavage}/edit', \App\Livewire\Cleaner\EditLavage::class)->name('lavages.edit');
+
+        // KWADO - Services de réparation de pneus
+        Route::get('/kwado', \App\Livewire\Cleaner\KwadoList::class)->name('kwado.index');
+        Route::get('/kwado/create', \App\Livewire\Cleaner\EnregistrerKwado::class)->name('kwado.create');
 
         // Dépenses
         Route::get('/depenses', \App\Livewire\Cleaner\DepensesList::class)->name('depenses.index');

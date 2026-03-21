@@ -76,6 +76,45 @@ class Cleaner extends Model
     }
 
     /**
+     * Relation avec les services KWADO (réparation pneus)
+     */
+    public function kwadoServices(): HasMany
+    {
+        return $this->hasMany(KwadoService::class);
+    }
+
+    /**
+     * Nombre de services KWADO du jour
+     */
+    public function getKwadoAujourdhuiAttribute(): int
+    {
+        return $this->kwadoServices()->whereDate('date_service', today())->count();
+    }
+
+    /**
+     * Recettes KWADO du jour
+     */
+    public function getKwadoRecettesJourAttribute(): float
+    {
+        return $this->kwadoServices()
+            ->whereDate('date_service', today())
+            ->where('statut_paiement', 'payé')
+            ->sum('montant_encaisse');
+    }
+
+    /**
+     * Recettes KWADO du mois
+     */
+    public function getKwadoRecettesMoisAttribute(): float
+    {
+        return $this->kwadoServices()
+            ->whereMonth('date_service', now()->month)
+            ->whereYear('date_service', now()->year)
+            ->where('statut_paiement', 'payé')
+            ->sum('montant_encaisse');
+    }
+
+    /**
      * Obtenir le nombre de lavages du jour
      */
     public function getLavagesAujourdhuiAttribute(): int
@@ -112,13 +151,16 @@ class Cleaner extends Model
     public function getStatistiques(): array
     {
         $lavages = $this->lavages()->where('statut_paiement', 'payé');
+        $kwado = $this->kwadoServices()->where('statut_paiement', 'payé');
 
         return [
-            'total_lavages' => $lavages->count(),
-            'lavages_internes' => $lavages->where('is_externe', false)->count(),
-            'lavages_externes' => $lavages->where('is_externe', true)->count(),
-            'chiffre_affaires_total' => $lavages->sum('part_cleaner'),
-            'part_okami_total' => $lavages->sum('part_okami'),
+            'total_lavages' => (clone $lavages)->count(),
+            'lavages_internes' => (clone $lavages)->where('is_externe', false)->count(),
+            'lavages_externes' => (clone $lavages)->where('is_externe', true)->count(),
+            'chiffre_affaires_lavage' => (clone $lavages)->sum('part_cleaner'),
+            'part_okami_total' => (clone $lavages)->sum('part_okami'),
+            'total_kwado' => (clone $kwado)->count(),
+            'chiffre_affaires_kwado' => (clone $kwado)->sum('montant_encaisse'),
         ];
     }
 }

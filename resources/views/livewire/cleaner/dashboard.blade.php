@@ -11,6 +11,9 @@
             <a href="{{ route('cleaner.depenses.create') }}" class="btn btn-outline-danger">
                 <i class="bi bi-dash-circle me-1"></i>Dépense
             </a>
+            <a href="{{ route('cleaner.kwado.create') }}" class="btn btn-warning">
+                <i class="bi bi-gear-wide-connected me-1"></i>KWADO
+            </a>
             <a href="{{ route('cleaner.lavages.create') }}" class="btn btn-info">
                 <i class="bi bi-plus-circle me-1"></i>Nouveau Lavage
             </a>
@@ -245,6 +248,85 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Section KWADO -->
+    <div class="card border-0 shadow-sm mb-4 border-start border-4 border-warning">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">
+                <i class="bi bi-gear-wide-connected me-2 text-warning"></i>Services KWADO (Pneus)
+            </h6>
+            <a href="{{ route('cleaner.kwado.create') }}" class="btn btn-sm btn-warning">
+                <i class="bi bi-plus-circle me-1"></i>Nouveau
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 text-center">
+                <div class="col-md-3">
+                    <div class="p-3 bg-warning bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-warning mb-0">{{ $kwadoJour }}</h4>
+                        <small class="text-muted">Services aujourd'hui</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-success bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-success mb-0">{{ number_format($kwadoRecettesJour) }} FC</h4>
+                        <small class="text-muted">Recettes KWADO jour</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-info bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-info mb-0">{{ $kwadoMois }}</h4>
+                        <small class="text-muted">Services ce mois</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-primary bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-primary mb-0">{{ number_format($kwadoRecettesMois) }} FC</h4>
+                        <small class="text-muted">Recettes KWADO mois</small>
+                    </div>
+                </div>
+            </div>
+
+            @if(count($derniersKwado) > 0)
+            <hr class="my-3">
+            <h6 class="fw-bold small text-muted mb-2"><i class="bi bi-clock-history me-1"></i>Derniers services KWADO</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>N°</th>
+                            <th>Véhicule</th>
+                            <th>Service</th>
+                            <th>Montant</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($derniersKwado as $kwado)
+                        <tr>
+                            <td class="fw-semibold">{{ $kwado->numero_service }}</td>
+                            <td>
+                                @if($kwado->is_externe)
+                                <span class="badge bg-secondary" style="font-size: 0.65rem;">EXT</span>
+                                @endif
+                                {{ $kwado->plaque }}
+                            </td>
+                            <td><span class="badge bg-warning bg-opacity-10 text-warning">{{ $kwado->type_service_label }}</span></td>
+                            <td class="fw-bold text-success">{{ number_format($kwado->montant_encaisse) }} FC</td>
+                            <td><small>{{ $kwado->date_service?->format('d/m H:i') }}</small></td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-2">
+                <a href="{{ route('cleaner.kwado.index') }}" class="btn btn-sm btn-outline-warning">
+                    Voir tous les services <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            @endif
         </div>
     </div>
 

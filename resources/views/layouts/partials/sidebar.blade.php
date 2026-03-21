@@ -116,7 +116,7 @@
                     <li><a href="{{ route('admin.commissions-benefices.index') }}"><i class="bi bi-clipboard-check text-success me-1"></i>Commissions &amp; B&eacute;n&eacute;fices</a></li>
                 </ul>
             </li>
-            <li class="has-submenu {{ request()->is('admin/cleaners*') || request()->is('admin/lavages*') ? 'active' : '' }}">
+            <li class="has-submenu {{ request()->is('admin/cleaners*') || request()->is('admin/lavages*') || request()->is('admin/kwado*') ? 'active' : '' }}">
                 <a href="#" class="toggle-submenu">
                     <i class="bi bi-droplet text-info"></i>
                     <span>Service Lavage</span>
@@ -126,6 +126,7 @@
                     <li><a href="{{ route('admin.cleaners.index') }}"><i class="bi bi-people me-1"></i>Laveurs</a></li>
                     <li><a href="{{ route('admin.cleaners.create') }}"><i class="bi bi-plus me-1"></i>Nouveau laveur</a></li>
                     <li><a href="{{ route('admin.lavages.index') }}"><i class="bi bi-list me-1"></i>Tous les lavages</a></li>
+                    <li><a href="{{ route('admin.kwado.index') }}"><i class="bi bi-gear-wide-connected text-warning me-1"></i>Services KWADO</a></li>
                 </ul>
             </li>
 
@@ -484,6 +485,19 @@
                 <a href="{{ route('cleaner.lavages.create') }}">
                     <i class="bi bi-plus-circle"></i>
                     <span>Nouveau Lavage</span>
+                </a>
+            </li>
+            <li class="sidebar-heading">Service KWADO</li>
+            <li class="{{ request()->is('cleaner/kwado') ? 'active' : '' }}">
+                <a href="{{ route('cleaner.kwado.index') }}">
+                    <i class="bi bi-gear-wide-connected text-warning"></i>
+                    <span>Services KWADO</span>
+                </a>
+            </li>
+            <li class="{{ request()->is('cleaner/kwado/create') ? 'active' : '' }}">
+                <a href="{{ route('cleaner.kwado.create') }}">
+                    <i class="bi bi-plus-circle text-warning"></i>
+                    <span>Nouveau KWADO</span>
                 </a>
             </li>
             <li class="sidebar-heading">Gestion Caisse</li>
