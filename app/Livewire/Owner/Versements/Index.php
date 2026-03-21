@@ -35,7 +35,7 @@ class Index extends Component
         $proprietaire = auth()->user()->proprietaire;
         $proprietaire_id = $proprietaire?->id;
 
-        return Versement::with(['motard.user', 'moto', 'caissier'])
+        return Versement::with(['motard.user', 'motardSecondaire.user', 'moto', 'caissier'])
             ->whereHas('moto', function ($q) use ($proprietaire_id) {
                 $q->where('proprietaire_id', $proprietaire_id);
             })

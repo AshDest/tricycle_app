@@ -62,7 +62,8 @@ class Historique extends Component
         $this->versementsPartiels = (clone $query)->where('statut', 'partiellement_payé')->count();
         $this->versementsEnRetard = (clone $query)->where('statut', 'en_retard')->count();
 
-        $versements = $query->orderBy('date_versement', 'desc')
+        $versements = $query->with('motardSecondaire.user')
+            ->orderBy('date_versement', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 

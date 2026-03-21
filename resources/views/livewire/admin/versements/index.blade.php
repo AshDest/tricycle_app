@@ -93,6 +93,11 @@
                                     <div>
                                         <span class="fw-medium d-block">{{ $versement->motard->user->name ?? 'N/A' }}</span>
                                         <small class="text-muted">{{ $versement->motard->numero_identifiant ?? '' }}</small>
+                                        @if($versement->motard_secondaire_id && $versement->motardSecondaire)
+                                        <span class="badge bg-info text-white d-block mt-1" style="font-size: 0.65rem;">
+                                            <i class="bi bi-person-badge me-1"></i>Remplaçant: {{ $versement->motardSecondaire->user->name ?? 'N/A' }}
+                                        </span>
+                                        @endif
                                     </div>
                                 </div>
                             </td>

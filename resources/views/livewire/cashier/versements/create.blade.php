@@ -106,6 +106,42 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
 
+                            <!-- Motard remplaçant (secondaire) -->
+                            @if(count($motardsSecondairesList ?? []) > 0)
+                            <div class="mt-4 mb-0">
+                                <div class="card border-info">
+                                    <div class="card-header py-2 bg-info bg-opacity-10">
+                                        <h6 class="mb-0 fw-bold text-info small">
+                                            <i class="bi bi-person-badge me-1"></i>Motard remplaçant (optionnel)
+                                        </h6>
+                                    </div>
+                                    <div class="card-body py-2">
+                                        <small class="text-muted d-block mb-2">
+                                            Si un autre motard (sans moto assignée) a travaillé ce jour à la place du titulaire, sélectionnez-le ci-dessous. Sinon, laissez vide.
+                                        </small>
+                                        <select wire:model="motard_secondaire_id" class="form-select form-select-sm @error('motard_secondaire_id') is-invalid @enderror">
+                                            <option value="">-- Motard titulaire ({{ $motardSelectionne?->user?->name ?? 'N/A' }}) --</option>
+                                            @foreach($motardsSecondairesList as $ms)
+                                            <option value="{{ $ms->id }}">
+                                                {{ $ms->user->name ?? 'N/A' }} ({{ $ms->numero_identifiant }})
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                        @error('motard_secondaire_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+
+                                        @if($motard_secondaire_id)
+                                        <div class="alert alert-info py-1 mt-2 mb-0 small">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Le versement sera enregistré pour la moto du titulaire, mais le conducteur effectif sera le remplaçant sélectionné.
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
                             <!-- Alerte Dimanche -->
                             @if($estDimanche)
                             <div class="alert alert-danger mt-3 mb-0 border-danger">

@@ -71,7 +71,14 @@
                                     <div class="avatar avatar-sm bg-success bg-opacity-10 text-success rounded-circle">
                                         {{ strtoupper(substr($versement->motard->user->name ?? 'M', 0, 1)) }}
                                     </div>
-                                    <span>{{ $versement->motard->user->name ?? 'N/A' }}</span>
+                                    <div>
+                                        <span>{{ $versement->motard->user->name ?? 'N/A' }}</span>
+                                        @if($versement->motard_secondaire_id && $versement->motardSecondaire)
+                                        <span class="badge bg-info text-white d-block mt-1" style="font-size: 0.6rem;">
+                                            <i class="bi bi-person-badge me-1"></i>{{ $versement->motardSecondaire->user->name ?? 'N/A' }}
+                                        </span>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
                             <td class="fw-bold text-success">{{ number_format($versement->montant ?? 0) }} FC</td>

@@ -181,6 +181,17 @@
                     <td class="label">ID</td>
                     <td class="value">{{ $versement->motard->numero_identifiant ?? 'N/A' }}</td>
                 </tr>
+                @if($versement->motard_secondaire_id && $versement->motardSecondaire)
+                <tr>
+                    <td class="label">Conducteur</td>
+                    <td class="value">{{ $versement->motardSecondaire->user->name ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="2" style="text-align:center; font-size: 7px; color: #856404;">
+                        (Remplaçant du motard titulaire)
+                    </td>
+                </tr>
+                @endif
             </table>
         </div>
 

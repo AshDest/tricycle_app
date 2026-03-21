@@ -85,12 +85,25 @@
 
                         <div class="mb-3">
                             <label class="form-label">Motard assigné</label>
+                            @if($moto->motard_id && $moto->motard)
+                            <div class="alert alert-info py-2 mb-2 small">
+                                <i class="bi bi-person-fill me-1"></i>
+                                <strong>Titulaire actuel:</strong> {{ $moto->motard->user->name ?? 'N/A' }}
+                                ({{ $moto->motard->numero_identifiant ?? '' }})
+                            </div>
+                            @endif
                             <select wire:model="motard_id" class="form-select">
                                 <option value="">Aucun (non assigné)</option>
                                 @foreach($motards as $motard)
-                                    <option value="{{ $motard->id }}">{{ $motard->user->name ?? 'N/A' }} ({{ $motard->numero_identifiant }})</option>
+                                    <option value="{{ $motard->id }}">
+                                        {{ $motard->user->name ?? 'N/A' }} ({{ $motard->numero_identifiant }})
+                                        @if($motard->id == $moto->motard_id) - Titulaire actuel @else - Disponible @endif
+                                    </option>
                                 @endforeach
                             </select>
+                            <small class="text-muted mt-1 d-block">
+                                <i class="bi bi-info-circle me-1"></i>Seuls les motards sans moto active sont proposés (+ le titulaire actuel).
+                            </small>
                         </div>
 
                         <div class="mb-3">

@@ -108,6 +108,11 @@
                                 <div>
                                     <span class="fw-medium">{{ $versement->date_versement?->format('d/m/Y') }}</span>
                                     <small class="text-muted d-block">{{ $versement->created_at?->format('H:i') }}</small>
+                                    @if($versement->motard_secondaire_id && $versement->motardSecondaire)
+                                    <span class="badge bg-info text-white mt-1" style="font-size: 0.6rem;">
+                                        <i class="bi bi-person-badge me-1"></i>Remplaçant: {{ $versement->motardSecondaire->user->name ?? 'N/A' }}
+                                    </span>
+                                    @endif
                                 </div>
                             </td>
                             <td class="fw-semibold text-success">{{ number_format($versement->montant ?? 0) }} FC</td>

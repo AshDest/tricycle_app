@@ -118,7 +118,7 @@ class Index extends Component
 
     protected function getFilteredQuery()
     {
-        return Versement::with(['motard.user', 'moto', 'caissier.user'])
+        return Versement::with(['motard.user', 'motardSecondaire.user', 'moto', 'caissier.user'])
             ->when($this->search, function ($q) {
                 $q->where(function ($query) {
                     $query->whereHas('motard.user', function ($q2) {

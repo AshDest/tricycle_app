@@ -15,6 +15,7 @@ use Carbon\Carbon;
 class Create extends Component
 {
     public $motard_id = '';
+    public $motard_secondaire_id = '';
     public $montant = '';
     public $mode_paiement = 'cash';
     public $notes = '';
@@ -46,10 +47,14 @@ class Create extends Component
     // Pour le téléchargement du reçu
     public $dernierVersementId = null;
 
+    // Liste des motards secondaires (sans moto assignée)
+    public $motardsSecondaires = [];
+
     protected function rules()
     {
         $rules = [
             'motard_id' => 'required|exists:motards,id',
+            'motard_secondaire_id' => 'nullable|exists:motards,id',
             'montant' => 'required|numeric|min:1',
             'mode_paiement' => 'required|in:cash,mobile_money,depot',
             'type_versement' => 'required|in:journalier,arrieres',
@@ -81,6 +86,19 @@ class Create extends Component
             $this->motardSelectionne = Motard::with(['user', 'moto'])->find($value);
             $this->montantJournalierAttendu = $this->motardSelectionne?->moto?->montant_journalier_attendu
                 ?? SystemSetting::getMontantJournalierDefaut();
+
+            // Charger les motards secondaires (sans moto assignée, différents du titulaire)
+            $this->motardsSecondaires = Motard::with('user')
+                ->where('is_active', true)
+                ->where('id', '!=', $value)
+                ->whereDoesntHave('moto', function ($q) {
+                    $q->where('statut', 'actif');
+                })
+                ->get()
+                ->toArray();
+
+            // Reset le motard secondaire
+            $this->motard_secondaire_id = '';
 
             // Charger les arriérés détaillés
             $this->loadArrieresDetails();
@@ -226,6 +244,8 @@ class Create extends Component
         $this->versementExistantJour = null;
         $this->montantDejaVerseJour = 0;
         $this->montantRestantJour = 0;
+        $this->motard_secondaire_id = '';
+        $this->motardsSecondaires = [];
     }
 
     protected function updateRepartitionPreview()
@@ -351,6 +371,7 @@ class Create extends Component
 
         $versement = Versement::create([
             'motard_id' => $motard->id,
+            'motard_secondaire_id' => $this->motard_secondaire_id ?: null,
             'moto_id' => $moto?->id,
             'caissier_id' => $caissier->id,
             'montant' => $montantVerse,
@@ -440,6 +461,7 @@ class Create extends Component
         // Créer un enregistrement de versement pour traçabilité avec type arrieres_only
         $versement = Versement::create([
             'motard_id' => $motard->id,
+            'motard_secondaire_id' => $this->motard_secondaire_id ?: null,
             'moto_id' => $moto?->id,
             'caissier_id' => $caissier->id,
             'montant' => $montantEffectif,
@@ -525,6 +547,18 @@ class Create extends Component
             ->whereHas('moto')
             ->get();
 
-        return view('livewire.cashier.versements.create', compact('motards'));
+        // Motards secondaires (sans moto assignée active)
+        $motardsSecondairesList = [];
+        if ($this->motard_id) {
+            $motardsSecondairesList = Motard::with('user')
+                ->where('is_active', true)
+                ->where('id', '!=', $this->motard_id)
+                ->whereDoesntHave('moto', function ($q) {
+                    $q->where('statut', 'actif');
+                })
+                ->get();
+        }
+
+        return view('livewire.cashier.versements.create', compact('motards', 'motardsSecondairesList'));
     }
 }

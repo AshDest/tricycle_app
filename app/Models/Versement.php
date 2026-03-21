@@ -17,6 +17,7 @@ class Versement extends Model
 
     protected $fillable = [
         'motard_id',
+        'motard_secondaire_id',
         'moto_id',
         'montant',
         'montant_attendu',
@@ -125,6 +126,34 @@ class Versement extends Model
     public function motard(): BelongsTo
     {
         return $this->belongsTo(Motard::class);
+    }
+
+    /**
+     * Le motard secondaire (remplaçant) qui a travaillé ce jour-là.
+     * Null si c'est le motard titulaire qui a travaillé.
+     */
+    public function motardSecondaire(): BelongsTo
+    {
+        return $this->belongsTo(Motard::class, 'motard_secondaire_id');
+    }
+
+    /**
+     * Vérifier si le versement a été fait par un motard remplaçant
+     */
+    public function getEstRemplacantAttribute(): bool
+    {
+        return !is_null($this->motard_secondaire_id);
+    }
+
+    /**
+     * Obtenir le nom du conducteur effectif (remplaçant ou titulaire)
+     */
+    public function getConducteurEffectifAttribute(): ?string
+    {
+        if ($this->motard_secondaire_id) {
+            return $this->motardSecondaire?->user?->name;
+        }
+        return $this->motard?->user?->name;
     }
 
     /**

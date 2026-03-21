@@ -50,7 +50,12 @@
             @forelse($versements as $versement)
                 <tr class="no-break">
                     <td>{{ \Carbon\Carbon::parse($versement->date_versement)->format('d/m/Y') }}</td>
-                    <td>{{ $versement->motard?->user?->name ?? '-' }}</td>
+                    <td>
+                        {{ $versement->motard?->user?->name ?? '-' }}
+                        @if($versement->motard_secondaire_id && $versement->motardSecondaire)
+                        <br><small style="color: #0d6efd; font-size: 7px;">(Rempl: {{ $versement->motardSecondaire->user->name ?? 'N/A' }})</small>
+                        @endif
+                    </td>
                     <td>{{ $versement->moto?->plaque_immatriculation ?? '-' }}</td>
                     <td class="amount">{{ number_format($versement->montant ?? 0) }} FC</td>
                     <td>

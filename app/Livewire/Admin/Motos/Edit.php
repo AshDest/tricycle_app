@@ -67,8 +67,23 @@ class Edit extends Component
     public function render()
     {
         $proprietaires = Proprietaire::with('user')->get();
-        $motards = Motard::with('user')->where('is_active', true)->get();
 
-        return view('livewire.admin.motos.edit', compact('proprietaires', 'motards'));
+        // Motards disponibles: motards sans moto assignée active, ou le motard actuellement assigné à cette moto
+        $motards = Motard::with('user')
+            ->where('is_active', true)
+            ->where(function ($q) {
+                // Motards sans moto assignée
+                $q->whereDoesntHave('moto', function ($q2) {
+                    $q2->where('statut', 'actif');
+                })
+                // Ou le motard actuellement assigné à cette moto
+                ->orWhere('id', $this->moto->motard_id);
+            })
+            ->get();
+
+        // Infos du motard actuel pour l'affichage
+        $motardActuel = $this->moto->motard_id ? Motard::with('user')->find($this->moto->motard_id) : null;
+
+        return view('livewire.admin.motos.edit', compact('proprietaires', 'motards', 'motardActuel'));
     }
 }

@@ -165,7 +165,7 @@ class Index extends Component
         }
 
         // Query principale avec filtres
-        $versements = Versement::with(['motard.user', 'moto'])
+        $versements = Versement::with(['motard.user', 'motardSecondaire.user', 'moto'])
             ->where('caissier_id', $caissier_id)
             ->when($this->search, function ($q) {
                 $q->whereHas('motard.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'))

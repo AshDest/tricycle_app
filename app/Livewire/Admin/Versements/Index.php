@@ -56,7 +56,7 @@ class Index extends Component
 
     protected function getBaseQuery()
     {
-        return Versement::with(['motard.user', 'moto', 'caissier.user'])
+        return Versement::with(['motard.user', 'motardSecondaire.user', 'moto', 'caissier.user'])
             ->when($this->search, function ($q) {
                 $q->whereHas('motard.user', function ($q2) {
                     $q2->where('name', 'like', '%' . $this->search . '%');
