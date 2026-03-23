@@ -219,7 +219,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-check card p-3 {{ $mode_paiement === 'cash' ? 'border-success bg-success bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model="mode_paiement" value="cash" id="modeCash">
+                                        <input class="form-check-input" type="radio" wire:model.live="mode_paiement" value="cash" id="modeCash">
                                         <label class="form-check-label d-flex align-items-center gap-2" for="modeCash">
                                             <i class="bi bi-cash text-success fs-4"></i>
                                             <span>Cash</span>
@@ -228,7 +228,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-check card p-3 {{ $mode_paiement === 'mobile_money' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model="mode_paiement" value="mobile_money" id="modeMobile">
+                                        <input class="form-check-input" type="radio" wire:model.live="mode_paiement" value="mobile_money" id="modeMobile">
                                         <label class="form-check-label d-flex align-items-center gap-2" for="modeMobile">
                                             <i class="bi bi-phone text-primary fs-4"></i>
                                             <span>Mobile Money</span>

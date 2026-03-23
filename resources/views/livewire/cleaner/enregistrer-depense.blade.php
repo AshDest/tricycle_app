@@ -101,14 +101,14 @@
                                 <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check card p-3 flex-fill {{ $mode_paiement === 'cash' ? 'border-success bg-success bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model="mode_paiement" value="cash" id="modeCash">
+                                        <input class="form-check-input" type="radio" wire:model.live="mode_paiement" value="cash" id="modeCash">
                                         <label class="form-check-label d-flex align-items-center gap-2" for="modeCash">
                                             <i class="bi bi-cash text-success"></i>
                                             <span>Cash</span>
                                         </label>
                                     </div>
                                     <div class="form-check card p-3 flex-fill {{ $mode_paiement === 'mobile_money' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model="mode_paiement" value="mobile_money" id="modeMobile">
+                                        <input class="form-check-input" type="radio" wire:model.live="mode_paiement" value="mobile_money" id="modeMobile">
                                         <label class="form-check-label d-flex align-items-center gap-2" for="modeMobile">
                                             <i class="bi bi-phone text-primary"></i>
                                             <span>Mobile</span>

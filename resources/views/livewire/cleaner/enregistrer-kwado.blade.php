@@ -196,14 +196,14 @@
                                 <label class="form-label fw-semibold">Mode de paiement</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check card p-3 flex-fill text-center {{ $mode_paiement === 'cash' ? 'border-success bg-success bg-opacity-10' : '' }}">
-                                        <input class="form-check-input d-none" type="radio" wire:model="mode_paiement" value="cash" id="modeCash">
+                                        <input class="form-check-input d-none" type="radio" wire:model.live="mode_paiement" value="cash" id="modeCash">
                                         <label class="form-check-label d-block" for="modeCash" style="cursor: pointer;">
                                             <i class="bi bi-cash fs-4 text-success d-block mb-1"></i>
                                             <small class="fw-semibold">Cash</small>
                                         </label>
                                     </div>
                                     <div class="form-check card p-3 flex-fill text-center {{ $mode_paiement === 'mobile_money' ? 'border-primary bg-primary bg-opacity-10' : '' }}">
-                                        <input class="form-check-input d-none" type="radio" wire:model="mode_paiement" value="mobile_money" id="modeMobile">
+                                        <input class="form-check-input d-none" type="radio" wire:model.live="mode_paiement" value="mobile_money" id="modeMobile">
                                         <label class="form-check-label d-block" for="modeMobile" style="cursor: pointer;">
                                             <i class="bi bi-phone fs-4 text-primary d-block mb-1"></i>
                                             <small class="fw-semibold">Mobile</small>

@@ -57,6 +57,7 @@
                                 <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
                                 <select wire:model.live="mode_paiement" class="form-select @error('mode_paiement') is-invalid @enderror">
                                     <option value="">-- Choisir --</option>
+                                    <option value="cash">Cash (Espèces)</option>
                                     <option value="mpesa">M-PESA</option>
                                     <option value="airtel_money">Airtel Money</option>
                                     <option value="orange_money">Orange Money</option>
