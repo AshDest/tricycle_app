@@ -78,6 +78,10 @@ npm run build
 echo -e "${GREEN}[6/12] Lien storage...${NC}"
 php artisan storage:link
 
+# 7b. Publier les assets Livewire (requis pour route:cache)
+echo -e "${GREEN}[6b/12] Publication des assets Livewire...${NC}"
+php artisan livewire:publish --assets
+
 # 8. Migrations (sans seeds)
 echo -e "${GREEN}[7/12] Migrations de la base de données...${NC}"
 php artisan migrate --force

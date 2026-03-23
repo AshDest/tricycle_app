@@ -38,6 +38,10 @@ jobs:
             echo "📦 Build des assets..."
             npm ci && npm run build
 
+            # Publier les assets Livewire (requis avec route:cache)
+            echo "📦 Publication assets Livewire..."
+            php artisan livewire:publish --assets
+
             # Exécuter les migrations
             echo "🗄️ Migrations..."
             php artisan migrate --force
