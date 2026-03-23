@@ -33,7 +33,7 @@ cd "$REPO_PATH" || { error "Impossible d'accéder à $REPO_PATH"; exit 1; }
 
 # Mode maintenance
 log "Activation du mode maintenance..."
-php artisan down --message="Mise à jour en cours..." --retry=60 || true
+php artisan down --retry=60 || true
 
 # 1. Récupérer les dernières modifications
 log "Récupération des modifications depuis GitHub..."

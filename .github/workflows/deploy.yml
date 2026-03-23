@@ -24,11 +24,12 @@ jobs:
             echo "🚀 Démarrage du déploiement..."
 
             # Mode maintenance
-            php artisan down --message="Mise à jour en cours..." --retry=60 || true
+            php artisan down --retry=60 || true
 
-            # Pull des dernières modifications
+            # Pull des dernières modifications (force pour écraser les changements locaux)
             echo "📥 Récupération du code..."
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
 
             # Installer les dépendances PHP
             echo "📦 Installation Composer..."
