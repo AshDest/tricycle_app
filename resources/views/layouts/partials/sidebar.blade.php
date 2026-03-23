@@ -29,6 +29,12 @@
                     <span>Dashboard Système</span>
                 </a>
             </li>
+            <li class="{{ request()->is('super-admin/users*') ? 'active' : '' }}">
+                <a href="{{ route('super-admin.users') }}">
+                    <i class="bi bi-people-fill text-danger"></i>
+                    <span>Gestion Utilisateurs</span>
+                </a>
+            </li>
             <li class="{{ request()->is('super-admin/server-processes*') ? 'active' : '' }}">
                 <a href="{{ route('super-admin.server-processes') }}">
                     <i class="bi bi-cpu text-danger"></i>

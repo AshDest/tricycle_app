@@ -38,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::middleware(['role:super-admin'])->prefix('super-admin')->name('super-admin.')->group(function () {
         Route::get('/', \App\Livewire\SuperAdmin\Dashboard::class)->name('dashboard');
+        Route::get('/users', \App\Livewire\SuperAdmin\UsersManager::class)->name('users');
         Route::get('/database', \App\Livewire\SuperAdmin\DatabaseManager::class)->name('database');
         Route::get('/logs', \App\Livewire\SuperAdmin\SystemLogs::class)->name('logs');
         Route::get('/activity', \App\Livewire\SuperAdmin\ActivityMonitor::class)->name('activity');
