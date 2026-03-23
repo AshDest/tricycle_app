@@ -80,7 +80,6 @@ class UsersManager extends Component
         ]);
 
         $user->forceFill([
-            'phone' => $this->phone ?: null,
             'email_verified_at' => now(),
         ])->save();
 
@@ -148,7 +147,6 @@ class UsersManager extends Component
             'email' => $this->editEmail,
         ]);
 
-        $user->forceFill(['phone' => $this->editPhone ?: null])->save();
 
         if (!empty($this->editPassword)) {
             $user->update(['password' => Hash::make($this->editPassword)]);

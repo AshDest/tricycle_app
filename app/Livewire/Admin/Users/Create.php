@@ -13,7 +13,6 @@ class Create extends Component
 {
     public $name = '';
     public $email = '';
-    public $phone = '';
     public $password = '';
     public $password_confirmation = '';
     public $role = '';
@@ -21,7 +20,6 @@ class Create extends Component
     protected $rules = [
         'name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email',
-        'phone' => 'nullable|string|max:20',
         'password' => 'required|string|min:6|confirmed',
         'role' => 'required|string|not_in:super-admin',
     ];
@@ -43,7 +41,6 @@ class Create extends Component
         $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
-            'phone' => $this->phone,
             'password' => Hash::make($this->password),
         ]);
 
