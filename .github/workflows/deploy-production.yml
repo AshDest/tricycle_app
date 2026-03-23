@@ -1,12 +1,12 @@
-name: 🧪 Deploy to Staging (NTH)
+name: 🚀 Deploy to Production (OKAMI)
 
 on:
   push:
-    branches: [main]
+    branches: [production]
 
 jobs:
   deploy:
-    name: Deploy to VPS
+    name: Deploy to Production
     runs-on: ubuntu-latest
 
     steps:
@@ -19,16 +19,16 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script_stop: true
           script: |
-            cd /var/www/tricycle_app
+            cd /var/www/tricycle_prod
 
-            echo "🚀 Démarrage du déploiement..."
+            echo "🚀 Démarrage du déploiement PRODUCTION..."
 
             # Mode maintenance
             php artisan down --message="Mise à jour en cours..." --retry=60 || true
 
             # Pull des dernières modifications
             echo "📥 Récupération du code..."
-            git pull origin main
+            git pull origin production
 
             # Installer les dépendances PHP
             echo "📦 Installation Composer..."
@@ -60,12 +60,12 @@ jobs:
             sudo systemctl reload php8.2-fpm || true
             sudo systemctl reload nginx || true
 
-            # Redémarrer le queue worker
+            # Redémarrer le queue worker production
             echo "🔄 Redémarrage du queue worker..."
-            sudo supervisorctl restart tricycle-queue-worker:* || echo "⚠️ Queue worker non configuré"
+            sudo supervisorctl restart tricycle-prod-queue-worker:* || echo "⚠️ Queue worker non configuré"
 
             # Désactiver le mode maintenance
             php artisan up
 
-            echo "✅ Déploiement terminé avec succès! Commit: $(git rev-parse --short HEAD)"
+            echo "✅ Déploiement PRODUCTION terminé! Commit: $(git rev-parse --short HEAD)"
 
