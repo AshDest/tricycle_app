@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use App\Notifications\WelcomeUserNotification;
 
 #[Layout('components.dashlite-layout')]
 class UsersManager extends Component
@@ -85,9 +86,18 @@ class UsersManager extends Component
 
         $user->assignRole($this->role);
 
+        // Envoyer le mail de bienvenue avec les identifiants
+        try {
+            $user->notify(new WelcomeUserNotification($this->password, $this->role));
+        } catch (\Exception $e) {
+            // Log l'erreur mais ne bloque pas la création
+            \Log::warning("Impossible d'envoyer le mail de bienvenue à {$user->email}: " . $e->getMessage());
+        }
+
+        $roleLabel = $this->getRoleLabel($this->role);
         $this->showCreateModal = false;
         $this->reset(['name', 'email', 'phone', 'password', 'password_confirmation', 'role']);
-        session()->flash('success', "Utilisateur {$user->name} créé avec le rôle {$this->getRoleLabel($user->roles->first()->name ?? '')}.");
+        session()->flash('success', "Utilisateur {$user->name} créé avec le rôle {$roleLabel}. Un email avec les identifiants lui a été envoyé.");
     }
 
     // === ÉDITION ===

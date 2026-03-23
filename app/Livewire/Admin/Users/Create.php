@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Notifications\WelcomeUserNotification;
 
 #[Layout('components.dashlite-layout')]
 class Create extends Component
@@ -48,7 +49,14 @@ class Create extends Component
 
         $user->assignRole($this->role);
 
-        session()->flash('success', 'Utilisateur créé avec succès.');
+        // Envoyer le mail de bienvenue avec les identifiants
+        try {
+            $user->notify(new WelcomeUserNotification($this->password, $this->role));
+        } catch (\Exception $e) {
+            \Log::warning("Impossible d'envoyer le mail de bienvenue à {$user->email}: " . $e->getMessage());
+        }
+
+        session()->flash('success', 'Utilisateur créé avec succès. Un email avec les identifiants lui a été envoyé.');
         return redirect()->route('admin.users.index');
     }
 
