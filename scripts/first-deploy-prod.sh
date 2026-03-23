@@ -10,7 +10,7 @@ set -e
 
 APP_DIR="/var/www/tricycle_prod"
 BRANCH="production"
-REPO="git@github.com:AshDest/tricycle_app.git"
+REPO="https://github.com/AshDest/tricycle_app.git"
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

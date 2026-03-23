@@ -43,7 +43,7 @@ sudo mysql -e "FLUSH PRIVILEGES;"
 sudo mkdir -p /var/www/tricycle_prod
 sudo chown -R deploy:deploy /var/www/tricycle_prod
 cd /var/www/tricycle_prod
-git clone -b production git@github.com:AshDest/tricycle_app.git .
+git clone -b production https://github.com/AshDest/tricycle_app.git .
 
 # Configurer le .env
 cp .env.production .env
