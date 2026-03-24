@@ -34,6 +34,7 @@ cd "$REPO_PATH" || { error "Impossible d'accéder à $REPO_PATH"; exit 1; }
 
 # 1. Récupérer les dernières modifications
 log "Récupération des modifications depuis GitHub..."
+git stash --include-untracked || true
 git fetch origin "$BRANCH"
 git reset --hard origin/"$BRANCH"
 

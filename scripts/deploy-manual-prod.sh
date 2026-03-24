@@ -37,6 +37,7 @@ php artisan down --retry=60 || true
 
 # 1. Récupérer les dernières modifications
 log "Récupération des modifications depuis GitHub..."
+git stash --include-untracked || true
 git fetch origin "$BRANCH"
 git reset --hard origin/"$BRANCH"
 

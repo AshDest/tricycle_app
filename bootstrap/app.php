@@ -21,5 +21,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', \App\Http\Middleware\UpdateLastActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Laravel utilise automatiquement les vues resources/views/errors/{code}.blade.php
+        // en production quand APP_DEBUG=false
     })->create();

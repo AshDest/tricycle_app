@@ -76,6 +76,7 @@ class UsersManager extends Component
         $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
+            'phone' => $this->phone ?: null,
             'password' => Hash::make($this->password),
         ]);
 
@@ -145,6 +146,7 @@ class UsersManager extends Component
         $user->update([
             'name' => $this->editName,
             'email' => $this->editEmail,
+            'phone' => $this->editPhone ?: null,
         ]);
 
 
