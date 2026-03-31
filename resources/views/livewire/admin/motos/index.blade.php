@@ -65,6 +65,7 @@
                         <tr>
                             <th>Plaque</th>
                             <th>Matricule</th>
+                            <th>Couleur</th>
                             <th>Propri&eacute;taire</th>
                             <th>Motard</th>
                             <th>Montant/Jour</th>
@@ -77,6 +78,13 @@
                         <tr>
                             <td><code class="fw-semibold">{{ $moto->plaque_immatriculation }}</code></td>
                             <td>{{ $moto->numero_matricule }}</td>
+                            <td>
+                                @if($moto->couleur)
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>{{ $moto->couleur }}</span>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            </td>
                             <td>{{ $moto->proprietaire->user->name ?? 'N/A' }}</td>
                             <td>
                                 @if($moto->motard)
@@ -102,7 +110,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="bi bi-bicycle fs-3 d-block mb-2"></i>
                                 Aucune moto trouv&eacute;e
                             </td>

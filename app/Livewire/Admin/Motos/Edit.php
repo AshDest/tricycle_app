@@ -16,6 +16,10 @@ class Edit extends Component
     public $numero_matricule = '';
     public $plaque_immatriculation = '';
     public $numero_chassis = '';
+    public $marque = '';
+    public $modele = '';
+    public $annee = '';
+    public $couleur = '';
     public $proprietaire_id = '';
     public $motard_id = '';
     public $montant_journalier_attendu = '';
@@ -27,6 +31,10 @@ class Edit extends Component
         $this->numero_matricule = $moto->numero_matricule;
         $this->plaque_immatriculation = $moto->plaque_immatriculation;
         $this->numero_chassis = $moto->numero_chassis ?? '';
+        $this->marque = $moto->marque ?? '';
+        $this->modele = $moto->modele ?? '';
+        $this->annee = $moto->annee_fabrication ?? '';
+        $this->couleur = $moto->couleur ?? '';
         $this->proprietaire_id = $moto->proprietaire_id;
         $this->motard_id = $moto->motard_id ?? '';
         $this->montant_journalier_attendu = $moto->montant_journalier_attendu;
@@ -39,6 +47,10 @@ class Edit extends Component
             'numero_matricule' => 'required|string|unique:motos,numero_matricule,' . $this->moto->id,
             'plaque_immatriculation' => 'required|string|unique:motos,plaque_immatriculation,' . $this->moto->id,
             'numero_chassis' => 'nullable|string',
+            'marque' => 'nullable|string|max:100',
+            'modele' => 'nullable|string|max:100',
+            'annee' => 'nullable|integer|min:1990|max:' . (date('Y') + 1),
+            'couleur' => 'nullable|string|max:50',
             'proprietaire_id' => 'required|exists:proprietaires,id',
             'motard_id' => 'nullable|exists:motards,id',
             'montant_journalier_attendu' => 'required|numeric|min:0',
@@ -54,6 +66,10 @@ class Edit extends Component
             'numero_matricule' => $this->numero_matricule,
             'plaque_immatriculation' => $this->plaque_immatriculation,
             'numero_chassis' => $this->numero_chassis,
+            'marque' => $this->marque ?: null,
+            'modele' => $this->modele ?: null,
+            'annee_fabrication' => $this->annee ?: null,
+            'couleur' => $this->couleur ?: null,
             'proprietaire_id' => $this->proprietaire_id,
             'motard_id' => $this->motard_id ?: null,
             'montant_journalier_attendu' => $this->montant_journalier_attendu,

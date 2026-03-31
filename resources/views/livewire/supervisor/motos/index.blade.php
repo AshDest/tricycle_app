@@ -169,6 +169,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4">Moto</th>
+                            <th>Couleur</th>
                             <th>Propriétaire</th>
                             <th>Motard</th>
                             <th>Contrat</th>
@@ -194,6 +195,13 @@
                                         <small class="text-muted">{{ $moto->numero_chassis ?? 'N/A' }}</small>
                                     </div>
                                 </div>
+                            </td>
+                            <td>
+                                @if($moto->couleur)
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>{{ $moto->couleur }}</span>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
                             </td>
                             <td><span class="fw-medium">{{ $moto->proprietaire->user->name ?? 'N/A' }}</span></td>
                             <td>
@@ -236,7 +244,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="7" class="text-center py-5 text-muted">
                                 <i class="bi bi-bicycle fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucune moto trouvée</p>
                             </td>

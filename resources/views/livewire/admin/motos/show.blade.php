@@ -40,6 +40,28 @@
                         <span>{{ $moto->numero_chassis ?? '-' }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted small">Marque</span>
+                        <span>{{ $moto->marque ?? '-' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted small">Mod&egrave;le</span>
+                        <span>{{ $moto->modele ?? '-' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted small">Ann&eacute;e</span>
+                        <span>{{ $moto->annee_fabrication ?? '-' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted small">Couleur</span>
+                        <span>
+                            @if($moto->couleur)
+                                <i class="bi bi-circle-fill me-1" style="font-size:0.6rem;"></i>{{ $moto->couleur }}
+                            @else
+                                -
+                            @endif
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
                         <span class="text-muted small">Propri&eacute;taire</span>
                         <span class="fw-medium">{{ $moto->proprietaire->user->name ?? 'N/A' }}</span>
                     </li>

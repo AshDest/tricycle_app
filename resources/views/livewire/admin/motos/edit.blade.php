@@ -35,6 +35,26 @@
                         @error('numero_chassis') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                    <div class="col-md-3">
+                        <label class="form-label">Marque</label>
+                        <input type="text" wire:model="marque" class="form-control" placeholder="Ex: Honda">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Mod&egrave;le</label>
+                        <input type="text" wire:model="modele" class="form-control" placeholder="Ex: CG125">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Ann&eacute;e</label>
+                        <input type="number" wire:model="annee" class="form-control" min="1990" max="{{ date('Y') + 1 }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Couleur</label>
+                        <input type="text" wire:model="couleur" class="form-control" placeholder="Ex: Rouge">
+                    </div>
+
                     <div class="col-12 mt-4">
                         <h6 class="fw-semibold text-primary mb-0"><i class="bi bi-people me-1"></i> Affectation</h6>
                         <hr class="mt-2">
