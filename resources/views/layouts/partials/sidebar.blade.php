@@ -118,6 +118,7 @@
                 <ul class="submenu">
                     <li><a href="{{ route('admin.collecteurs.index') }}"><i class="bi bi-list me-1"></i>Liste</a></li>
                     <li><a href="{{ route('admin.collecteurs.create') }}"><i class="bi bi-plus me-1"></i>Ajouter</a></li>
+                    <li><a href="{{ route('admin.collecteurs-soldes') }}"><i class="bi bi-wallet2 text-success me-1"></i>Soldes &amp; D&eacute;penses</a></li>
                     <li><a href="{{ route('admin.transactions-mobile.index') }}"><i class="bi bi-phone me-1"></i>Transactions Mobile</a></li>
                     <li><a href="{{ route('admin.commissions-benefices.index') }}"><i class="bi bi-clipboard-check text-success me-1"></i>Commissions &amp; B&eacute;n&eacute;fices</a></li>
                 </ul>

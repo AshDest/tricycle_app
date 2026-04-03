@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Collecteurs
         Route::get('/collecteurs', \App\Livewire\Admin\Collecteurs\Index::class)->name('collecteurs.index');
         Route::get('/collecteurs/create', \App\Livewire\Admin\Collecteurs\Create::class)->name('collecteurs.create');
+        Route::get('/collecteurs/soldes', \App\Livewire\Admin\Collecteurs\SoldesOverview::class)->name('collecteurs-soldes');
         Route::get('/collecteurs/{collecteur}', \App\Livewire\Admin\Collecteurs\Show::class)->name('collecteurs.show');
         Route::get('/collecteurs/{collecteur}/solde', \App\Livewire\Admin\Collecteurs\Solde::class)->name('collecteurs.solde');
         Route::get('/collecteurs/{collecteur}/edit', \App\Livewire\Admin\Collecteurs\Edit::class)->name('collecteurs.edit');
