@@ -142,7 +142,7 @@
         </div>
     </div>
 
-    <!-- Solde OKAMI (Part 1/6) -->
+    <!-- Total Versements -->
     <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #00838f 0%, #006064 100%);">
         <div class="card-body text-white">
             <div class="row align-items-center">
@@ -152,8 +152,8 @@
                             <i class="bi bi-wallet2 fs-2"></i>
                         </div>
                         <div>
-                            <h5 class="mb-1 fw-bold">Solde OKAMI</h5>
-                            <small class="opacity-75">Part de 1/6 sur chaque versement (≈16.67%)</small>
+                            <h5 class="mb-1 fw-bold">Total Versements</h5>
+                            <small class="opacity-75">Montant total des versements collectés</small>
                         </div>
                     </div>
                 </div>
@@ -162,19 +162,19 @@
                         <div class="col-4">
                             <div class="bg-white bg-opacity-10 rounded p-3">
                                 <small class="d-block opacity-75">Cette semaine</small>
-                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiSemaine ?? 0) }} FC</h4>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeVersementsSemaine ?? 0) }} FC</h4>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="bg-white bg-opacity-10 rounded p-3">
                                 <small class="d-block opacity-75">Ce mois</small>
-                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiMois ?? 0) }} FC</h4>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeVersementsMois ?? 0) }} FC</h4>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="bg-white bg-opacity-25 rounded p-3">
                                 <small class="d-block opacity-75">Total cumulé</small>
-                                <h4 class="fw-bold mb-0">{{ number_format($soldeOkamiTotal ?? 0) }} FC</h4>
+                                <h4 class="fw-bold mb-0">{{ number_format($soldeVersementsTotal ?? 0) }} FC</h4>
                             </div>
                         </div>
                     </div>
@@ -184,10 +184,10 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="opacity-75">
                         <i class="bi bi-info-circle me-1"></i>
-                        Système: 6 jours de recettes → 5 jours Propriétaire + 1 jour OKAMI
+                        Les 6 jours de versement vont dans une caisse unique
                     </small>
                     <a href="{{ route('supervisor.reports.repartition') }}" class="btn btn-sm btn-light">
-                        <i class="bi bi-pie-chart me-1"></i>Voir la répartition détaillée
+                        <i class="bi bi-bar-chart me-1"></i>Voir les rapports détaillés
                     </a>
                 </div>
             </div>
@@ -307,15 +307,15 @@
         </div>
     </div>
 
-    <!-- Total Global OKAMI -->
-    <div class="alert alert-warning mb-4">
+    <!-- Total Global Caisse -->
+    <div class="alert alert-info mb-4">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <i class="bi bi-wallet2 me-2 fs-4"></i>
-                <strong>Total Global OKAMI disponible:</strong>
+                <strong>Total Global en Caisse (Collecteurs):</strong>
             </div>
-            <span class="badge bg-warning text-dark fs-5 px-3 py-2">
-                {{ number_format(($soldeOkamiTotal ?? 0) + ($soldeOkamiLavageTotal ?? 0) + ($soldeOkamiCommissionTotal ?? 0)) }} FC
+            <span class="badge bg-info text-white fs-5 px-3 py-2">
+                {{ number_format(\App\Models\Collecteur::sum('solde_caisse')) }} FC
             </span>
         </div>
     </div>

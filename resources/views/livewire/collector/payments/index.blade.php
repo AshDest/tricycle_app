@@ -22,37 +22,16 @@
         </div>
     </div>
 
-    <!-- Solde Caisse avec Répartition -->
+    <!-- Solde Caisse -->
     <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #212529 0%, #343a40 100%);">
         <div class="card-body py-3">
-            <div class="row align-items-center">
-                <div class="col-lg-4 mb-2 mb-lg-0">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-safe fs-4" style="color: #fff;"></i>
-                        <div>
-                            <small class="d-block" style="color: rgba(255,255,255,0.7);">Solde Total</small>
-                            <h5 class="mb-0 fw-bold" style="color: #fff;">{{ number_format($soldeCaisse) }} FC</h5>
-                        </div>
-                    </div>
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-safe fs-4" style="color: #fff;"></i>
+                <div>
+                    <small class="d-block" style="color: rgba(255,255,255,0.7);">Solde Total en Caisse</small>
+                    <h5 class="mb-0 fw-bold" style="color: #fff;">{{ number_format($soldeCaisse) }} FC</h5>
                 </div>
-                <div class="col-lg-8">
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="bg-white bg-opacity-10 rounded p-2">
-                                <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-building me-1"></i>Part OKAMI</small>
-                                <strong style="color: #ffc107;">{{ number_format($soldePartOkami) }} FC</strong>
-                                <small class="d-block text-muted">({{ $demandesOkami }} demande(s))</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-white bg-opacity-10 rounded p-2">
-                                <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-people me-1"></i>Part Propriétaires</small>
-                                <strong style="color: #20c997;">{{ number_format($soldePartProprietaire) }} FC</strong>
-                                <small class="d-block text-muted">({{ $demandesProprietaire }} demande(s))</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <span class="ms-auto badge bg-warning text-dark">{{ $demandesEnAttente }} demande(s) en attente</span>
             </div>
         </div>
     </div>
@@ -312,13 +291,8 @@
                                 <strong>Paiement en Cash</strong>
                             </div>
                             <div class="text-end">
-                                @if($isFromOkami)
-                                <small>Solde OKAMI:</small>
-                                <strong class="ms-1 text-warning">{{ number_format($soldePartOkami) }} FC</strong>
-                                @else
-                                <small>Solde Propriétaires:</small>
-                                <strong class="ms-1 text-success">{{ number_format($soldePartProprietaire) }} FC</strong>
-                                @endif
+                                <small>Solde en Caisse:</small>
+                                <strong class="ms-1 text-primary">{{ number_format($soldeCaisse) }} FC</strong>
                             </div>
                         </div>
                         <small class="d-block mt-1">Un reçu sera généré automatiquement après le traitement.</small>

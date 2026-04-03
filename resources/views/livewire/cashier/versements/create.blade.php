@@ -378,22 +378,9 @@
                         <small class="text-muted d-block">Montant versé</small>
                         <h5 class="fw-bold mb-0">{{ number_format((float)$montant) }} FC</h5>
                     </div>
-                    <hr>
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="bg-info bg-opacity-10 rounded p-3 text-center">
-                                <small class="d-block text-muted">Part Propriétaire</small>
-                                <strong class="text-info fs-5">{{ number_format($partProprietairePreview) }} FC</strong>
-                                <small class="d-block text-muted">(5/6 ≈ 83.33%)</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-warning bg-opacity-10 rounded p-3 text-center">
-                                <small class="d-block text-muted">Part OKAMI</small>
-                                <strong class="text-warning fs-5">{{ number_format($partOkamiPreview) }} FC</strong>
-                                <small class="d-block text-muted">(1/6 ≈ 16.67%)</small>
-                            </div>
-                        </div>
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ce montant sera ajouté à la caisse unique du collecteur.
                     </div>
                 </div>
             </div>

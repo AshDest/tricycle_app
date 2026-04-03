@@ -89,8 +89,6 @@ class RepartitionHebdomadaire extends Component
             'detailsProprietaires' => $detailsProprietaires,
             'constantes' => [
                 'jours_semaine' => RepartitionService::JOURS_SEMAINE,
-                'jours_proprietaire' => RepartitionService::JOURS_PROPRIETAIRE,
-                'jours_okami' => RepartitionService::JOURS_OKAMI,
             ],
         ]);
     }

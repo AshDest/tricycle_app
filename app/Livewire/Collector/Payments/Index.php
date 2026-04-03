@@ -87,19 +87,10 @@ class Index extends Component
 
         // Pour les paiements cash, vérifier que le collecteur a assez dans sa caisse
         if ($isCash && $collecteur) {
-            // Vérifier selon la source de la caisse
-            if ($isFromOkami) {
-                $soldeDisponible = $collecteur->solde_part_okami ?? 0;
-                if ($this->montant_paye > $soldeDisponible) {
-                    $this->addError('montant_paye', "Le montant dépasse votre solde de caisse OKAMI ({$soldeDisponible} FC).");
-                    return;
-                }
-            } else {
-                $soldeDisponible = $collecteur->solde_part_proprietaire ?? 0;
-                if ($this->montant_paye > $soldeDisponible) {
-                    $this->addError('montant_paye', "Le montant dépasse votre solde de caisse Propriétaires ({$soldeDisponible} FC).");
-                    return;
-                }
+            $soldeDisponible = $collecteur->solde_caisse ?? 0;
+            if ($this->montant_paye > $soldeDisponible) {
+                $this->addError('montant_paye', "Le montant dépasse votre solde en caisse ({$soldeDisponible} FC).");
+                return;
             }
         }
 
@@ -130,13 +121,7 @@ class Index extends Component
 
         // Déduire le montant de la caisse du collecteur pour les paiements cash
         if ($isCash && $collecteur) {
-            if ($isFromOkami) {
-                // Déduire de la part OKAMI
-                $collecteur->retirerMontantOkami($this->montant_paye);
-            } else {
-                // Déduire de la part Propriétaires
-                $collecteur->retirerMontantProprietaire($this->montant_paye);
-            }
+            $collecteur->retirerMontant($this->montant_paye);
         }
 
         $paymentId = $this->paymentEnCours->id;
@@ -186,7 +171,7 @@ class Index extends Component
         // Calculer le solde pour chaque paiement
         foreach ($payments as $payment) {
             if ($payment->source_caisse === 'okami' || !$payment->proprietaire) {
-                $payment->solde_disponible = $collecteur?->solde_part_okami ?? 0;
+                $payment->solde_disponible = $collecteur?->solde_caisse ?? 0;
             } else {
                 $payment->solde_disponible = $paymentService->getSoldeDisponibleProprietaire($payment->proprietaire);
             }
@@ -195,8 +180,6 @@ class Index extends Component
         $stats = [
             'total_demandes' => $payments->count(),
             'total_montant' => $payments->sum('total_du'),
-            'demandes_okami' => $payments->where('source_caisse', 'okami')->count(),
-            'demandes_proprietaire' => $payments->where('source_caisse', '!=', 'okami')->count(),
         ];
 
         $pdf = Pdf::loadView('pdf.liste-demandes-paiement', [
@@ -230,8 +213,6 @@ class Index extends Component
     {
         $collecteur = auth()->user()->collecteur;
         $soldeCaisse = $collecteur?->solde_caisse ?? 0;
-        $soldePartOkami = $collecteur?->solde_part_okami ?? 0;
-        $soldePartProprietaire = $collecteur?->solde_part_proprietaire ?? 0;
 
         $paymentService = new PaymentService();
 
@@ -251,29 +232,21 @@ class Index extends Component
         // Calculer le solde disponible pour chaque propriétaire
         foreach ($payments as $payment) {
             if ($payment->source_caisse === 'okami' || !$payment->proprietaire) {
-                // Pour les paiements OKAMI, on utilise le solde OKAMI du collecteur
-                $payment->solde_disponible = $soldePartOkami;
-                $payment->peut_etre_paye = $payment->total_du <= $soldePartOkami;
+                $payment->solde_disponible = $soldeCaisse;
+                $payment->peut_etre_paye = $payment->total_du <= $soldeCaisse;
             } else {
-                // Pour les paiements propriétaire, calculer le solde réel du propriétaire
                 $soldeProprietaire = $paymentService->getSoldeDisponibleProprietaire($payment->proprietaire);
                 $payment->solde_disponible = $soldeProprietaire;
-                $payment->peut_etre_paye = $payment->total_du <= $soldeProprietaire && $payment->total_du <= $soldePartProprietaire;
+                $payment->peut_etre_paye = $payment->total_du <= $soldeProprietaire && $payment->total_du <= $soldeCaisse;
             }
         }
 
         $demandesEnAttente = Payment::where('statut', 'en_attente')->count();
-        $demandesOkami = Payment::where('statut', 'en_attente')->where('source_caisse', 'okami')->count();
-        $demandesProprietaire = Payment::where('statut', 'en_attente')->fromProprietaire()->count();
 
         return view('livewire.collector.payments.index', [
             'payments' => $payments,
             'demandesEnAttente' => $demandesEnAttente,
-            'demandesOkami' => $demandesOkami,
-            'demandesProprietaire' => $demandesProprietaire,
             'soldeCaisse' => $soldeCaisse,
-            'soldePartOkami' => $soldePartOkami,
-            'soldePartProprietaire' => $soldePartProprietaire,
         ]);
     }
 }

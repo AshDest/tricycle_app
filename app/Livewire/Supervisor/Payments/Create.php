@@ -142,8 +142,8 @@ class Create extends Component
      */
     private function calculerSoldeOkami()
     {
-        // Somme des soldes OKAMI de tous les collecteurs
-        $this->soldeOkamiDisponible = Collecteur::sum('solde_part_okami');
+        // Somme des soldes en caisse de tous les collecteurs
+        $this->soldeOkamiDisponible = Collecteur::sum('solde_caisse');
 
         // Calculer aussi pour la semaine sélectionnée
         $this->calculerSoldeOkamiSemaine();
@@ -369,13 +369,11 @@ class Create extends Component
                 'motard' => $v->motard?->user?->name ?? 'N/A',
                 'moto' => $v->moto?->plaque_immatriculation ?? 'N/A',
                 'montant' => $v->montant,
-                'part_proprietaire' => $v->part_proprietaire,
-                'part_okami' => $v->part_okami,
             ];
         })->toArray();
 
         $this->totalVersementsSemaine = $versements->sum('montant');
-        $this->partProprietaireSemaine = $versements->sum('part_proprietaire');
+        $this->partProprietaireSemaine = $versements->sum('montant'); // Plus de scission
 
         // Vérifier si des paiements ont déjà été faits pour cette période
         $paiementsDejaFaits = Payment::where('proprietaire_id', $this->proprietaireSelectionne->id)

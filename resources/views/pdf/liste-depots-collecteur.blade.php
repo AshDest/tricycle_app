@@ -34,8 +34,6 @@
         <span><strong>Total depots:</strong> {{ $stats['count'] }}</span>
         <span><strong>Valides:</strong> {{ $stats['valides'] }}</span>
         <span><strong>Total collecte:</strong> {{ number_format($stats['total_collecte']) }} FC</span>
-        <span><strong>Part OKAMI:</strong> {{ number_format($stats['part_okami']) }} FC</span>
-        <span><strong>Part Proprietaires:</strong> {{ number_format($stats['part_proprietaire']) }} FC</span>
     </div>
     <table>
         <thead>
@@ -44,8 +42,6 @@
                 <th>Caissier</th>
                 <th>Zone</th>
                 <th class="text-right">Montant</th>
-                <th class="text-right">Part OKAMI</th>
-                <th class="text-right">Part Proprio.</th>
                 <th class="text-center">Statut</th>
             </tr>
         </thead>
@@ -56,8 +52,6 @@
                 <td>{{ $collecte->caissier->user->name ?? 'N/A' }}</td>
                 <td>{{ $collecte->caissier->zone ?? '-' }}</td>
                 <td class="text-right">{{ number_format($collecte->montant_collecte) }} FC</td>
-                <td class="text-right">{{ number_format($collecte->part_okami ?? 0) }} FC</td>
-                <td class="text-right">{{ number_format($collecte->part_proprietaire ?? 0) }} FC</td>
                 <td class="text-center">
                     @if($collecte->statut === 'en_litige')
                     <span class="badge badge-danger">Litige</span>
@@ -70,22 +64,20 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center">Aucun depot trouve</td>
+                <td colspan="5" class="text-center">Aucun depot trouve</td>
             </tr>
             @endforelse
             @if($collectes->count() > 0)
             <tr class="total-row">
                 <td colspan="3" class="text-right"><strong>TOTAUX</strong></td>
                 <td class="text-right"><strong>{{ number_format($stats['total_collecte']) }} FC</strong></td>
-                <td class="text-right"><strong>{{ number_format($stats['part_okami']) }} FC</strong></td>
-                <td class="text-right"><strong>{{ number_format($stats['part_proprietaire']) }} FC</strong></td>
                 <td></td>
             </tr>
             @endif
         </tbody>
     </table>
     <div class="footer">
-        <p>OKAMI - Gestion des Motos-Tricycles | Repartition: 1/6 OKAMI + 5/6 Proprietaires</p>
+        <p>OKAMI - Gestion des Motos-Tricycles | Caisse unique</p>
     </div>
 </body>
 </html>

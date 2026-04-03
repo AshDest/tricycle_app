@@ -63,15 +63,15 @@ class Index extends Component
         $this->totalEnvois = (clone $queryTx)->where('type', 'envoi')->sum('montant');
         $this->totalRetraits = (clone $queryTx)->where('type', 'retrait')->sum('montant');
 
-        // Solde caisse global des collecteurs (collectes - paiements)
+        // Solde caisse global des collecteurs
         if ($this->filterCollecteur) {
             $collecteur = Collecteur::find($this->filterCollecteur);
-            $this->totalCollectes = $collecteur ? ($collecteur->solde_caisse + $collecteur->solde_part_okami) : 0;
+            $this->totalCollectes = $collecteur ? $collecteur->solde_caisse : 0;
             $this->totalPaiements = Payment::where('traite_par', $collecteur?->user_id)
                 ->where('statut', 'paye')
                 ->sum('total_paye');
         } else {
-            $this->totalCollectes = Collecteur::sum('solde_caisse') + Collecteur::sum('solde_part_okami');
+            $this->totalCollectes = Collecteur::sum('solde_caisse');
             $this->totalPaiements = Payment::where('statut', 'paye')->sum('total_paye');
         }
 

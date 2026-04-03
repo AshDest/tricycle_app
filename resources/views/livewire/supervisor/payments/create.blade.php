@@ -50,8 +50,8 @@
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceProp">
                                         <i class="bi bi-people fs-3 text-success"></i>
                                         <div>
-                                            <strong class="d-block">Part Propriétaires</strong>
-                                            <small class="text-muted">5/6 des versements</small>
+                                            <strong class="d-block">Paiement Propriétaires</strong>
+                                            <small class="text-muted">Versements collectés</small>
                                         </div>
                                     </label>
                                 </div>
@@ -62,10 +62,10 @@
                                     <label class="form-check-label d-flex align-items-start gap-3 w-100" for="sourceOkami">
                                         <i class="bi bi-building fs-3 text-warning"></i>
                                         <div>
-                                            <strong class="d-block">Part OKAMI</strong>
-                                            <small class="text-muted">1/6 versements</small>
+                                            <strong class="d-block">Caisse OKAMI</strong>
+                                            <small class="text-muted">Dépenses OKAMI</small>
                                             <div class="mt-1">
-                                                <span class="badge bg-warning text-dark">{{ number_format($soldeOkamiDisponible) }} FC</span>
+                                                <span class="badge bg-warning text-dark">{{ number_format($soldeOkamiDisponible) }} FC dispo</span>
                                             </div>
                                         </div>
                                     </label>
@@ -569,14 +569,14 @@
                     @if($source_caisse === 'proprietaire')
                     <div class="alert alert-success border-0 mb-3">
                         <i class="bi bi-people me-2"></i>
-                        <strong>Part Propriétaires (5/6):</strong><br>
-                        <small>Les versements journaliers sont cumulés par semaine. 5/6 revient aux propriétaires de motos.</small>
+                        <strong>Paiement Propriétaires:</strong><br>
+                        <small>Les versements journaliers sont cumulés par semaine et payés aux propriétaires de motos.</small>
                     </div>
                     @elseif($source_caisse === 'okami')
                     <div class="alert alert-warning border-0 mb-3">
                         <i class="bi bi-building me-2"></i>
-                        <strong>Part OKAMI Versements (1/6):</strong><br>
-                        <small>1/6 des versements journaliers est conservé pour les frais de gestion OKAMI.</small>
+                        <strong>Caisse OKAMI:</strong><br>
+                        <small>Paiement depuis la caisse pour les dépenses et frais de gestion OKAMI.</small>
                     </div>
                     @elseif($source_caisse === 'lavage')
                     <div class="alert alert-info border-0 mb-3">

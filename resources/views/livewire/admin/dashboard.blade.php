@@ -156,7 +156,7 @@
         <div class="card-header bg-gradient py-3" style="background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);">
             <div class="d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 fw-bold text-white">
-                    <i class="bi bi-pie-chart me-2"></i>Répartition Hebdomadaire (5/6 Propriétaires - 1/6 OKAMI)
+                    <i class="bi bi-bar-chart me-2"></i>Résumé Hebdomadaire
                 </h6>
                 <a href="{{ route('admin.reports.repartition') }}" class="btn btn-sm btn-light">
                     <i class="bi bi-arrow-right me-1"></i>Voir détails
@@ -165,49 +165,38 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <div class="text-center">
                         <small class="text-muted d-block">Motos Actives</small>
                         <h5 class="fw-bold text-primary mb-0">{{ $repartitionHebdo['nb_motos_actives'] ?? 0 }}</h5>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <div class="text-center">
                         <small class="text-muted d-block">Attendu</small>
                         <h5 class="fw-bold text-secondary mb-0">{{ number_format($repartitionHebdo['total_attendu'] ?? 0) }} FC</h5>
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <div class="text-center">
+                <div class="col-md-3">
+                    <div class="text-center p-2 bg-success bg-opacity-10 rounded">
                         <small class="text-muted d-block">Versé</small>
                         <h5 class="fw-bold text-success mb-0">{{ number_format($repartitionHebdo['total_verse'] ?? 0) }} FC</h5>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="text-center p-2 bg-warning bg-opacity-10 rounded">
-                        <small class="text-muted d-block">Part Propriétaires (5/6)</small>
-                        <h5 class="fw-bold text-warning mb-0">{{ number_format($repartitionHebdo['repartition_verse']['part_proprietaires'] ?? 0) }} FC</h5>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-center p-2 bg-info bg-opacity-10 rounded">
-                        <small class="text-muted d-block">Part OKAMI (1/6)</small>
-                        <h5 class="fw-bold text-info mb-0">{{ number_format($repartitionHebdo['repartition_verse']['part_okami'] ?? 0) }} FC</h5>
+                    <div class="text-center p-2 {{ ($repartitionHebdo['ecart'] ?? 0) >= 0 ? 'bg-success' : 'bg-danger' }} bg-opacity-10 rounded">
+                        <small class="text-muted d-block">Écart</small>
+                        <h5 class="fw-bold {{ ($repartitionHebdo['ecart'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }} mb-0">{{ number_format($repartitionHebdo['ecart'] ?? 0) }} FC</h5>
                     </div>
                 </div>
             </div>
+            @php
+                $taux = $repartitionHebdo['taux_recouvrement'] ?? 0;
+            @endphp
             <div class="mt-3">
                 <div class="progress" style="height: 20px;">
-                    @php
-                        $total = ($repartitionHebdo['repartition_verse']['part_proprietaires'] ?? 0) + ($repartitionHebdo['repartition_verse']['part_okami'] ?? 0);
-                        $pctProp = $total > 0 ? (($repartitionHebdo['repartition_verse']['part_proprietaires'] ?? 0) / $total) * 100 : 83.33;
-                        $pctOkami = $total > 0 ? (($repartitionHebdo['repartition_verse']['part_okami'] ?? 0) / $total) * 100 : 16.67;
-                    @endphp
-                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $pctProp }}%">
-                        Propriétaires ({{ number_format($pctProp, 1) }}%)
-                    </div>
-                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ $pctOkami }}%">
-                        OKAMI ({{ number_format($pctOkami, 1) }}%)
+                    <div class="progress-bar {{ $taux >= 100 ? 'bg-success' : ($taux >= 75 ? 'bg-warning' : 'bg-danger') }}" role="progressbar" style="width: {{ min($taux, 100) }}%">
+                        Taux de recouvrement: {{ number_format($taux, 1) }}%
                     </div>
                 </div>
             </div>

@@ -203,7 +203,7 @@
     <div class="summary-box">
         <h3>Détail des Entrées OKAMI</h3>
         <div class="summary-row">
-            <div class="label">Part OKAMI sur versements (1/6)</div>
+            <div class="label">Versements collectés</div>
             <div class="value text-success">{{ number_format($totalPartOkamiVersements, 0, ',', ' ') }} FC</div>
         </div>
         <div class="summary-row">

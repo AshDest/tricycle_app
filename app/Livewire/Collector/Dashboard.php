@@ -19,10 +19,8 @@ class Dashboard extends Component
     public $tourneesTerminees = 0;
     public $totalTourneesJour = 0;
 
-    // Solde avec répartition
+    // Solde caisse
     public $soldeCaisse = 0;
-    public $soldePartOkami = 0;
-    public $soldePartProprietaire = 0;
 
     public function mount()
     {
@@ -32,10 +30,8 @@ class Dashboard extends Component
         if ($this->collecteur) {
             $today = Carbon::today();
 
-            // Soldes de caisse avec répartition
+            // Solde de caisse unique
             $this->soldeCaisse = $this->collecteur->solde_caisse ?? 0;
-            $this->soldePartOkami = $this->collecteur->solde_part_okami ?? 0;
-            $this->soldePartProprietaire = $this->collecteur->solde_part_proprietaire ?? 0;
 
             // Tournées du jour
             $tourneesDuJour = Tournee::where('collecteur_id', $this->collecteur->id)

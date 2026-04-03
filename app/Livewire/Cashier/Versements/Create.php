@@ -324,9 +324,9 @@ class Create extends Component
             return;
         }
 
-        // Calculer la répartition
-        $partProprietaire = RepartitionService::getPartProprietaire($montantVerse);
-        $partOkami = RepartitionService::getPartOkami($montantVerse);
+        // Plus de scission OKAMI/Propriétaire - tout va dans une caisse unique
+        $partProprietaire = $montantVerse;
+        $partOkami = 0;
 
         if ($this->type_versement === 'arrieres') {
             // Versement pour rembourser les arriérés uniquement
@@ -413,9 +413,9 @@ class Create extends Component
             $nouveauStatut = 'partiellement_payé';
         }
 
-        // Recalculer la répartition totale
-        $nouvPartProprietaire = RepartitionService::getPartProprietaire($nouveauMontant);
-        $nouvPartOkami = RepartitionService::getPartOkami($nouveauMontant);
+        // Plus de scission - tout va dans une caisse unique
+        $nouvPartProprietaire = $nouveauMontant;
+        $nouvPartOkami = 0;
 
         $noteComplement = "[Complément de " . number_format($montantVerse) . " FC le " . now()->format('d/m/Y H:i') . "]";
 

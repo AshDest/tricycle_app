@@ -13,14 +13,11 @@ use Carbon\Carbon;
  *
  * Principe:
  * - Semaine = 6 jours de travail
- * - Part Propriétaire = 5/6 des recettes (équivalent 5 jours)
- * - Part OKAMI = 1/6 des recettes (équivalent 1 jour)
+ * - Tous les versements vont dans une caisse unique (plus de split OKAMI/Propriétaire)
  */
 class RepartitionService
 {
     const JOURS_SEMAINE = 6;
-    const JOURS_PROPRIETAIRE = 5;
-    const JOURS_OKAMI = 1;
 
     /**
      * Obtenir le montant journalier attendu (depuis les paramètres système ou défaut)
@@ -40,36 +37,31 @@ class RepartitionService
     }
 
     /**
-     * Calculer la part du propriétaire (5/6)
-     */
-    public static function getPartProprietaire(float $montantTotal): float
-    {
-        return ($montantTotal / self::JOURS_SEMAINE) * self::JOURS_PROPRIETAIRE;
-    }
-
-    /**
-     * Calculer la part OKAMI (1/6)
-     */
-    public static function getPartOkami(float $montantTotal): float
-    {
-        return ($montantTotal / self::JOURS_SEMAINE) * self::JOURS_OKAMI;
-    }
-
-    /**
      * Obtenir la répartition détaillée pour un montant donné
+     * (Simplifié: plus de scission)
      */
     public static function getRepartition(float $montantTotal): array
     {
         return [
             'total' => $montantTotal,
-            'part_proprietaire' => self::getPartProprietaire($montantTotal),
-            'part_okami' => self::getPartOkami($montantTotal),
-            'pourcentage_proprietaire' => round((self::JOURS_PROPRIETAIRE / self::JOURS_SEMAINE) * 100, 2),
-            'pourcentage_okami' => round((self::JOURS_OKAMI / self::JOURS_SEMAINE) * 100, 2),
             'jours_semaine' => self::JOURS_SEMAINE,
-            'jours_proprietaire' => self::JOURS_PROPRIETAIRE,
-            'jours_okami' => self::JOURS_OKAMI,
         ];
+    }
+
+    /**
+     * @deprecated Conservé pour compatibilité, retourne 0
+     */
+    public static function getPartProprietaire(float $montantTotal): float
+    {
+        return $montantTotal;
+    }
+
+    /**
+     * @deprecated Conservé pour compatibilité, retourne 0
+     */
+    public static function getPartOkami(float $montantTotal): float
+    {
+        return 0;
     }
 
     /**
@@ -91,8 +83,6 @@ class RepartitionService
         $montantVerse = $versements->sum('montant');
         $nbVersements = $versements->count();
 
-        $repartition = self::getRepartition($montantVerse);
-
         return [
             'moto_id' => $moto->id,
             'plaque' => $moto->plaque_immatriculation,
@@ -105,10 +95,6 @@ class RepartitionService
             'montant_verse' => $montantVerse,
             'nb_versements' => $nbVersements,
             'ecart' => $montantVerse - $montantHebdomadaireAttendu,
-            'part_proprietaire' => $repartition['part_proprietaire'],
-            'part_okami' => $repartition['part_okami'],
-            'part_proprietaire_attendue' => self::getPartProprietaire($montantHebdomadaireAttendu),
-            'part_okami_attendue' => self::getPartOkami($montantHebdomadaireAttendu),
         ];
     }
 
@@ -124,8 +110,6 @@ class RepartitionService
 
         $totalAttendu = 0;
         $totalVerse = 0;
-        $totalPartProprietaire = 0;
-        $totalPartOkami = 0;
         $detailsMotos = [];
 
         foreach ($motos as $moto) {
@@ -134,8 +118,6 @@ class RepartitionService
 
             $totalAttendu += $detail['montant_hebdomadaire_attendu'];
             $totalVerse += $detail['montant_verse'];
-            $totalPartProprietaire += $detail['part_proprietaire'];
-            $totalPartOkami += $detail['part_okami'];
         }
 
         return [
@@ -149,10 +131,6 @@ class RepartitionService
             'total_attendu' => $totalAttendu,
             'total_verse' => $totalVerse,
             'ecart' => $totalVerse - $totalAttendu,
-            'total_part_proprietaire' => $totalPartProprietaire,
-            'total_part_okami' => $totalPartOkami,
-            'part_proprietaire_attendue' => self::getPartProprietaire($totalAttendu),
-            'part_okami_attendue' => self::getPartOkami($totalAttendu),
             'details_motos' => $detailsMotos,
         ];
     }
@@ -181,9 +159,6 @@ class RepartitionService
             $totalVerse += $versements;
         }
 
-        $repartitionVerse = self::getRepartition($totalVerse);
-        $repartitionAttendu = self::getRepartition($totalAttendu);
-
         return [
             'periode' => [
                 'debut' => $dateDebut->format('d/m/Y'),
@@ -194,14 +169,6 @@ class RepartitionService
             'total_verse' => $totalVerse,
             'ecart' => $totalVerse - $totalAttendu,
             'taux_recouvrement' => $totalAttendu > 0 ? round(($totalVerse / $totalAttendu) * 100, 2) : 0,
-            'repartition_verse' => [
-                'part_proprietaires' => $repartitionVerse['part_proprietaire'],
-                'part_okami' => $repartitionVerse['part_okami'],
-            ],
-            'repartition_attendue' => [
-                'part_proprietaires' => $repartitionAttendu['part_proprietaire'],
-                'part_okami' => $repartitionAttendu['part_okami'],
-            ],
         ];
     }
 

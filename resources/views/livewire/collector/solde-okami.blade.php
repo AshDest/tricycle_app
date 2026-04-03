@@ -5,7 +5,7 @@
             <h4 class="page-title mb-1">
                 <i class="bi bi-building me-2 text-warning"></i>Solde OKAMI
             </h4>
-            <p class="text-muted mb-0">Vue détaillée des fonds OKAMI (1/6 des versements + 20% lavages)</p>
+            <p class="text-muted mb-0">Vue détaillée des fonds en caisse (versements + 20% lavages)</p>
         </div>
         <div class="d-flex gap-2">
             <button wire:click="exporterPdf" class="btn btn-outline-danger" wire:loading.attr="disabled">
@@ -68,7 +68,7 @@
                         <div>
                             <small class="text-muted">Entrées (Versements)</small>
                             <h4 class="mb-0 fw-bold text-success">{{ number_format($totalPartOkamiVersements) }} FC</h4>
-                            <small class="text-muted">1/6 des versements</small>
+                            <small class="text-muted">Total versements</small>
                         </div>
                         <i class="bi bi-arrow-down-circle fs-2 text-success opacity-50"></i>
                     </div>
@@ -281,7 +281,7 @@
                     <small class="fw-bold text-muted"><i class="bi bi-info-circle me-1"></i>Sources des fonds OKAMI:</small>
                 </div>
                 <div class="col">
-                    <span class="badge bg-success me-2">1/6 des versements</span>
+                    <span class="badge bg-success me-2">Versements</span>
                     <small class="text-muted me-3">Part OKAMI sur chaque versement hebdomadaire</small>
 
                     <span class="badge bg-info me-2">20% des lavages</span>

@@ -5,7 +5,7 @@
             <h4 class="page-title mb-1">
                 <i class="bi bi-pie-chart me-2 text-primary"></i>Répartition Hebdomadaire
             </h4>
-            <p class="text-muted mb-0">Répartition des recettes entre Propriétaires (5/6) et OKAMI (1/6)</p>
+            <p class="text-muted mb-0">Résumé des recettes hebdomadaires</p>
         </div>
         <button wire:click="exportPdf" class="btn btn-danger" wire:loading.attr="disabled">
             <span wire:loading.remove wire:target="exportPdf">
@@ -17,16 +17,15 @@
         </button>
     </div>
 
-    <!-- Info système de répartition -->
+    <!-- Info système -->
     <div class="alert alert-info mb-4">
         <div class="d-flex align-items-start gap-3">
             <i class="bi bi-info-circle fs-4"></i>
             <div>
-                <h6 class="fw-bold mb-1">Système de répartition hebdomadaire</h6>
+                <h6 class="fw-bold mb-1">Système de recettes hebdomadaires</h6>
                 <p class="mb-0 small">
                     <strong>Semaine = {{ $constantes['jours_semaine'] }} jours</strong> de travail |
-                    <strong>Part Propriétaire = {{ $constantes['jours_proprietaire'] }} jours</strong> ({{ round(($constantes['jours_proprietaire']/$constantes['jours_semaine'])*100, 1) }}%) |
-                    <strong>Part OKAMI = {{ $constantes['jours_okami'] }} jour</strong> ({{ round(($constantes['jours_okami']/$constantes['jours_semaine'])*100, 1) }}%)
+                    Tous les versements vont dans une caisse unique
                 </p>
             </div>
         </div>
@@ -94,50 +93,20 @@
         </div>
     </div>
 
-    <!-- Répartition -->
+    <!-- Écart -->
     <div class="row g-4 mb-4">
-        <!-- Part Propriétaires -->
-        <div class="col-md-6">
-            <div class="card border-warning h-100">
-                <div class="card-header bg-warning bg-opacity-10 py-3">
-                    <h6 class="mb-0 fw-bold text-warning">
-                        <i class="bi bi-building me-2"></i>Part Propriétaires ({{ $constantes['jours_proprietaire'] }}/{{ $constantes['jours_semaine'] }} = {{ round(($constantes['jours_proprietaire']/$constantes['jours_semaine'])*100, 1) }}%)
+        <div class="col-md-6 mx-auto">
+            <div class="card border-{{ ($resume['ecart'] ?? 0) >= 0 ? 'success' : 'danger' }} h-100">
+                <div class="card-header bg-{{ ($resume['ecart'] ?? 0) >= 0 ? 'success' : 'danger' }} bg-opacity-10 py-3">
+                    <h6 class="mb-0 fw-bold text-{{ ($resume['ecart'] ?? 0) >= 0 ? 'success' : 'danger' }}">
+                        <i class="bi bi-calculator me-2"></i>Écart (Versé - Attendu)
                     </h6>
                 </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Attendue</p>
-                            <h5 class="fw-bold text-secondary">{{ number_format($resume['repartition_attendue']['part_proprietaires']) }} FC</h5>
-                        </div>
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Réelle (sur versé)</p>
-                            <h5 class="fw-bold text-warning">{{ number_format($resume['repartition_verse']['part_proprietaires']) }} FC</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Part OKAMI -->
-        <div class="col-md-6">
-            <div class="card border-info h-100">
-                <div class="card-header bg-info bg-opacity-10 py-3">
-                    <h6 class="mb-0 fw-bold text-info">
-                        <i class="bi bi-shield-check me-2"></i>Part OKAMI ({{ $constantes['jours_okami'] }}/{{ $constantes['jours_semaine'] }} = {{ round(($constantes['jours_okami']/$constantes['jours_semaine'])*100, 1) }}%)
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Attendue</p>
-                            <h5 class="fw-bold text-secondary">{{ number_format($resume['repartition_attendue']['part_okami']) }} FC</h5>
-                        </div>
-                        <div class="col-6">
-                            <p class="text-muted small mb-1">Réelle (sur versé)</p>
-                            <h5 class="fw-bold text-info">{{ number_format($resume['repartition_verse']['part_okami']) }} FC</h5>
-                        </div>
-                    </div>
+                <div class="card-body text-center">
+                    <h3 class="fw-bold text-{{ ($resume['ecart'] ?? 0) >= 0 ? 'success' : 'danger' }}">
+                        {{ ($resume['ecart'] ?? 0) >= 0 ? '+' : '' }}{{ number_format($resume['ecart'] ?? 0) }} FC
+                    </h3>
+                    <p class="text-muted small mb-0">Taux de recouvrement: {{ $resume['taux_recouvrement'] }}%</p>
                 </div>
             </div>
         </div>

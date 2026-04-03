@@ -27,8 +27,6 @@ class Solde extends Component
 
     // Stats
     public $soldeCaisse = 0;
-    public $soldePartOkami = 0;
-    public $soldePartProprietaire = 0;
     public $totalCollectePeriode = 0;
     public $totalPaiementsPeriode = 0;
     public $totalTransactionsEnvoi = 0;
@@ -85,10 +83,8 @@ class Solde extends Component
 
     private function computeStats()
     {
-        // Soldes actuels
+        // Solde actuel
         $this->soldeCaisse = $this->collecteur->solde_caisse ?? 0;
-        $this->soldePartOkami = $this->collecteur->solde_part_okami ?? 0;
-        $this->soldePartProprietaire = $this->collecteur->solde_part_proprietaire ?? 0;
 
         // Collectes de la période
         $collectesQuery = Collecte::whereHas('tournee', function ($q) {
@@ -242,8 +238,6 @@ class Solde extends Component
             'collecteur' => $this->collecteur,
             'journal' => $journal,
             'soldeCaisse' => $this->soldeCaisse,
-            'soldePartOkami' => $this->soldePartOkami,
-            'soldePartProprietaire' => $this->soldePartProprietaire,
             'totalCollectePeriode' => $this->totalCollectePeriode,
             'totalPaiementsPeriode' => $this->totalPaiementsPeriode,
             'totalTransactionsEnvoi' => $this->totalTransactionsEnvoi,
