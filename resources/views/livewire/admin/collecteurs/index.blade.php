@@ -63,6 +63,8 @@
                             <th>Zone</th>
                             <th>Téléphone</th>
                             <th>Solde Caisse</th>
+                            <th>Part Propriétaire</th>
+                            <th>Part OKAMI</th>
                             <th>Statut</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
@@ -85,6 +87,8 @@
                             <td><span class="badge bg-light text-dark">{{ $collecteur->zone_affectation ?? 'N/A' }}</span></td>
                             <td>{{ $collecteur->telephone ?? 'N/A' }}</td>
                             <td class="fw-semibold text-success">{{ number_format($collecteur->solde_caisse ?? 0) }} FC</td>
+                            <td class="text-primary">{{ number_format($collecteur->solde_part_proprietaire ?? 0) }} FC</td>
+                            <td class="text-warning">{{ number_format($collecteur->solde_part_okami ?? 0) }} FC</td>
                             <td>
                                 <span class="badge badge-soft-{{ $collecteur->is_active ? 'success' : 'danger' }}"
                                       style="cursor: pointer;"
@@ -95,6 +99,9 @@
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group">
+                                    <a href="{{ route('admin.collecteurs.solde', $collecteur) }}" class="btn btn-sm btn-outline-info" title="Solde & Dépenses">
+                                        <i class="bi bi-wallet2"></i>
+                                    </a>
                                     <a href="{{ route('admin.collecteurs.show', $collecteur) }}" class="btn btn-sm btn-outline-primary" title="Voir">
                                         <i class="bi bi-eye"></i>
                                     </a>
@@ -111,7 +118,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucun collecteur trouvé</p>
                                 <a href="{{ route('admin.collecteurs.create') }}" class="btn btn-sm btn-primary mt-3">

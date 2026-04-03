@@ -14,6 +14,9 @@
             </nav>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('admin.collecteurs.solde', $collecteur) }}" class="btn btn-info text-white">
+                <i class="bi bi-wallet2 me-1"></i>Solde & Dépenses
+            </a>
             <a href="{{ route('admin.collecteurs.edit', $collecteur) }}" class="btn btn-primary">
                 <i class="bi bi-pencil me-1"></i>Modifier
             </a>
@@ -80,6 +83,41 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Répartition du solde -->
+                <div class="col-sm-6">
+                    <div class="card border-0 bg-success bg-opacity-10">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Part Propriétaire</small>
+                                    <h5 class="fw-bold text-success mb-0">{{ number_format($collecteur->solde_part_proprietaire ?? 0) }} FC</h5>
+                                </div>
+                                <i class="bi bi-people text-success fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-0 bg-warning bg-opacity-10">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Part OKAMI</small>
+                                    <h5 class="fw-bold text-warning mb-0">{{ number_format($collecteur->solde_part_okami ?? 0) }} FC</h5>
+                                </div>
+                                <i class="bi bi-building text-warning fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lien vers détails solde -->
+                <div class="col-12">
+                    <a href="{{ route('admin.collecteurs.solde', $collecteur) }}" class="btn btn-outline-info w-100">
+                        <i class="bi bi-journal-text me-2"></i>Voir le journal quotidien & dépenses détaillées
+                    </a>
                 </div>
 
                 <!-- Stats Cards -->
