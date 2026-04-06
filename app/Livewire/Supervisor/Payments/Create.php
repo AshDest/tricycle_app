@@ -391,6 +391,7 @@ class Create extends Component
                 'motard' => $v->motard?->user?->name ?? 'N/A',
                 'moto' => $v->moto?->plaque_immatriculation ?? 'N/A',
                 'montant' => $v->montant,
+                'part_proprietaire' => $v->montant, // Plus de scission, tout va au propriétaire
             ];
         })->toArray();
 
