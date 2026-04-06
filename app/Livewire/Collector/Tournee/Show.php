@@ -37,8 +37,14 @@ class Show extends Component
             ->firstOrFail();
 
         // Vérifier que le caissier a déjà déposé
-        if ($collecte->statut !== 'reussie' || $collecte->montant_collecte <= 0) {
+        if ($collecte->statut !== 'reussie' || (float)$collecte->montant_collecte <= 0) {
             session()->flash('error', 'Le caissier n\'a pas encore effectué le dépôt.');
+            return;
+        }
+
+        // Vérifier que ce n'est pas déjà validé
+        if ($collecte->valide_par_collecteur) {
+            session()->flash('error', 'Ce dépôt a déjà été validé.');
             return;
         }
 
@@ -49,8 +55,9 @@ class Show extends Component
 
         // Ajouter le montant à la caisse du collecteur
         $collecteur = auth()->user()->collecteur;
-        if ($collecteur) {
-            $collecteur->increment('solde_caisse', $collecte->montant_collecte);
+        $montant = (float) $collecte->montant_collecte;
+        if ($collecteur && $montant > 0) {
+            $collecteur->ajouterMontantAvecRepartition($montant);
 
             // Si le dépôt a été fait via mobile money, créer automatiquement une transaction entrante
             if ($collecte->mode_paiement !== 'cash' && in_array($collecte->mode_paiement, ['mpesa', 'airtel_money', 'orange_money', 'afrimoney'])) {
@@ -61,7 +68,7 @@ class Show extends Component
         $this->tournee->refresh();
 
         $modeLabel = $collecte->mode_paiement === 'cash' ? '' : ' (via ' . strtoupper(str_replace('_', ' ', $collecte->mode_paiement)) . ')';
-        session()->flash('success', 'Collecte validée. ' . number_format($collecte->montant_collecte) . " FC ajoutés à votre caisse{$modeLabel}.");
+        session()->flash('success', 'Collecte validée. ' . number_format($montant) . " FC ajoutés à votre caisse{$modeLabel}.");
     }
 
     /**

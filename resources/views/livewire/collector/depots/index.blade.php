@@ -180,12 +180,18 @@
                                 <span class="badge badge-soft-success">
                                     <i class="bi bi-check-circle me-1"></i>Validé
                                 </span>
+                                @elseif($collecte->statut === 'reussie' && $collecte->montant_collecte > 0)
+                                <span class="badge badge-soft-info">
+                                    <i class="bi bi-hourglass me-1"></i>Déposé - À valider
+                                </span>
                                 @else
-                                <span class="badge badge-soft-warning">À valider</span>
+                                <span class="badge badge-soft-secondary">
+                                    <i class="bi bi-clock me-1"></i>En attente du dépôt
+                                </span>
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                @if(!$collecte->valide_par_collecteur && $collecte->statut !== 'en_litige')
+                                @if($collecte->statut === 'reussie' && !$collecte->valide_par_collecteur && $collecte->montant_collecte > 0)
                                 <div class="btn-group">
                                     <button wire:click="validerReception({{ $collecte->id }})"
                                             class="btn btn-sm btn-success"
@@ -198,6 +204,16 @@
                                         <i class="bi bi-exclamation-triangle"></i>
                                     </button>
                                 </div>
+                                @elseif($collecte->valide_par_collecteur)
+                                <span class="text-success small">
+                                    @if($collecte->valide_collecteur_at)
+                                    Validé le {{ $collecte->valide_collecteur_at->format('d/m H:i') }}
+                                    @endif
+                                </span>
+                                @elseif($collecte->statut === 'en_attente' || $collecte->montant_collecte <= 0)
+                                <span class="badge badge-soft-secondary">
+                                    <i class="bi bi-hourglass-split me-1"></i>En attente du dépôt
+                                </span>
                                 @else
                                 <span class="text-muted small">
                                     @if($collecte->valide_collecteur_at)

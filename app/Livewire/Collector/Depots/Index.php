@@ -57,14 +57,17 @@ class Index extends Component
             return;
         }
 
-        // Calculer le montant total
-        $montant = $collecte->montant_collecte;
+        // Vérifier que le caissier a bien déposé un montant > 0
+        $montant = (float) $collecte->montant_collecte;
+        if ($montant <= 0 || $collecte->statut !== 'reussie') {
+            session()->flash('error', 'Le caissier n\'a pas encore effectué le dépôt. Veuillez attendre que le caissier dépose l\'argent.');
+            return;
+        }
 
         // Mettre à jour la collecte
         $collecte->update([
             'valide_par_collecteur' => true,
             'valide_collecteur_at' => now(),
-            'statut' => 'reussie',
         ]);
 
         // Ajouter le montant à la caisse du collecteur
@@ -142,7 +145,12 @@ class Index extends Component
             ->whereHas('tournee', function($q) use ($collecteurId) {
                 $q->where('collecteur_id', $collecteurId);
             })
-            ->when($this->filterDate, fn($q) => $q->whereDate('created_at', $this->filterDate))
+            ->when($this->filterDate, function($q) {
+                $q->where(function($q2) {
+                    $q2->whereDate('created_at', $this->filterDate)
+                       ->orWhereHas('tournee', fn($q3) => $q3->whereDate('date', $this->filterDate));
+                });
+            })
             ->when($this->filterStatut === 'a_valider', fn($q) => $q->where('valide_par_collecteur', false))
             ->when($this->filterStatut === 'valide', fn($q) => $q->where('valide_par_collecteur', true))
             ->when($this->filterStatut === 'litige', fn($q) => $q->where('statut', 'en_litige'))
