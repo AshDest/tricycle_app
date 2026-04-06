@@ -123,10 +123,11 @@ class Depot extends Component
         }
 
         try {
-            // Mettre à jour la collecte avec le mode de paiement
+            // Mettre à jour le montant_attendu avec le solde réel au moment du dépôt
             $this->collecteEnCours->update([
+                'montant_attendu' => $this->soldeActuel,
                 'montant_collecte' => $montant,
-                'ecart' => $montant - ($this->collecteEnCours->montant_attendu ?? 0),
+                'ecart' => $montant - $this->soldeActuel,
                 'statut' => 'reussie',
                 'mode_paiement' => $this->mode_paiement,
                 'numero_transaction_mobile' => $this->mode_paiement !== 'cash' ? $this->numero_transaction : null,

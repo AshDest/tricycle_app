@@ -109,6 +109,7 @@
                             <th>Collecteur</th>
                             <th>Zone</th>
                             <th>Caissiers</th>
+                            <th>Montant attendu</th>
                             <th>Montant collecté</th>
                             <th>Statut</th>
                             <th class="text-end pe-4">Actions</th>
@@ -134,11 +135,13 @@
                                 <span class="fw-semibold">{{ $tournee->collectes_count ?? 0 }}</span>
                                 <small class="text-muted">visités</small>
                             </td>
+                            <td class="fw-semibold text-primary">{{ number_format($tournee->collectes_sum_montant_attendu ?? 0) }} FC</td>
                             <td class="fw-semibold text-success">{{ number_format($tournee->collectes_sum_montant_collecte ?? 0) }} FC</td>
                             <td>
                                 @php
                                     $statutConfig = [
                                         'planifiee' => ['color' => 'info', 'icon' => 'calendar'],
+                                        'confirmee' => ['color' => 'primary', 'icon' => 'check2-circle'],
                                         'en_cours' => ['color' => 'warning', 'icon' => 'play-circle'],
                                         'terminee' => ['color' => 'success', 'icon' => 'check-circle'],
                                         'annulee' => ['color' => 'danger', 'icon' => 'x-circle'],
@@ -155,7 +158,7 @@
                                     <a href="{{ route('admin.tournees.show', $tournee) }}" class="btn btn-sm btn-outline-primary" title="Voir">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    @if($tournee->statut === 'planifiee')
+                                    @if(in_array($tournee->statut, ['planifiee', 'confirmee']))
                                     <button wire:click="demarrer({{ $tournee->id }})" class="btn btn-sm btn-outline-success" title="Démarrer">
                                         <i class="bi bi-play"></i>
                                     </button>
@@ -175,7 +178,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="bi bi-calendar-x fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucune tournée trouvée</p>
                                 <a href="{{ route('admin.tournees.create') }}" class="btn btn-sm btn-primary mt-3">

@@ -13,7 +13,7 @@ class Show extends Component
 
     public function mount(Tournee $tournee)
     {
-        $this->tournee = $tournee;
+        $this->tournee = $tournee->load(['collectes.caissier.user', 'collecteur.user']);
     }
 
     public function render()
