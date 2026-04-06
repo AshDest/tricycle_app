@@ -438,6 +438,62 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
+                            @if($source_caisse === 'proprietaire')
+                            {{-- Paiement propriétaire: saisie en USD avec conversion automatique en CDF --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-currency-dollar me-1 text-success"></i>
+                                    Montant à payer (USD) <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white">$</span>
+                                    <input type="number" wire:model.live="montant_usd"
+                                           class="form-control form-control-lg @error('montant_usd') is-invalid @enderror"
+                                           placeholder="0.00" min="0.01" step="0.01">
+                                    <span class="input-group-text">USD</span>
+                                </div>
+                                @error('montant_usd')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+
+                                {{-- Affichage du taux et de l'équivalent CDF --}}
+                                <div class="mt-2">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <small class="text-muted">
+                                            <i class="bi bi-arrow-left-right me-1"></i>
+                                            Taux: 1 USD = <strong>{{ number_format($tauxUsdCdf, 2) }}</strong> FC
+                                        </small>
+                                    </div>
+                                    @if($montant_usd && is_numeric($montant_usd) && $montant_usd > 0)
+                                    <div class="alert alert-success py-2 px-3 mb-0 d-flex align-items-center gap-2">
+                                        <i class="bi bi-calculator"></i>
+                                        <div>
+                                            <small class="d-block text-muted">Équivalent en Franc Congolais:</small>
+                                            <strong class="fs-5">{{ number_format($montant, 2) }} FC</strong>
+                                        </div>
+                                    </div>
+                                    @endif
+                                </div>
+
+                                {{-- Montant CDF caché (calculé automatiquement) --}}
+                                <input type="hidden" wire:model="montant">
+
+                                <!-- Boutons de remplissage rapide -->
+                                <div class="mt-2 d-flex gap-2 flex-wrap">
+                                    @if($soldeHebdomadaire > 0)
+                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeHebdomadaire) }} FC ≈ ${{ $taux_usd_cdf > 0 ? number_format($soldeHebdomadaire / $taux_usd_cdf, 2) : '0' }})
+                                    </button>
+                                    @endif
+                                    @if($soldeDisponible > 0)
+                                    <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-wallet2 me-1"></i>Total ({{ number_format($soldeDisponible) }} FC ≈ ${{ $taux_usd_cdf > 0 ? number_format($soldeDisponible / $taux_usd_cdf, 2) : '0' }})
+                                    </button>
+                                    @endif
+                                </div>
+                            </div>
+                            @else
+                            {{-- Autres sources de caisse: saisie en FC directement --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Montant à payer <span class="text-danger">*</span></label>
                                 <div class="input-group">
@@ -452,11 +508,7 @@
 
                                 <!-- Boutons de remplissage rapide -->
                                 <div class="mt-2 d-flex gap-2 flex-wrap">
-                                    @if($source_caisse === 'proprietaire' && $soldeHebdomadaire > 0)
-                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeHebdomadaire) }} FC)
-                                    </button>
-                                    @elseif($source_caisse === 'okami' && $soldeOkamiSemaine > 0)
+                                    @if($source_caisse === 'okami' && $soldeOkamiSemaine > 0)
                                     <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-warning">
                                         <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeOkamiSemaine) }} FC)
                                     </button>
@@ -472,7 +524,6 @@
 
                                     @php
                                         $soldeTotal = match($source_caisse) {
-                                            'proprietaire' => $soldeDisponible,
                                             'okami' => $soldeOkamiDisponible,
                                             'lavage' => $soldeLavageOkamiDisponible,
                                             'commission' => $soldeCommissionOkamiDisponible,
@@ -486,6 +537,7 @@
                                     @endif
                                 </div>
                             </div>
+                            @endif
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
@@ -561,6 +613,25 @@
             </div>
             @endif
 
+            @if($source_caisse === 'proprietaire')
+            <div class="card mb-4 border-success">
+                <div class="card-header py-3 bg-success text-white">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-currency-exchange me-2"></i>Conversion USD → FC</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Taux actuel:</span>
+                        <strong class="text-success">1 USD = {{ number_format($tauxUsdCdf, 2) }} FC</strong>
+                    </div>
+                    <small class="text-muted d-block">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Le montant est saisi en USD et converti automatiquement en Franc Congolais.
+                        Le taux est configuré par l'administrateur.
+                    </small>
+                </div>
+            </div>
+            @endif
+
             <div class="card mb-4">
                 <div class="card-header py-3">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-info-circle me-2 text-info"></i>Informations</h6>
@@ -607,7 +678,13 @@
                         </li>
                         <li class="d-flex align-items-start gap-2 mb-3">
                             <i class="bi bi-4-circle text-primary mt-1"></i>
-                            <span>Entrez le montant et le mode de paiement</span>
+                            <span>
+                                @if($source_caisse === 'proprietaire')
+                                Entrez le montant en USD (converti automatiquement en FC)
+                                @else
+                                Entrez le montant et le mode de paiement
+                                @endif
+                            </span>
                         </li>
                         <li class="d-flex align-items-start gap-2">
                             <i class="bi bi-5-circle text-primary mt-1"></i>

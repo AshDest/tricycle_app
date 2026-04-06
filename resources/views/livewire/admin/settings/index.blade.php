@@ -65,6 +65,19 @@
                                     @error('devise') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     <small class="text-muted">Symbole de la devise (ex: FC, USD, EUR)</small>
                                 </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="bi bi-currency-exchange me-1 text-success"></i>
+                                        Taux de change USD → CDF
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">1 USD =</span>
+                                        <input type="number" wire:model="taux_usd_cdf" class="form-control @error('taux_usd_cdf') is-invalid @enderror" min="1" step="0.01" placeholder="2800">
+                                        <span class="input-group-text">FC</span>
+                                    </div>
+                                    @error('taux_usd_cdf') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                    <small class="text-muted">Ce taux sera utilisé pour convertir les paiements saisis en USD vers le Franc Congolais (CDF/FC).</small>
+                                </div>
                                 <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
                                     <span wire:loading.remove wire:target="saveGeneralSettings">
                                         <i class="bi bi-check-lg me-1"></i>Enregistrer

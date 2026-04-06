@@ -183,6 +183,8 @@ class PaymentService
             'source_caisse' => $data['source_caisse'] ?? 'proprietaire',
             'total_du' => $montantDemande,
             'total_paye' => 0,
+            'montant_usd' => $data['montant_usd'] ?? null,
+            'taux_conversion' => $data['taux_conversion'] ?? null,
             'mode_paiement' => $data['mode_paiement'],
             'numero_compte' => $proprietaire->getNumeroCompte($data['mode_paiement']) ?? $data['numero_compte'] ?? null,
             'statut' => 'en_attente',

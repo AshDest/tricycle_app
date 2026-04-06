@@ -29,6 +29,8 @@ class Payment extends Model
         'beneficiaire_motif',    // Motif du paiement (si caisse OKAMI)
         'total_du',
         'total_paye',
+        'montant_usd',           // Montant saisi en USD par OKAMI
+        'taux_conversion',       // Taux USD → CDF au moment de la demande
         'mode_paiement',
         'statut', // demande, en_cours, paye, valide, rejete
         'date_demande',
@@ -51,6 +53,8 @@ class Payment extends Model
     protected $casts = [
         'total_du' => 'decimal:2',
         'total_paye' => 'decimal:2',
+        'montant_usd' => 'decimal:2',
+        'taux_conversion' => 'decimal:2',
         'date_demande' => 'date',
         'date_paiement' => 'date',
         'periode_debut' => 'date',

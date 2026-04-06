@@ -184,6 +184,16 @@
         <div class="section">
             <div class="section-title">Détails</div>
             <table class="info">
+                @if($payment->montant_usd)
+                <tr>
+                    <td class="label">Montant (USD)</td>
+                    <td class="value">${{ number_format($payment->montant_usd, 2, ',', ' ') }} USD</td>
+                </tr>
+                <tr>
+                    <td class="label">Taux de conversion</td>
+                    <td class="value">1 USD = {{ number_format($payment->taux_conversion, 2, ',', ' ') }} FC</td>
+                </tr>
+                @endif
                 <tr>
                     <td class="label">Montant demandé</td>
                     <td class="value">{{ number_format($payment->total_du ?? 0, 0, ',', ' ') }} FC</td>

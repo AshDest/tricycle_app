@@ -130,6 +130,8 @@ class RepartitionService
             'nb_motos' => $motos->count(),
             'total_attendu' => $totalAttendu,
             'total_verse' => $totalVerse,
+            'total_part_proprietaire' => $totalVerse, // Plus de scission: tout va au propriétaire
+            'total_part_okami' => 0,                  // Plus de scission: part OKAMI = 0
             'ecart' => $totalVerse - $totalAttendu,
             'details_motos' => $detailsMotos,
         ];
@@ -167,6 +169,14 @@ class RepartitionService
             'nb_motos_actives' => $motos->count(),
             'total_attendu' => $totalAttendu,
             'total_verse' => $totalVerse,
+            'repartition_attendue' => [
+                'part_proprietaires' => $totalAttendu, // Plus de scission: tout va au propriétaire
+                'part_okami' => 0,
+            ],
+            'repartition_verse' => [
+                'part_proprietaires' => $totalVerse, // Plus de scission: tout va au propriétaire
+                'part_okami' => 0,
+            ],
             'ecart' => $totalVerse - $totalAttendu,
             'taux_recouvrement' => $totalAttendu > 0 ? round(($totalVerse / $totalAttendu) * 100, 2) : 0,
         ];

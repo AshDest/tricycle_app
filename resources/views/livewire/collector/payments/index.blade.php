@@ -149,6 +149,14 @@
                                 <span class="fw-bold {{ $payment->peut_etre_paye ? 'text-success' : 'text-danger' }} fs-5">
                                     {{ number_format($payment->total_du) }} FC
                                 </span>
+                                @if($payment->montant_usd)
+                                <br><small class="text-muted">
+                                    <i class="bi bi-currency-dollar"></i>{{ number_format($payment->montant_usd, 2) }} USD
+                                    <span class="text-info" title="Taux: 1 USD = {{ number_format($payment->taux_conversion, 2) }} FC">
+                                        (×{{ number_format($payment->taux_conversion) }})
+                                    </span>
+                                </small>
+                                @endif
                                 @if($payment->numero_compte)
                                 <br><code class="small">{{ $payment->numero_compte }}</code>
                                 @endif
@@ -255,6 +263,12 @@
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-dark fs-6">{{ number_format($paymentEnCours->total_du) }} FC</span>
+                                @if($paymentEnCours->montant_usd)
+                                <br><small class="text-muted mt-1 d-inline-block">
+                                    <i class="bi bi-currency-dollar"></i>{{ number_format($paymentEnCours->montant_usd, 2) }} USD
+                                    <br><span class="text-info">Taux: 1 USD = {{ number_format($paymentEnCours->taux_conversion, 2) }} FC</span>
+                                </small>
+                                @endif
                             </div>
                         </div>
                         <hr class="my-2">

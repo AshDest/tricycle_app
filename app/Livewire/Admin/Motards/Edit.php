@@ -55,7 +55,7 @@ class Edit extends Component
 
         $this->motard->update([
             'numero_identifiant' => $this->numero_identifiant,
-            'licence_numero' => $this->licence_numero,
+            'licence_numero' => $this->licence_numero ?: null,
             'zone_affectation' => $this->zone_affectation,
             'is_active' => $this->is_active,
         ]);
