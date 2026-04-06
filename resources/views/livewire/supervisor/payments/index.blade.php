@@ -130,7 +130,15 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="fw-semibold">{{ number_format($payment->total_du) }} FC</td>
+                            <td class="fw-semibold">
+                                {{ number_format($payment->total_du) }} FC
+                                @if($payment->montant_usd)
+                                <br><small class="text-muted fw-normal">
+                                    <i class="bi bi-currency-dollar"></i>{{ number_format($payment->montant_usd, 2) }} USD
+                                    <span class="text-info">(×{{ number_format($payment->taux_conversion) }})</span>
+                                </small>
+                                @endif
+                            </td>
                             <td class="fw-semibold text-success">{{ number_format($payment->total_paye) }} FC</td>
                             <td>
                                 <span class="badge bg-light text-dark">

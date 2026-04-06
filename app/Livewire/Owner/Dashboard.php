@@ -29,8 +29,7 @@ class Dashboard extends Component
 
     // Répartition hebdomadaire
     public $repartitionHebdo = null;
-    public $partProprietaireHebdo = 0;
-    public $partOkamiHebdo = 0;
+    public $totalVerseHebdo = 0;
 
     // Listes
     public $derniersVersements = [];
@@ -70,15 +69,13 @@ class Dashboard extends Component
 
         // Répartition hebdomadaire
         $this->repartitionHebdo = RepartitionService::getRepartitionHebdomadaireProprietaire($this->proprietaire);
-        $this->partProprietaireHebdo = $this->repartitionHebdo['total_part_proprietaire'] ?? 0;
-        $this->partOkamiHebdo = $this->repartitionHebdo['total_part_okami'] ?? 0;
+        $this->totalVerseHebdo = $this->repartitionHebdo['total_verse'] ?? 0;
 
-        // Prochain paiement estimé = part propriétaire non encore payée
-        $totalPartProprietaire = RepartitionService::getPartProprietaire($this->revenusTotal);
+        // Prochain paiement estimé = total versements non encore payé
         $totalPayeAuProprietaire = $this->proprietaire->payments()
             ->whereIn('statut', ['paye', 'payé', 'valide'])
             ->sum('total_paye');
-        $this->prochainPaiement = max(0, $totalPartProprietaire - $totalPayeAuProprietaire);
+        $this->prochainPaiement = max(0, $this->revenusTotal - $totalPayeAuProprietaire);
 
         // Maintenances en cours
         $this->maintenancesEnCours = Maintenance::whereIn('moto_id', $motoIds)

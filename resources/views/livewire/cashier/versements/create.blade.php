@@ -95,8 +95,79 @@
                             </div>
                         </div>
 
-                        <!-- Date du versement -->
-                        <div class="mb-4">
+                        {{-- ===== JOURS MANQUANTS (SANS VERSEMENT) ===== --}}
+                        @if($type_versement === 'journalier' && count($joursManquants) > 0)
+                        <div class="card mb-4 border-danger">
+                            <div class="card-header py-3 bg-danger bg-opacity-10">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0 fw-bold text-danger">
+                                        <i class="bi bi-calendar-x me-2"></i>Jours sans versement ({{ count($joursManquants) }})
+                                    </h6>
+                                    <div class="d-flex gap-2">
+                                        @if(count($joursSelectionnes) < count($joursManquants))
+                                        <button type="button" wire:click="selectionnerTousLesJours" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-check-all me-1"></i>Tout sélectionner
+                                        </button>
+                                        @else
+                                        <button type="button" wire:click="deselectionnerTousLesJours" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-x-lg me-1"></i>Tout désélectionner
+                                        </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="list-group list-group-flush" style="max-height: 280px; overflow-y: auto;">
+                                    @foreach($joursManquants as $jour)
+                                    @php
+                                        $estSelectionne = in_array($jour['date'], $joursSelectionnes);
+                                    @endphp
+                                    <label class="list-group-item list-group-item-action d-flex align-items-center gap-3 {{ $estSelectionne ? 'bg-danger bg-opacity-10 border-start border-danger border-3' : '' }}"
+                                           style="cursor: pointer;" wire:click.prevent="toggleJour('{{ $jour['date'] }}')">
+                                        <input type="checkbox"
+                                               class="form-check-input flex-shrink-0"
+                                               value="{{ $jour['date'] }}"
+                                               {{ $estSelectionne ? 'checked' : '' }}
+                                               style="pointer-events: none;">
+                                        <div class="flex-grow-1">
+                                            <span class="fw-medium {{ $jour['est_aujourdhui'] ? 'text-primary' : '' }}">
+                                                {{ $jour['date_formatted'] }}
+                                                @if($jour['est_aujourdhui'])
+                                                <span class="badge bg-primary ms-1">Aujourd'hui</span>
+                                                @endif
+                                            </span>
+                                        </div>
+                                        <span class="badge {{ $estSelectionne ? 'bg-danger' : 'bg-secondary bg-opacity-25 text-dark' }}">
+                                            {{ number_format($montantJournalierAttendu) }} FC
+                                        </span>
+                                    </label>
+                                    @endforeach
+                                </div>
+
+                                {{-- Résumé de la sélection --}}
+                                @if(count($joursSelectionnes) > 0)
+                                <div class="p-3 bg-danger bg-opacity-10 border-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ count($joursSelectionnes) }} jour(s) sélectionné(s)</strong>
+                                        </div>
+                                        <div class="text-end">
+                                            <strong class="text-danger fs-5">{{ number_format(count($joursSelectionnes) * $montantJournalierAttendu) }} FC</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        @elseif($type_versement === 'journalier' && count($joursManquants) === 0 && $motardSelectionne)
+                        <div class="alert alert-success mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            <strong>Tous les jours sont couverts!</strong> Aucun jour manquant dans les 30 derniers jours.
+                        </div>
+                        @endif
+
+                        {{-- Date de versement (cachée si multi-jours, visible en mode arriérés ou date manuelle) --}}
+                        <div class="mb-4 {{ ($type_versement === 'journalier' && count($joursManquants) > 0) ? 'd-none' : '' }}">
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-calendar-date text-primary me-1"></i>
                                 Date du versement <span class="text-danger">*</span>
@@ -105,6 +176,7 @@
                             @error('date_versement')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
 
                             <!-- Motard remplaçant (secondaire) -->
                             @if(count($motardsSecondairesList ?? []) > 0)
@@ -194,7 +266,6 @@
                                 </div>
                             </div>
                             @endif
-                        </div>
 
                         <!-- Type de versement -->
                         <div class="mb-4">
@@ -378,22 +449,9 @@
                         <small class="text-muted d-block">Montant versé</small>
                         <h5 class="fw-bold mb-0">{{ number_format((float)$montant) }} FC</h5>
                     </div>
-                    <hr>
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="bg-info bg-opacity-10 rounded p-3 text-center">
-                                <small class="d-block text-muted">Part Propriétaire</small>
-                                <strong class="text-info fs-5">{{ number_format($partProprietairePreview) }} FC</strong>
-                                <small class="d-block text-muted">(5/6 ≈ 83.33%)</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-warning bg-opacity-10 rounded p-3 text-center">
-                                <small class="d-block text-muted">Part OKAMI</small>
-                                <strong class="text-warning fs-5">{{ number_format($partOkamiPreview) }} FC</strong>
-                                <small class="d-block text-muted">(1/6 ≈ 16.67%)</small>
-                            </div>
-                        </div>
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ce montant sera ajouté à la caisse unique du collecteur.
                     </div>
                 </div>
             </div>

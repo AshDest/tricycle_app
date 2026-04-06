@@ -25,8 +25,6 @@ class SoldesOverview extends Component
 
     // Totaux globaux
     public $totalSoldeCaisse = 0;
-    public $totalPartProprietaire = 0;
-    public $totalPartOkami = 0;
     public $totalPaiementsPeriode = 0;
 
     public function mount()
@@ -55,8 +53,6 @@ class SoldesOverview extends Component
             }));
 
         $this->totalSoldeCaisse = (clone $query)->sum('solde_caisse');
-        $this->totalPartProprietaire = (clone $query)->sum('solde_part_proprietaire');
-        $this->totalPartOkami = (clone $query)->sum('solde_part_okami');
 
         // Total paiements sur la période
         $collecteurIds = (clone $query)->pluck('user_id');
@@ -110,8 +106,6 @@ class SoldesOverview extends Component
                 'identifiant' => $c->numero_identifiant ?? 'N/A',
                 'zone' => $c->zone_affectation ?? 'N/A',
                 'solde_caisse' => $c->solde_caisse ?? 0,
-                'part_proprietaire' => $c->solde_part_proprietaire ?? 0,
-                'part_okami' => $c->solde_part_okami ?? 0,
                 'depenses_periode' => $this->getCollecteurDepenses($c->user_id),
                 'collectes_periode' => $this->getCollecteurCollectes($c->id),
             ];
@@ -120,8 +114,6 @@ class SoldesOverview extends Component
         $pdf = Pdf::loadView('pdf.admin.collecteurs-soldes', [
             'collecteurs' => $data,
             'totalSoldeCaisse' => $this->totalSoldeCaisse,
-            'totalPartProprietaire' => $this->totalPartProprietaire,
-            'totalPartOkami' => $this->totalPartOkami,
             'totalPaiements' => $this->totalPaiementsPeriode,
             'dateDebut' => $this->dateDebut,
             'dateFin' => $this->dateFin,

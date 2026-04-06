@@ -76,7 +76,7 @@ class Index extends Component
         $this->nombreTransactions = (clone $query)->count();
 
         // Solde caisse global du collecteur (collectes - paiements)
-        $this->soldeCaisse = ($collecteur->solde_caisse ?? 0) + ($collecteur->solde_part_okami ?? 0);
+        $this->soldeCaisse = $collecteur->solde_caisse ?? 0;
     }
 
     private function getBaseQuery()

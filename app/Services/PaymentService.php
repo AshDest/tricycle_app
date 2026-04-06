@@ -183,6 +183,8 @@ class PaymentService
             'source_caisse' => $data['source_caisse'] ?? 'proprietaire',
             'total_du' => $montantDemande,
             'total_paye' => 0,
+            'montant_usd' => $data['montant_usd'] ?? null,
+            'taux_conversion' => $data['taux_conversion'] ?? null,
             'mode_paiement' => $data['mode_paiement'],
             'numero_compte' => $proprietaire->getNumeroCompte($data['mode_paiement']) ?? $data['numero_compte'] ?? null,
             'statut' => 'en_attente',
@@ -202,10 +204,10 @@ class PaymentService
     {
         $montantDemande = $data['montant'];
 
-        // Vérifier que le montant ne dépasse pas le solde OKAMI disponible
-        $soldeOkami = \App\Models\Collecteur::sum('solde_part_okami');
-        if ($montantDemande > $soldeOkami) {
-            throw new \Exception("Le montant demandé (" . number_format($montantDemande) . " FC) dépasse le solde OKAMI disponible (" . number_format($soldeOkami) . " FC).");
+        // Vérifier que le montant ne dépasse pas le solde disponible en caisse
+        $soldeCaisse = \App\Models\Collecteur::sum('solde_caisse');
+        if ($montantDemande > $soldeCaisse) {
+            throw new \Exception("Le montant demandé (" . number_format($montantDemande) . " FC) dépasse le solde en caisse disponible (" . number_format($soldeCaisse) . " FC).");
         }
 
         return Payment::create([

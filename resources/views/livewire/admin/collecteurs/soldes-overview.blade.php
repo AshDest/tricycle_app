@@ -1,15 +1,16 @@
 <div>
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-            <h4 class="page-title mb-1"><i class="bi bi-wallet2 me-2 text-success"></i>Soldes &amp; Dépenses des Collecteurs</h4>
+            <h4 class="page-title mb-1"><i class="bi bi-wallet2 me-2 text-success"></i>Soldes & Dépenses des Collecteurs</h4>
             <p class="text-muted mb-0">Vue globale des soldes et suivi quotidien des dépenses</p>
         </div>
         <div class="d-flex gap-2">
             <button wire:click="exportPdf" class="btn btn-danger"><i class="bi bi-file-pdf me-1"></i>Exporter PDF</button>
         </div>
     </div>
+
     <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
                 <div class="card-body text-white py-3">
                     <p class="mb-1 opacity-75 small">Solde Caisse Total</p>
@@ -17,23 +18,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
-                <div class="card-body text-white py-3">
-                    <p class="mb-1 opacity-75 small">Total Part Propriétaire</p>
-                    <h4 class="fw-bold mb-0">{{ number_format($totalPartProprietaire) }} FC</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
-                <div class="card-body text-white py-3">
-                    <p class="mb-1 opacity-75 small">Total Part OKAMI</p>
-                    <h4 class="fw-bold mb-0">{{ number_format($totalPartOkami) }} FC</h4>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);">
                 <div class="card-body text-white py-3">
                     <p class="mb-1 opacity-75 small">Paiements (Période)</p>
@@ -42,6 +27,7 @@
             </div>
         </div>
     </div>
+
     <div class="card mb-4">
         <div class="card-body">
             <div class="row g-3 align-items-end">
@@ -69,6 +55,7 @@
             </div>
         </div>
     </div>
+
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -78,8 +65,6 @@
                             <th class="ps-4">Collecteur</th>
                             <th>Zone</th>
                             <th class="text-end">Solde Caisse</th>
-                            <th class="text-end">Part Propriétaire</th>
-                            <th class="text-end">Part OKAMI</th>
                             <th class="text-end">Collectes (Période)</th>
                             <th class="text-end">Dépenses (Période)</th>
                             <th class="text-center pe-4">Actions</th>
@@ -101,8 +86,6 @@
                             </td>
                             <td><span class="badge bg-light text-dark">{{ $collecteur->zone_affectation ?? 'N/A' }}</span></td>
                             <td class="text-end fw-bold" style="color: #4f46e5;">{{ number_format($collecteur->solde_caisse ?? 0) }} FC</td>
-                            <td class="text-end text-success fw-semibold">{{ number_format($collecteur->solde_part_proprietaire ?? 0) }} FC</td>
-                            <td class="text-end text-warning fw-semibold">{{ number_format($collecteur->solde_part_okami ?? 0) }} FC</td>
                             <td class="text-end">
                                 @if(($collecteur->collectes_periode ?? 0) > 0)
                                     <span class="text-success fw-semibold">+{{ number_format($collecteur->collectes_periode) }} FC</span>
@@ -125,7 +108,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucun collecteur actif trouvé</p>
                             </td>
@@ -137,8 +120,6 @@
                         <tr>
                             <td class="ps-4" colspan="2">TOTAUX</td>
                             <td class="text-end" style="color: #4f46e5;">{{ number_format($totalSoldeCaisse) }} FC</td>
-                            <td class="text-end text-success">{{ number_format($totalPartProprietaire) }} FC</td>
-                            <td class="text-end text-warning">{{ number_format($totalPartOkami) }} FC</td>
                             <td class="text-end text-success">+{{ number_format($collecteurs->sum('collectes_periode')) }} FC</td>
                             <td class="text-end text-danger">-{{ number_format($collecteurs->sum('depenses_periode')) }} FC</td>
                             <td></td>

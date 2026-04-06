@@ -8,14 +8,6 @@
             <div class="value">{{ number_format($soldeCaisse) }} FC</div>
             <div class="label">Solde Caisse Total</div>
         </div>
-        <div class="stat-item">
-            <div class="value">{{ number_format($soldePartProprietaire) }} FC</div>
-            <div class="label">Part Propriétaire</div>
-        </div>
-        <div class="stat-item">
-            <div class="value">{{ number_format($soldePartOkami) }} FC</div>
-            <div class="label">Part OKAMI</div>
-        </div>
     </div>
 
     {{-- Période --}}

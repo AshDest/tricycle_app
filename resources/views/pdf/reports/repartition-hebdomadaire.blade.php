@@ -109,9 +109,7 @@
 
     <!-- Info système -->
     <div class="info-box">
-        <strong>Système de répartition:</strong> Semaine = 6 jours |
-        Part Propriétaires = 5 jours (83.33%) |
-        Part OKAMI = 1 jour (16.67%)
+        <strong>Système:</strong> Semaine = 6 jours de travail | Caisse unique
     </div>
 
     <!-- Statistiques globales -->

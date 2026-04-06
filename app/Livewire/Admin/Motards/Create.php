@@ -87,7 +87,7 @@ class Create extends Component
         Motard::create([
             'user_id' => $user->id,
             'numero_identifiant' => $this->numero_identifiant,
-            'licence_numero' => $this->licence_numero,
+            'licence_numero' => $this->licence_numero ?: null,
             'zone_affectation' => $this->zone_affectation,
             'is_active' => $this->is_active,
         ]);

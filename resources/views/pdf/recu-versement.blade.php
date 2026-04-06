@@ -268,22 +268,6 @@
             </table>
         </div>
 
-        <!-- Répartition (si renseignée) -->
-        @if(($versement->part_proprietaire ?? 0) > 0 || ($versement->part_okami ?? 0) > 0)
-        <div class="section">
-            <div class="section-title">Répartition</div>
-            <table class="info">
-                <tr>
-                    <td class="label">Part Propriétaire (5/6)</td>
-                    <td class="value">{{ number_format($versement->part_proprietaire ?? 0, 0, ',', ' ') }} FC</td>
-                </tr>
-                <tr>
-                    <td class="label">Part OKAMI (1/6)</td>
-                    <td class="value">{{ number_format($versement->part_okami ?? 0, 0, ',', ' ') }} FC</td>
-                </tr>
-            </table>
-        </div>
-        @endif
 
         <!-- Arriérés si existants -->
         @if(($versement->arrieres ?? 0) > 0)

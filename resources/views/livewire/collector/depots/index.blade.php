@@ -22,44 +22,16 @@
         </div>
     </div>
 
-    <!-- Solde Caisse avec Répartition -->
+    <!-- Solde Caisse -->
     <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #212529 0%, #343a40 100%);">
         <div class="card-body py-4">
-            <div class="row align-items-center">
-                <div class="col-lg-4 mb-3 mb-lg-0">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-white bg-opacity-10 rounded-circle p-3">
-                            <i class="bi bi-safe fs-2" style="color: #fff;"></i>
-                        </div>
-                        <div>
-                            <small class="d-block" style="color: rgba(255,255,255,0.7);">Solde Total en Caisse</small>
-                            <h2 class="mb-0 fw-bold" style="color: #fff;">{{ number_format($soldeCaisse) }} FC</h2>
-                        </div>
-                    </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-white bg-opacity-10 rounded-circle p-3">
+                    <i class="bi bi-safe fs-2" style="color: #fff;"></i>
                 </div>
-                <div class="col-lg-8">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="bg-white bg-opacity-10 rounded p-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-building me-1"></i>Part OKAMI (1/6)</small>
-                                        <h4 class="mb-0 fw-bold" style="color: #ffc107;">{{ number_format($soldePartOkami) }} FC</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-white bg-opacity-10 rounded p-3">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <small class="d-block" style="color: rgba(255,255,255,0.6);"><i class="bi bi-people me-1"></i>Part Propriétaires (5/6)</small>
-                                        <h4 class="mb-0 fw-bold" style="color: #20c997;">{{ number_format($soldePartProprietaire) }} FC</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <small class="d-block" style="color: rgba(255,255,255,0.7);">Solde Total en Caisse</small>
+                    <h2 class="mb-0 fw-bold" style="color: #fff;">{{ number_format($soldeCaisse) }} FC</h2>
                 </div>
             </div>
         </div>
@@ -217,7 +189,7 @@
                                 <div class="btn-group">
                                     <button wire:click="validerReception({{ $collecte->id }})"
                                             class="btn btn-sm btn-success"
-                                            wire:confirm="Confirmer la réception de {{ number_format($montant) }} FC ?&#10;&#10;Part OKAMI: {{ number_format($partOkami) }} FC&#10;Part Propriétaire: {{ number_format($partProprietaire) }} FC">
+                                            wire:confirm="Confirmer la réception de {{ number_format($collecte->montant_collecte) }} FC ?">
                                         <i class="bi bi-check-lg"></i> Valider
                                     </button>
                                     <button wire:click="signalerProbleme({{ $collecte->id }})"
@@ -260,11 +232,7 @@
             <div class="row align-items-center">
                 <div class="col-auto">
                     <i class="bi bi-info-circle text-info me-2"></i>
-                    <strong>Répartition automatique:</strong>
-                </div>
-                <div class="col">
-                    <span class="badge bg-warning me-2">1/6 pour OKAMI</span>
-                    <span class="badge bg-success">5/6 pour les Propriétaires</span>
+                    <strong>Tous les montants validés sont ajoutés à la caisse unique du collecteur.</strong>
                 </div>
             </div>
         </div>

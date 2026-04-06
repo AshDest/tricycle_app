@@ -24,9 +24,9 @@
         </div>
     </div>
 
-    <!-- Soldes Cards -->
+    <!-- Solde Card -->
     <div class="row g-3 mb-4">
-        <div class="col-lg-4">
+        <div class="col-lg-6 mx-auto">
             <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
                 <div class="card-body text-white">
                     <div class="d-flex justify-content-between align-items-center">
@@ -36,36 +36,6 @@
                         </div>
                         <div class="bg-white bg-opacity-25 rounded-3 p-3">
                             <i class="bi bi-wallet2 fs-3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%);">
-                <div class="card-body text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="mb-1 opacity-75 small">Part Propriétaire</p>
-                            <h3 class="fw-bold mb-0">{{ number_format($soldePartProprietaire) }} FC</h3>
-                        </div>
-                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
-                            <i class="bi bi-people fs-3"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);">
-                <div class="card-body text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="mb-1 opacity-75 small">Part OKAMI</p>
-                            <h3 class="fw-bold mb-0">{{ number_format($soldePartOkami) }} FC</h3>
-                        </div>
-                        <div class="bg-white bg-opacity-25 rounded-3 p-3">
-                            <i class="bi bi-building fs-3"></i>
                         </div>
                     </div>
                 </div>
@@ -277,8 +247,6 @@
                                 <th>Zone</th>
                                 <th class="text-end">Montant Attendu</th>
                                 <th class="text-end">Montant Collecté</th>
-                                <th class="text-end">Part OKAMI</th>
-                                <th class="text-end">Part Propriétaire</th>
                                 <th class="text-center pe-4">Statut</th>
                             </tr>
                         </thead>
@@ -292,8 +260,6 @@
                                 <td><span class="badge bg-light text-dark">{{ $collecte->tournee?->zone ?? 'N/A' }}</span></td>
                                 <td class="text-end">{{ number_format($collecte->montant_attendu ?? 0) }} FC</td>
                                 <td class="text-end fw-semibold text-success">{{ number_format($collecte->montant_collecte ?? 0) }} FC</td>
-                                <td class="text-end text-warning">{{ number_format($collecte->part_okami ?? 0) }} FC</td>
-                                <td class="text-end text-primary">{{ number_format($collecte->part_proprietaire ?? 0) }} FC</td>
                                 <td class="text-center pe-4">
                                     @php
                                         $colors = ['reussie' => 'success', 'partielle' => 'warning', 'echouee' => 'danger', 'en_litige' => 'info'];
@@ -305,7 +271,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
+                                <td colspan="6" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                     <p class="mb-0">Aucune collecte sur cette période</p>
                                 </td>

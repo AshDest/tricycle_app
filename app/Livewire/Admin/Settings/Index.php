@@ -16,6 +16,7 @@ class Index extends Component
     // Paramètres généraux
     public $nom_societe = '';
     public $devise = '';
+    public $taux_usd_cdf = 2800;
 
     // Paramètres versements
     public $montant_journalier_defaut = 5000;
@@ -51,6 +52,7 @@ class Index extends Component
     {
         $this->nom_societe = SystemSetting::get('nom_societe', 'New Technology Hub Sarl');
         $this->devise = SystemSetting::get('devise', 'FC');
+        $this->taux_usd_cdf = SystemSetting::get('taux_usd_cdf', 2800);
         $this->montant_journalier_defaut = SystemSetting::get('montant_journalier_defaut', 5000);
         $this->seuil_arriere_faible = SystemSetting::get('seuil_arriere_faible', 25000);
         $this->seuil_arriere_moyen = SystemSetting::get('seuil_arriere_moyen', 50000);
@@ -62,10 +64,12 @@ class Index extends Component
         $this->validate([
             'nom_societe' => 'required|string|max:255',
             'devise' => 'required|string|max:10',
+            'taux_usd_cdf' => 'required|numeric|min:1',
         ]);
 
         SystemSetting::set('nom_societe', $this->nom_societe, 'string', 'general');
         SystemSetting::set('devise', $this->devise, 'string', 'general');
+        SystemSetting::set('taux_usd_cdf', $this->taux_usd_cdf, 'decimal', 'general');
 
         session()->flash('success', 'Paramètres généraux mis à jour avec succès.');
     }

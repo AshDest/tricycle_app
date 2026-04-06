@@ -85,6 +85,14 @@ class SystemSetting extends Model
     }
 
     /**
+     * Obtenir le taux de conversion USD → CDF
+     */
+    public static function getTauxUsdCdf(): float
+    {
+        return static::get('taux_usd_cdf', 2800);
+    }
+
+    /**
      * Vider le cache des paramètres
      */
     public static function clearCache(): void

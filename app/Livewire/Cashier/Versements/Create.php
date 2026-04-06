@@ -50,6 +50,10 @@ class Create extends Component
     // Liste des motards secondaires (sans moto assignée)
     public $motardsSecondaires = [];
 
+    // Jours manquants (sans versement) et jours sélectionnés par le caissier
+    public $joursManquants = [];
+    public $joursSelectionnes = [];
+
     protected function rules()
     {
         $rules = [
@@ -103,6 +107,9 @@ class Create extends Component
             // Charger les arriérés détaillés
             $this->loadArrieresDetails();
 
+            // Charger les jours manquants (sans versement)
+            $this->loadJoursManquants();
+
             // Vérifier le versement existant pour le jour sélectionné
             $this->verifierVersementExistant();
 
@@ -111,11 +118,26 @@ class Create extends Component
                 $this->estDimanche = Carbon::parse($this->date_versement)->isSunday();
             }
 
-            // Pré-remplir le montant avec le montant journalier (sauf si dimanche)
-            if ($this->type_versement === 'journalier' && empty($this->montant) && !$this->estDimanche) {
-                $this->montant = $this->montantRestantJour > 0 ? $this->montantRestantJour : $this->montantJournalierAttendu;
-            } elseif ($this->estDimanche && $this->arrieresCumules > 0) {
-                // Si dimanche avec arriérés, basculer automatiquement
+            // Si on est en mode journalier, auto-sélectionner aujourd'hui s'il est dans les jours manquants
+            if ($this->type_versement === 'journalier') {
+                $today = Carbon::today()->format('Y-m-d');
+                if (in_array($today, array_column($this->joursManquants, 'date'))) {
+                    $this->joursSelectionnes = [$today];
+                    $this->date_versement = $today;
+                    $this->montant = $this->montantJournalierAttendu;
+                } elseif (count($this->joursManquants) > 0) {
+                    // Sélectionner le premier jour manquant
+                    $premierJour = $this->joursManquants[0]['date'];
+                    $this->joursSelectionnes = [$premierJour];
+                    $this->date_versement = $premierJour;
+                    $this->montant = $this->montantJournalierAttendu;
+                } else {
+                    $this->joursSelectionnes = [];
+                    $this->montant = '';
+                }
+            }
+
+            if ($this->estDimanche && $this->arrieresCumules > 0) {
                 $this->type_versement = 'arrieres';
                 $this->montant = $this->arrieresCumules;
             }
@@ -191,6 +213,107 @@ class Create extends Component
     }
 
     /**
+     * Charger les jours ouvrables sans versement (Lun-Sam) sur les 30 derniers jours
+     */
+    protected function loadJoursManquants()
+    {
+        $this->joursManquants = [];
+        $this->joursSelectionnes = [];
+
+        if (!$this->motardSelectionne) {
+            return;
+        }
+
+        $today = Carbon::today();
+        // Remonter jusqu'à 30 jours en arrière (ou début du mois précédent)
+        $dateDebut = $today->copy()->subDays(30)->startOfDay();
+
+        // Récupérer toutes les dates ayant un versement journalier pour ce motard
+        $datesAvecVersement = Versement::where('motard_id', $this->motardSelectionne->id)
+            ->whereBetween('date_versement', [$dateDebut, $today])
+            ->where(function ($query) {
+                $query->where('type', 'journalier')
+                      ->orWhereNull('type');
+            })
+            ->pluck('date_versement')
+            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+            ->toArray();
+
+        // Parcourir chaque jour ouvrable (Lun-Sam) et vérifier s'il manque un versement
+        $cursor = $dateDebut->copy();
+        $jours = [];
+
+        while ($cursor->lte($today)) {
+            // Exclure les dimanches
+            if (!$cursor->isSunday()) {
+                $dateStr = $cursor->format('Y-m-d');
+                if (!in_array($dateStr, $datesAvecVersement)) {
+                    $jours[] = [
+                        'date' => $dateStr,
+                        'date_formatted' => $cursor->translatedFormat('D d/m/Y'),
+                        'jour_semaine' => $cursor->translatedFormat('l'),
+                        'est_aujourdhui' => $cursor->isToday(),
+                        'est_cette_semaine' => $cursor->isCurrentWeek(),
+                    ];
+                }
+            }
+            $cursor->addDay();
+        }
+
+        // Trier du plus récent au plus ancien
+        $this->joursManquants = array_reverse($jours);
+    }
+
+    /**
+     * Quand les jours sélectionnés changent → recalculer le montant
+     */
+    public function updatedJoursSelectionnes()
+    {
+        $nbJours = count($this->joursSelectionnes);
+        if ($nbJours > 0 && $this->type_versement === 'journalier') {
+            $this->montant = $nbJours * $this->montantJournalierAttendu;
+            // Mettre la date_versement sur le premier jour sélectionné (pour l'enregistrement)
+            sort($this->joursSelectionnes);
+            $this->date_versement = $this->joursSelectionnes[0];
+        } elseif ($nbJours === 0) {
+            $this->montant = '';
+        }
+        $this->updateRepartitionPreview();
+    }
+
+    /**
+     * Sélectionner / désélectionner un jour manquant
+     */
+    public function toggleJour($date)
+    {
+        if (in_array($date, $this->joursSelectionnes)) {
+            $this->joursSelectionnes = array_values(array_diff($this->joursSelectionnes, [$date]));
+        } else {
+            $this->joursSelectionnes[] = $date;
+        }
+        $this->updatedJoursSelectionnes();
+    }
+
+    /**
+     * Sélectionner tous les jours manquants
+     */
+    public function selectionnerTousLesJours()
+    {
+        $this->joursSelectionnes = array_column($this->joursManquants, 'date');
+        $this->updatedJoursSelectionnes();
+    }
+
+    /**
+     * Désélectionner tous les jours
+     */
+    public function deselectionnerTousLesJours()
+    {
+        $this->joursSelectionnes = [];
+        $this->montant = '';
+        $this->updateRepartitionPreview();
+    }
+
+    /**
      * Vérifier si un versement existe déjà pour ce jour
      */
     protected function verifierVersementExistant()
@@ -246,6 +369,8 @@ class Create extends Component
         $this->montantRestantJour = 0;
         $this->motard_secondaire_id = '';
         $this->motardsSecondaires = [];
+        $this->joursManquants = [];
+        $this->joursSelectionnes = [];
     }
 
     protected function updateRepartitionPreview()
@@ -324,16 +449,21 @@ class Create extends Component
             return;
         }
 
-        // Calculer la répartition
-        $partProprietaire = RepartitionService::getPartProprietaire($montantVerse);
-        $partOkami = RepartitionService::getPartOkami($montantVerse);
+        // Plus de scission OKAMI/Propriétaire - tout va dans une caisse unique
+        $partProprietaire = $montantVerse;
+        $partOkami = 0;
 
         if ($this->type_versement === 'arrieres') {
             // Versement pour rembourser les arriérés uniquement
             return $this->enregistrerVersementArrieres($caissier, $motard, $moto, $montantVerse, $partProprietaire, $partOkami);
         }
 
-        // Versement journalier
+        // Versement journalier - avec gestion multi-jours
+        if (count($this->joursSelectionnes) > 1) {
+            return $this->enregistrerVersementsMultiJours($caissier, $motard, $moto, $montantVerse);
+        }
+
+        // Versement journalier classique (1 seul jour)
         return $this->enregistrerVersementJournalier($caissier, $motard, $moto, $montantVerse, $partProprietaire, $partOkami);
     }
 
@@ -396,6 +526,75 @@ class Create extends Component
     }
 
     /**
+     * Enregistrer des versements journaliers pour plusieurs jours sélectionnés
+     */
+    protected function enregistrerVersementsMultiJours($caissier, $motard, $moto, $montantTotal)
+    {
+        $montantJournalierAttendu = $moto?->montant_journalier_attendu ?? SystemSetting::getMontantJournalierDefaut();
+        $nbJours = count($this->joursSelectionnes);
+        $montantParJour = $montantJournalierAttendu;
+
+        // Vérifier que le montant total correspond bien
+        $montantAttenduTotal = $nbJours * $montantParJour;
+
+        sort($this->joursSelectionnes);
+        $dernierVersementId = null;
+        $joursEnregistres = 0;
+
+        foreach ($this->joursSelectionnes as $dateStr) {
+            $dateVersement = Carbon::parse($dateStr);
+
+            // Vérifier qu'il n'existe pas déjà un versement pour ce jour
+            $existant = Versement::where('motard_id', $motard->id)
+                ->whereDate('date_versement', $dateVersement)
+                ->where(function ($q) {
+                    $q->where('type', 'journalier')->orWhereNull('type');
+                })
+                ->whereNull('semaine_debut')
+                ->exists();
+
+            if ($existant) {
+                continue; // Ignorer les jours déjà payés
+            }
+
+            $versement = Versement::create([
+                'motard_id' => $motard->id,
+                'motard_secondaire_id' => $this->motard_secondaire_id ?: null,
+                'moto_id' => $moto?->id,
+                'caissier_id' => $caissier->id,
+                'montant' => $montantParJour,
+                'montant_attendu' => $montantParJour,
+                'arrieres' => 0,
+                'mode_paiement' => $this->mode_paiement,
+                'type' => 'journalier',
+                'statut' => 'payé',
+                'date_versement' => $dateVersement,
+                'part_proprietaire' => $montantParJour,
+                'part_okami' => 0,
+                'validated_by_caissier_at' => Carbon::now(),
+                'notes' => trim(($this->notes ? $this->notes . "\n" : '') . "Versement groupé ({$nbJours} jours)"),
+            ]);
+
+            $dernierVersementId = $versement->id;
+            $joursEnregistres++;
+        }
+
+        if ($joursEnregistres > 0) {
+            $caissier->increment('solde_actuel', $montantTotal);
+
+            $premierJour = Carbon::parse($this->joursSelectionnes[0])->format('d/m/Y');
+            $dernierJour = Carbon::parse(end($this->joursSelectionnes))->format('d/m/Y');
+
+            session()->flash('success', "Versement de " . number_format($montantTotal) . " FC enregistré pour {$joursEnregistres} jour(s) ({$premierJour} → {$dernierJour}).");
+            session()->flash('dernierVersementId', $dernierVersementId);
+        } else {
+            session()->flash('error', 'Aucun versement créé - tous les jours sélectionnés ont déjà un versement.');
+        }
+
+        return redirect()->route('cashier.versements.index');
+    }
+
+    /**
      * Compléter un versement existant (ajout au même jour)
      */
     protected function completerVersementExistant($caissier, $montantVerse, $partProprietaire, $partOkami, $motard)
@@ -413,9 +612,9 @@ class Create extends Component
             $nouveauStatut = 'partiellement_payé';
         }
 
-        // Recalculer la répartition totale
-        $nouvPartProprietaire = RepartitionService::getPartProprietaire($nouveauMontant);
-        $nouvPartOkami = RepartitionService::getPartOkami($nouveauMontant);
+        // Plus de scission - tout va dans une caisse unique
+        $nouvPartProprietaire = $nouveauMontant;
+        $nouvPartOkami = 0;
 
         $noteComplement = "[Complément de " . number_format($montantVerse) . " FC le " . now()->format('d/m/Y H:i') . "]";
 

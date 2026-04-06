@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Collecteur = Agent terrain qui récupère l'argent chez les caissiers.
  * Il effectue des tournées quotidiennes et transmet l'argent à NTH (Admin).
- * La caisse est répartie entre la part OKAMI et la part Propriétaire.
+ * Tout l'argent collecté va dans une caisse unique (solde_caisse).
  */
 class Collecteur extends Model
 {
@@ -59,54 +59,56 @@ class Collecteur extends Model
     }
 
     /**
-     * Ajouter un montant à la caisse avec répartition
-     * Selon le cahier des charges: sur 6 jours, 5 jours pour propriétaire, 1 jour pour OKAMI
-     * Ratio: 5/6 propriétaire, 1/6 OKAMI
+     * Ajouter un montant à la caisse unique
+     * Tout l'argent des 6 jours de versement va dans la même caisse
      */
     public function ajouterMontantAvecRepartition(float $montant): array
     {
-        // Calcul de la répartition
-        $partOkami = round($montant / 6, 2); // 1/6 pour OKAMI
-        $partProprietaire = $montant - $partOkami; // 5/6 pour propriétaire
-
-        // Mise à jour des soldes
         $this->increment('solde_caisse', $montant);
-        $this->increment('solde_part_okami', $partOkami);
-        $this->increment('solde_part_proprietaire', $partProprietaire);
 
         return [
             'montant_total' => $montant,
-            'part_okami' => $partOkami,
-            'part_proprietaire' => $partProprietaire,
         ];
     }
 
     /**
-     * Retirer un montant de la caisse (pour paiement propriétaire)
+     * Retirer un montant de la caisse (pour tout type de paiement)
      */
     public function retirerMontantProprietaire(float $montant): bool
     {
-        if ($montant > $this->solde_part_proprietaire) {
+        if ($montant > $this->solde_caisse) {
             return false;
         }
 
         $this->decrement('solde_caisse', $montant);
-        $this->decrement('solde_part_proprietaire', $montant);
 
         return true;
     }
 
     /**
-     * Retirer un montant pour OKAMI
+     * Retirer un montant de la caisse (alias pour compatibilité)
      */
     public function retirerMontantOkami(float $montant): bool
     {
-        if ($montant > $this->solde_part_okami) {
+        if ($montant > $this->solde_caisse) {
             return false;
         }
 
         $this->decrement('solde_caisse', $montant);
-        $this->decrement('solde_part_okami', $montant);
+
+        return true;
+    }
+
+    /**
+     * Retirer un montant de la caisse
+     */
+    public function retirerMontant(float $montant): bool
+    {
+        if ($montant > $this->solde_caisse) {
+            return false;
+        }
+
+        $this->decrement('solde_caisse', $montant);
 
         return true;
     }
