@@ -322,6 +322,18 @@
                     <li><a href="{{ route('supervisor.recompenses.index') }}"><i class="bi bi-award me-1"></i>Historique</a></li>
                 </ul>
             </li>
+            <li class="sidebar-heading">Communication</li>
+            <li class="has-submenu {{ request()->is('supervisor/realisations*') ? 'active' : '' }}">
+                <a href="#" class="toggle-submenu">
+                    <i class="bi bi-camera-reels text-primary"></i>
+                    <span>Nos R&eacute;alisations</span>
+                    <i class="bi bi-chevron-down submenu-icon"></i>
+                </a>
+                <ul class="submenu">
+                    <li><a href="{{ route('supervisor.realisations.index') }}"><i class="bi bi-grid me-1"></i>Galerie</a></li>
+                    <li><a href="{{ route('supervisor.realisations.create') }}"><i class="bi bi-plus-circle me-1"></i>Nouvelle</a></li>
+                </ul>
+            </li>
             @endrole
 
             {{-- Owner Menu --}}

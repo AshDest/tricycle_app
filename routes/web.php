@@ -203,6 +203,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Récompenses Motards (visualisation)
         Route::get('/recompenses', \App\Livewire\Supervisor\Recompenses\Index::class)->name('recompenses.index');
         Route::get('/recompenses/classement', \App\Livewire\Supervisor\Recompenses\Classement::class)->name('recompenses.classement');
+
+        // Réalisations (galerie photos/vidéos)
+        Route::get('/realisations', \App\Livewire\Supervisor\Realisations\Index::class)->name('realisations.index');
+        Route::get('/realisations/create', \App\Livewire\Supervisor\Realisations\Create::class)->name('realisations.create');
+        Route::get('/realisations/{realisation}', \App\Livewire\Supervisor\Realisations\Show::class)->name('realisations.show');
+        Route::get('/realisations/{realisation}/edit', \App\Livewire\Supervisor\Realisations\Edit::class)->name('realisations.edit');
     });
 
     /*
