@@ -25,7 +25,7 @@
 <body>
     <div class="header">
         <h1>{{ $title ?? 'Bénéfices de Change' }}</h1>
-        <p>New Technology Hub Sarl - Kinshasa</p>
+        <p>LATEM Sarl - Kinshasa</p>
         <p>Période: {{ $periode ?? 'Toutes' }}</p>
         @if($collecteur)
         <p>Collecteur: {{ $collecteur->user->name ?? $collecteur->identifiant }}</p>

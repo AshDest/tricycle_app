@@ -4,7 +4,7 @@
             <h4 class="page-title mb-1">
                 <i class="bi bi-percent me-2 text-success"></i>Commissions Mobile Money
             </h4>
-            <p class="text-muted mb-0">Enregistrement mensuel des commissions (70% NTH / 30% OKAMI)</p>
+            <p class="text-muted mb-0">Enregistrement mensuel des commissions (70% LATEM / 30% OKAMI)</p>
         </div>
         <div class="d-flex gap-2">
             <button wire:click="exportPdf" class="btn btn-danger">
@@ -43,7 +43,7 @@
                 <div class="card-body py-3 text-center">
                     <i class="bi bi-building fs-3 text-primary"></i>
                     <h4 class="fw-bold text-primary mb-1">{{ number_format($totalPartNth) }} FC</h4>
-                    <small class="text-muted">Part NTH (70%)</small>
+                    <small class="text-muted">Part LATEM (70%)</small>
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@
                             <th class="ps-4">Référence</th>
                             <th>Période</th>
                             <th class="text-end">Montant Total</th>
-                            <th class="text-end">Part NTH (70%)</th>
+                            <th class="text-end">Part LATEM (70%)</th>
                             <th class="text-end">Part OKAMI (30%)</th>
                             <th>Preuve</th>
                             <th>Statut</th>
@@ -162,7 +162,7 @@
                     <div class="modal-body">
                         <div class="alert alert-info mb-4">
                             <i class="bi bi-info-circle me-2"></i>
-                            <strong>Répartition automatique:</strong> 70% pour NTH, 30% pour OKAMI
+                            <strong>Répartition automatique:</strong> 70% pour LATEM, 30% pour OKAMI
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -197,7 +197,7 @@
                                 <div class="row g-2">
                                     <div class="col-6">
                                         <div class="alert alert-primary mb-0 py-2 text-center">
-                                            <small class="d-block">Part NTH (70%)</small>
+                                            <small class="d-block">Part LATEM (70%)</small>
                                             <strong>{{ number_format($previewNth) }} FC</strong>
                                         </div>
                                     </div>

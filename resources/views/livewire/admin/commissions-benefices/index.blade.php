@@ -44,7 +44,7 @@
                         <div class="row text-center">
                             <div class="col-4">
                                 <div class="text-success fw-bold">{{ number_format($statsCommissions['part_nth'] ?? 0) }} FC</div>
-                                <small class="text-muted">Part NTH (70%)</small>
+                                <small class="text-muted">Part LATEM (70%)</small>
                             </div>
                             <div class="col-4">
                                 <div class="fw-bold" style="color: #6f42c1;">{{ number_format($statsCommissions['part_okami'] ?? 0) }} FC</div>
@@ -143,7 +143,7 @@
                             <th class="ps-4">Collecteur</th>
                             <th>Période</th>
                             <th class="text-end">Montant Total</th>
-                            <th class="text-end">NTH (70%)</th>
+                            <th class="text-end">LATEM (70%)</th>
                             <th class="text-end">OKAMI (30%)</th>
                             <th>Preuve</th>
                             <th>Statut</th>

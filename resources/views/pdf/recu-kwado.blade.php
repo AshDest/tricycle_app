@@ -98,7 +98,7 @@
     <div class="header">
         <h1>KWADO SERVICE</h1>
         <p>Réparation de Pneus</p>
-        <p>New Technology Hub Sarl - Kinshasa</p>
+        <p>LATEM Sarl - Kinshasa</p>
     </div>
 
     <div class="numero">REÇU N° {{ $service->numero_service }}</div>

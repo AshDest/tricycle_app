@@ -135,7 +135,7 @@
                                     $payeurLabels = [
                                         'motard' => 'Motard',
                                         'proprietaire' => 'Propriétaire',
-                                        'nth' => 'NTH Sarl',
+                                        'nth' => 'LATEM Sarl',
                                         'okami' => 'OKAMI',
                                     ];
                                 @endphp

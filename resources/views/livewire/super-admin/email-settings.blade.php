@@ -206,7 +206,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold text-dark">Nom d'expédition <span class="text-danger">*</span></label>
-                                <input type="text" wire:model="mailFromName" class="form-control @error('mailFromName') is-invalid @enderror" placeholder="Tricycle App - NTH">
+                                <input type="text" wire:model="mailFromName" class="form-control @error('mailFromName') is-invalid @enderror" placeholder="Tricycle App - LATEM">
                                 @error('mailFromName')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>

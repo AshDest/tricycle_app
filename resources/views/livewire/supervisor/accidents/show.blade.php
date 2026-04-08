@@ -101,7 +101,7 @@
                                         'motard' => 'Motard',
                                         'proprietaire' => 'Propriétaire',
                                         'assurance' => 'Assurance',
-                                        'nth' => 'NTH Sarl',
+                                        'nth' => 'LATEM Sarl',
                                     ];
                                 @endphp
                                 {{ $priseEnChargeLabels[$accident->prise_en_charge] ?? ucfirst($accident->prise_en_charge ?? 'N/A') }}

@@ -75,7 +75,7 @@
                     <ul class="list-group list-group-flush small">
                         <li class="list-group-item d-flex justify-content-between">
                             <span><strong>admin</strong></span>
-                            <span class="text-muted">Administrateur NTH</span>
+                            <span class="text-muted">Administrateur LATEM</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span><strong>supervisor</strong></span>

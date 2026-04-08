@@ -26,7 +26,7 @@
 <body>
     <div class="header">
         <h1>{{ $title ?? 'Commissions Mobile Money' }}</h1>
-        <p>New Technology Hub Sarl - Kinshasa</p>
+        <p>LATEM Sarl - Kinshasa</p>
         @if($collecteur)
         <p>Collecteur: {{ $collecteur->user->name ?? $collecteur->identifiant }}</p>
         @endif
@@ -38,7 +38,7 @@
         </div>
         <div class="stat-box">
             <h4 class="text-primary">{{ number_format($stats['totalPartNth'] ?? 0) }} FC</h4>
-            <p>Part NTH (70%)</p>
+            <p>Part LATEM (70%)</p>
         </div>
         <div class="stat-box">
             <h4 class="text-warning">{{ number_format($stats['totalPartOkami'] ?? 0) }} FC</h4>
@@ -51,7 +51,7 @@
                 <th>Référence</th>
                 <th>Période</th>
                 <th class="text-end">Montant Total</th>
-                <th class="text-end">Part NTH</th>
+                <th class="text-end">Part LATEM</th>
                 <th class="text-end">Part OKAMI</th>
                 <th class="text-center">Statut</th>
             </tr>

@@ -264,7 +264,7 @@
                         </div>
                         <div>
                             <h5 class="mb-1 fw-bold">Solde OKAMI - Commissions</h5>
-                            <small class="opacity-75">Part de 30% sur chaque commission (70% NTH)</small>
+                            <small class="opacity-75">Part de 30% sur chaque commission (70% LATEM)</small>
                         </div>
                     </div>
                 </div>
@@ -297,7 +297,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="opacity-75">
                         <i class="bi bi-info-circle me-1"></i>
-                        Les commissions sont réparties: 70% pour NTH et 30% pour OKAMI
+                        Les commissions sont réparties: 70% pour LATEM et 30% pour OKAMI
                     </small>
                     <a href="{{ route('supervisor.payments.create') }}" class="btn btn-sm btn-light">
                         <i class="bi bi-plus-circle me-1"></i>Demande de paiement

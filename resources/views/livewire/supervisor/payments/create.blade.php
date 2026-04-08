@@ -355,7 +355,7 @@
                                 <div>
                                     <i class="bi bi-info-circle me-2" style="color: #6f42c1;"></i>
                                     <strong>Part OKAMI Commission (30%)</strong>
-                                    <br><small class="text-muted">70% va à New Technology Hub, 30% à OKAMI</small>
+                                    <br><small class="text-muted">70% va à LATEM, 30% à OKAMI</small>
                                 </div>
                                 <div>
                                     <span class="badge" style="background-color: #6f42c1;">Disponible: {{ number_format($soldeCommissionOkamiDisponible) }} FC</span>
@@ -379,7 +379,7 @@
                                             <tr>
                                                 <th>Période</th>
                                                 <th>Collecteur</th>
-                                                <th class="text-end">Part NTH (70%)</th>
+                                                <th class="text-end">Part LATEM (70%)</th>
                                                 <th class="text-end">Part OKAMI (30%)</th>
                                             </tr>
                                         </thead>

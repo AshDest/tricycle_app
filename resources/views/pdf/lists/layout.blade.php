@@ -143,7 +143,7 @@
 <body>
     <div class="header clearfix">
         <div class="company-info">
-            <strong>New Technology Hub Sarl</strong><br>
+            <strong>LATEM Sarl</strong><br>
             Gestion Motos-Tricycles<br>
             Kinshasa, RDC
         </div>
@@ -159,7 +159,7 @@
     </div>
 
     <div class="footer">
-        <span>© {{ date('Y') }} New Technology Hub Sarl - Système de Gestion des Motos-Tricycles</span>
+        <span>© {{ date('Y') }} LATEM Sarl - Système de Gestion des Motos-Tricycles</span>
     </div>
 </body>
 </html>

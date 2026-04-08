@@ -140,7 +140,7 @@
         <!-- En-tête -->
         <div class="header">
             <h1>TRICYCLE APP</h1>
-            <p>New Technology Hub Sarl</p>
+            <p>LATEM Sarl</p>
             <p>Kinshasa, RDC</p>
         </div>
 

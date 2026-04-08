@@ -86,7 +86,7 @@
 <body>
     <div class="header">
         <h1>{{ $title ?? 'Rapport' }}</h1>
-        <p>{{ $subtitle ?? '' }} | Généré le {{ now()->format('d/m/Y H:i') }} | New Technology Hub Sarl</p>
+        <p>{{ $subtitle ?? '' }} | Généré le {{ now()->format('d/m/Y H:i') }} | LATEM Sarl</p>
     </div>
 
     @yield('content')

@@ -28,7 +28,7 @@
                     @php
                         $role = auth()->user()->roles->first();
                         $roleLabels = [
-                            'admin' => 'Administrateur NTH',
+                            'admin' => 'Administrateur LATEM',
                             'supervisor' => 'Superviseur OKAMI',
                             'owner' => 'Propriétaire',
                             'driver' => 'Motard',
