@@ -18,9 +18,12 @@ class Index extends Component
     public $search = '';
     public $filterStatut = '';
     public $filterMode = '';
+    public $filterProprietaire = '';
+    public $dateFrom = '';
+    public $dateTo = '';
     public $perPage = 15;
 
-    protected $queryString = ['search', 'filterStatut', 'filterMode'];
+    protected $queryString = ['search', 'filterStatut', 'filterMode', 'filterProprietaire', 'dateFrom', 'dateTo'];
 
     public function updatingSearch()
     {
@@ -34,6 +37,27 @@ class Index extends Component
 
     public function updatingFilterMode()
     {
+        $this->resetPage();
+    }
+
+    public function updatingFilterProprietaire()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateFrom()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo()
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterStatut', 'filterMode', 'filterProprietaire', 'dateFrom', 'dateTo']);
         $this->resetPage();
     }
 
@@ -72,17 +96,30 @@ class Index extends Component
 
     protected function getBaseQuery()
     {
-        return Payment::with('proprietaire.user')
+        return Payment::with(['proprietaire.user', 'traitePar'])
             ->when($this->search, function ($q) {
-                $q->whereHas('proprietaire.user', function ($q2) {
-                    $q2->where('name', 'like', '%' . $this->search . '%');
-                })->orWhere('reference_paiement', 'like', '%' . $this->search . '%');
+                $q->where(function($q2) {
+                    $q2->whereHas('proprietaire.user', function ($q3) {
+                        $q3->where('name', 'like', '%' . $this->search . '%');
+                    })
+                    ->orWhere('reference_paiement', 'like', '%' . $this->search . '%')
+                    ->orWhere('beneficiaire_nom', 'like', '%' . $this->search . '%');
+                });
             })
             ->when($this->filterStatut, function ($q) {
                 $q->where('statut', $this->filterStatut);
             })
             ->when($this->filterMode, function ($q) {
                 $q->where('mode_paiement', $this->filterMode);
+            })
+            ->when($this->filterProprietaire, function ($q) {
+                $q->where('proprietaire_id', $this->filterProprietaire);
+            })
+            ->when($this->dateFrom, function ($q) {
+                $q->whereDate('created_at', '>=', $this->dateFrom);
+            })
+            ->when($this->dateTo, function ($q) {
+                $q->whereDate('created_at', '<=', $this->dateTo);
             })
             ->orderBy('created_at', 'desc');
     }
@@ -106,6 +143,8 @@ class Index extends Component
             'filtres' => [
                 'search' => $this->search,
                 'statut' => $this->filterStatut,
+                'date_from' => $this->dateFrom,
+                'date_to' => $this->dateTo,
             ],
         ]);
 
@@ -120,9 +159,21 @@ class Index extends Component
     {
         $payments = $this->getBaseQuery()->paginate($this->perPage);
 
+        $proprietaires = Proprietaire::with('user')->get();
         $totalEnAttente = Payment::whereIn('statut', ['en_attente', 'demande'])->count();
         $totalPaye = Payment::where('statut', 'paye')->sum('total_paye');
+        $totalArrieres = Payment::whereIn('statut', ['en_attente', 'demande'])->sum('total_du');
+        $nombrePaiements = Payment::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
 
-        return view('livewire.admin.payments.index', compact('payments', 'totalEnAttente', 'totalPaye'));
+        return view('livewire.admin.payments.index', compact(
+            'payments',
+            'proprietaires',
+            'totalEnAttente',
+            'totalPaye',
+            'totalArrieres',
+            'nombrePaiements'
+        ));
     }
 }

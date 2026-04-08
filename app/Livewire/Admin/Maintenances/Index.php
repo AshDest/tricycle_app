@@ -17,9 +17,11 @@ class Index extends Component
     public $search = '';
     public $filterType = '';
     public $filterStatut = '';
+    public $dateFrom = '';
+    public $dateTo = '';
     public $perPage = 15;
 
-    protected $queryString = ['search', 'filterType', 'filterStatut'];
+    protected $queryString = ['search', 'filterType', 'filterStatut', 'dateFrom', 'dateTo'];
 
     public function updatingSearch()
     {
@@ -33,6 +35,22 @@ class Index extends Component
 
     public function updatingFilterStatut()
     {
+        $this->resetPage();
+    }
+
+    public function updatingDateFrom()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo()
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterType', 'filterStatut', 'dateFrom', 'dateTo']);
         $this->resetPage();
     }
 
@@ -99,6 +117,12 @@ class Index extends Component
             })
             ->when($this->filterStatut, function ($q) {
                 $q->where('statut', $this->filterStatut);
+            })
+            ->when($this->dateFrom, function ($q) {
+                $q->whereDate('date_intervention', '>=', $this->dateFrom);
+            })
+            ->when($this->dateTo, function ($q) {
+                $q->whereDate('date_intervention', '<=', $this->dateTo);
             })
             ->orderBy('date_intervention', 'desc');
     }

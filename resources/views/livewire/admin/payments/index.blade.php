@@ -129,7 +129,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="fw-bold text-success">{{ number_format($payment->montant ?? 0) }} FC</td>
+                            <td class="fw-bold text-success">{{ number_format($payment->total_du ?? 0) }} FC</td>
                             <td>
                                 @php
                                     $modeIcons = ['mobile_money' => 'phone', 'virement' => 'bank', 'cash' => 'cash'];
@@ -139,7 +139,7 @@
                                     {{ ucfirst(str_replace('_', ' ', $payment->mode_paiement ?? 'N/A')) }}
                                 </span>
                             </td>
-                            <td><code>{{ $payment->reference ?? 'N/A' }}</code></td>
+                            <td><code>{{ $payment->reference_paiement ?? 'N/A' }}</code></td>
                             <td>
                                 @php
                                     $statutColors = [
