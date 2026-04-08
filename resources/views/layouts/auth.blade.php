@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="author" content="New Technology Hub Sarl">
+    <meta name="author" content="LATEM Sarl">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="Tricycle App - Gestion de flotte de motos-tricycles">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -614,7 +614,7 @@
         </div>
 
         <div class="brand-footer">
-            <p>&copy; {{ date('Y') }} <a href="https://nth-sarl.com" target="_blank">New Technology Hub Sarl</a>. Tous droits réservés.</p>
+            <p>&copy; {{ date('Y') }} <a href="https://nth-sarl.com" target="_blank">LATEM Sarl</a>. Tous droits réservés.</p>
         </div>
     </div>
 
@@ -633,7 +633,7 @@
 
             <!-- Mobile Footer -->
             <div class="mobile-footer">
-                <p>&copy; {{ date('Y') }} New Technology Hub Sarl</p>
+                <p>&copy; {{ date('Y') }} LATEM Sarl</p>
             </div>
         </div>
     </div>

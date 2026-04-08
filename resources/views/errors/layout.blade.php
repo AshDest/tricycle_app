@@ -138,7 +138,7 @@
     </div>
 
     <div class="brand">
-        <i class="bi bi-shield-check"></i> Tricycle App &mdash; New Technology Hub Sarl
+        <i class="bi bi-shield-check"></i> Tricycle App &mdash; LATEM Sarl
     </div>
 </body>
 </html>

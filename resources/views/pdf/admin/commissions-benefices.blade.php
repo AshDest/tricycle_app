@@ -20,7 +20,7 @@
 <body>
     <div class="header">
         <h1>{{ $title }}</h1>
-        <p>New Technology Hub Sarl - Administration</p>
+        <p>LATEM Sarl - Administration</p>
         <p>Généré le {{ now()->format('d/m/Y à H:i') }}</p>
     </div>
     <table>
@@ -30,7 +30,7 @@
                 <th>Collecteur</th>
                 <th>Période</th>
                 <th class="text-end">Total</th>
-                <th class="text-end">NTH (70%)</th>
+                <th class="text-end">LATEM (70%)</th>
                 <th class="text-end">OKAMI (30%)</th>
                 <th class="text-center">Statut</th>
                 @else

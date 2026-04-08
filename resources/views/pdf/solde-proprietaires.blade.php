@@ -197,7 +197,7 @@
     </table>
 
     <div class="footer">
-        <p>New Technology Hub Sarl - Gestion des Motos Tricycles</p>
+        <p>LATEM Sarl - Gestion des Motos Tricycles</p>
         <p>Document généré automatiquement - {{ $dateGeneration->format('d/m/Y H:i:s') }}</p>
     </div>
 </body>

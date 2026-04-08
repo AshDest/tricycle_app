@@ -125,7 +125,7 @@
 <body>
     <div class="header">
         <h1>SERVICE DE LAVAGE</h1>
-        <p>New Technology Hub Sarl</p>
+        <p>LATEM Sarl</p>
         <p>Kinshasa, RDC</p>
     </div>
 

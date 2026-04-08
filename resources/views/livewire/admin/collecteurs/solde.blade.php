@@ -414,7 +414,7 @@
                                 <th class="ps-4">Référence</th>
                                 <th>Période</th>
                                 <th class="text-end">Montant Total</th>
-                                <th class="text-end">Part NTH (70%)</th>
+                                <th class="text-end">Part LATEM (70%)</th>
                                 <th class="text-end">Part OKAMI (30%)</th>
                                 <th class="text-center pe-4">Statut</th>
                             </tr>

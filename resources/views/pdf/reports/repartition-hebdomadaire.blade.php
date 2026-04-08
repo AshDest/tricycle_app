@@ -104,7 +104,7 @@
     <!-- En-tête -->
     <div class="header">
         <h1>RAPPORT DE RÉPARTITION HEBDOMADAIRE</h1>
-        <p>New Technology Hub Sarl - Tricycle App | Période: {{ $resume['periode']['debut'] }} au {{ $resume['periode']['fin'] }}</p>
+        <p>LATEM Sarl - Tricycle App | Période: {{ $resume['periode']['debut'] }} au {{ $resume['periode']['fin'] }}</p>
     </div>
 
     <!-- Info système -->
@@ -207,7 +207,7 @@
 
     <!-- Pied de page -->
     <div class="footer">
-        <p>Document généré le {{ $dateExport }} | Tricycle App - New Technology Hub Sarl</p>
+        <p>Document généré le {{ $dateExport }} | Tricycle App - LATEM Sarl</p>
     </div>
 </body>
 </html>

@@ -110,7 +110,7 @@
     <!-- En-tête -->
     <div class="header">
         <h1>RELEVÉ MENSUEL - {{ strtoupper($mois) }}</h1>
-        <p>New Technology Hub Sarl - Tricycle App | Généré le {{ now()->format('d/m/Y à H:i') }}</p>
+        <p>LATEM Sarl - Tricycle App | Généré le {{ now()->format('d/m/Y à H:i') }}</p>
     </div>
 
     <!-- Infos propriétaire -->
@@ -207,7 +207,7 @@
 
     <!-- Pied de page -->
     <div class="footer">
-        <p>Ce document est un relevé officiel généré par Tricycle App - New Technology Hub Sarl</p>
+        <p>Ce document est un relevé officiel généré par Tricycle App - LATEM Sarl</p>
         <p>Pour toute question, veuillez contacter l'administration.</p>
     </div>
 </body>

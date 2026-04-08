@@ -184,7 +184,7 @@ new #[Layout('layouts.auth')] class extends Component
  {{-- Footer --}}
  <div >
  <div class="mt-3">
- <p>&copy; {{ date('Y') }} New Technology Hub Sarl. Tous droits réservés.</p>
+ <p>&copy; {{ date('Y') }} LATEM Sarl. Tous droits réservés.</p>
  </div>
  </div>
  </div>
