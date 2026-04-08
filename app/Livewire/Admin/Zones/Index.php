@@ -30,6 +30,12 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterStatut']);
+        $this->resetPage();
+    }
+
     public function toggleActive(Zone $zone)
     {
         $zone->update(['is_active' => !$zone->is_active]);

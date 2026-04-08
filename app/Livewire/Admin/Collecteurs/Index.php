@@ -36,6 +36,12 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterZone', 'filterStatut']);
+        $this->resetPage();
+    }
+
     public function toggleActive(Collecteur $collecteur)
     {
         $collecteur->update(['is_active' => !$collecteur->is_active]);
