@@ -51,7 +51,7 @@ class EditLavage extends Component
         ];
 
         if ($this->is_externe) {
-            $rules['plaque_externe'] = 'required|string|max:20';
+            $rules['plaque_externe'] = 'nullable|string|max:20';
             $rules['proprietaire_externe'] = 'nullable|string|max:100';
             $rules['telephone_externe'] = 'nullable|string|max:20';
         } else {
@@ -135,6 +135,13 @@ class EditLavage extends Component
     public function updatedRemise($value)
     {
         $this->calculerPrixFinal();
+    }
+
+    public function updatedPrixFinal($value)
+    {
+        // Permettre la saisie libre du prix final
+        $this->prix_final = max(0, (float) $value);
+        $this->updateRepartitionPreview();
     }
 
     public function calculerPrixFinal()
