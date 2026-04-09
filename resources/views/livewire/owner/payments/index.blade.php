@@ -22,35 +22,27 @@
 
     <!-- Stats -->
     <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-success bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
-                    <h4 class="fw-bold text-success mb-1">{{ number_format($totalRecu ?? 0) }} FC</h4>
-                    <small class="text-muted">Total reçu</small>
+                    <h4 class="fw-bold text-success mb-1">{{ number_format($totalRecuUsd ?? 0, 2) }} $</h4>
+                    <small class="text-muted">Total reçu (USD)</small>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-primary bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
-                    <h4 class="fw-bold text-primary mb-1">{{ number_format($soldeDisponible ?? 0) }} FC</h4>
-                    <small class="text-muted">Solde disponible</small>
+                    <h4 class="fw-bold text-primary mb-1">{{ number_format($recuMoisUsd ?? 0, 2) }} $</h4>
+                    <small class="text-muted">Reçu ce mois (USD)</small>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-warning bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
-                    <h4 class="fw-bold text-warning mb-1">{{ number_format($enAttente ?? 0) }} FC</h4>
+                    <h4 class="fw-bold text-warning mb-1">{{ $paiementsEnAttente ?? 0 }}</h4>
                     <small class="text-muted">En attente</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card bg-danger bg-opacity-10 border-0">
-                <div class="card-body py-3 text-center">
-                    <h4 class="fw-bold text-danger mb-1">{{ number_format($arrieres ?? 0) }} FC</h4>
-                    <small class="text-muted">Arriérés motards</small>
                 </div>
             </div>
         </div>
@@ -102,7 +94,7 @@
                     <thead class="bg-light">
                         <tr>
                             <th class="ps-4">Date</th>
-                            <th>Montant</th>
+                            <th>Montant (USD)</th>
                             <th>Mode</th>
                             <th>Référence</th>
                             <th>Statut</th>
@@ -113,25 +105,28 @@
                         @forelse($payments ?? [] as $payment)
                         <tr>
                             <td class="ps-4">
-                                <span class="fw-medium">{{ $payment->created_at?->format('d/m/Y') }}</span>
+                                <span class="fw-medium">{{ $payment->date_paiement?->format('d/m/Y') ?? $payment->created_at?->format('d/m/Y') }}</span>
                                 <small class="text-muted d-block">{{ $payment->created_at?->format('H:i') }}</small>
                             </td>
-                            <td class="fw-bold text-success">{{ number_format($payment->montant ?? 0) }} FC</td>
+                            <td class="fw-bold text-success">{{ number_format($payment->montant_usd ?? 0, 2) }} $</td>
                             <td>
                                 @php
-                                    $modeIcons = ['mobile_money' => 'phone', 'virement' => 'bank', 'cash' => 'cash'];
+                                    $modeIcons = ['mobile_money' => 'phone', 'mpesa' => 'phone', 'airtel_money' => 'phone', 'orange_money' => 'phone', 'virement_bancaire' => 'bank', 'cash' => 'cash'];
                                 @endphp
                                 <span class="badge bg-light text-dark">
                                     <i class="bi bi-{{ $modeIcons[$payment->mode_paiement] ?? 'credit-card' }} me-1"></i>
                                     {{ ucfirst(str_replace('_', ' ', $payment->mode_paiement ?? 'N/A')) }}
                                 </span>
                             </td>
-                            <td><code>{{ $payment->reference ?? 'N/A' }}</code></td>
+                            <td><code>{{ $payment->reference_paiement ?? $payment->reference ?? 'N/A' }}</code></td>
                             <td>
                                 @php
                                     $statutColors = [
                                         'paye' => 'success',
+                                        'payé' => 'success',
+                                        'valide' => 'success',
                                         'en_attente' => 'warning',
+                                        'demande' => 'info',
                                         'rejete' => 'danger'
                                     ];
                                 @endphp
@@ -140,7 +135,7 @@
                                 </span>
                             </td>
                             <td class="text-end pe-4">
-                                @if($payment->statut === 'paye')
+                                @if(in_array($payment->statut, ['paye', 'payé', 'valide']))
                                 <button wire:click="telechargerRecu({{ $payment->id }})" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-download me-1"></i>PDF
                                 </button>

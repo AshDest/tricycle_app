@@ -5,7 +5,7 @@
             <h4 class="page-title mb-1">
                 <i class="bi bi-file-earmark-bar-graph me-2 text-info"></i>Mes Relevés
             </h4>
-            <p class="text-muted mb-0">Consultez vos relevés mensuels de versements</p>
+            <p class="text-muted mb-0">Consultez vos relevés mensuels de paiements reçus</p>
         </div>
         @if($proprietaire)
         <button wire:click="exportPdf" class="btn btn-danger" wire:loading.attr="disabled">
@@ -25,7 +25,6 @@
         <strong>Attention:</strong> Votre compte n'est pas associé à un profil propriétaire. Veuillez contacter l'administration.
     </div>
     @else
-
 
     <!-- Filtres période -->
     <div class="card mb-4">
@@ -59,129 +58,101 @@
 
     <!-- Résumé -->
     <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-success bg-opacity-10 border-0 h-100">
                 <div class="card-body text-center py-4">
                     <i class="bi bi-cash-stack fs-2 text-success mb-2"></i>
-                    <h4 class="fw-bold text-success mb-1">{{ number_format($totalVersements) }} FC</h4>
-                    <small class="text-muted">Total Versé</small>
+                    <h4 class="fw-bold text-success mb-1">{{ number_format($recuMoisUsd ?? 0, 2) }} $</h4>
+                    <small class="text-muted">Reçu ce mois (USD)</small>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-primary bg-opacity-10 border-0 h-100">
                 <div class="card-body text-center py-4">
-                    <i class="bi bi-bullseye fs-2 text-primary mb-2"></i>
-                    <h4 class="fw-bold text-primary mb-1">{{ number_format($totalAttendu) }} FC</h4>
-                    <small class="text-muted">Total Attendu</small>
+                    <i class="bi bi-wallet2 fs-2 text-primary mb-2"></i>
+                    <h4 class="fw-bold text-primary mb-1">{{ number_format($totalRecuUsd ?? 0, 2) }} $</h4>
+                    <small class="text-muted">Total reçu (USD)</small>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card bg-{{ $totalArrieres > 0 ? 'danger' : 'success' }} bg-opacity-10 border-0 h-100">
-                <div class="card-body text-center py-4">
-                    <i class="bi bi-exclamation-triangle fs-2 text-{{ $totalArrieres > 0 ? 'danger' : 'success' }} mb-2"></i>
-                    <h4 class="fw-bold text-{{ $totalArrieres > 0 ? 'danger' : 'success' }} mb-1">{{ number_format($totalArrieres) }} FC</h4>
-                    <small class="text-muted">Arriérés</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-info bg-opacity-10 border-0 h-100">
                 <div class="card-body text-center py-4">
-                    <i class="bi bi-wallet2 fs-2 text-info mb-2"></i>
-                    <h4 class="fw-bold text-info mb-1">{{ number_format($soldeDisponible) }} FC</h4>
-                    <small class="text-muted">Solde Disponible</small>
+                    <i class="bi bi-receipt fs-2 text-info mb-2"></i>
+                    <h4 class="fw-bold text-info mb-1">{{ $nbPaiements ?? 0 }}</h4>
+                    <small class="text-muted">Paiements ce mois</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Détails par moto -->
+    <!-- Détails des paiements -->
     <div class="card">
         <div class="card-header py-3">
-            <h6 class="mb-0 fw-bold"><i class="bi bi-bicycle me-2 text-primary"></i>Détails par Moto ({{ count($versementsParMoto) }} motos)</h6>
+            <h6 class="mb-0 fw-bold"><i class="bi bi-list-check me-2 text-primary"></i>Paiements Reçus - {{ $moisOptions[$mois] ?? '' }} {{ $annee }}</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
-                            <th class="ps-4">Moto</th>
-                            <th>Motard</th>
-                            <th class="text-center">Nb Versements</th>
-                            <th class="text-end">Versé</th>
-                            <th class="text-end">Attendu</th>
-                            <th class="text-end">Arriérés</th>
-                            <th class="text-center pe-4">Taux</th>
+                            <th class="ps-4">Date</th>
+                            <th>Mode</th>
+                            <th>Référence</th>
+                            <th class="text-end">Montant (USD)</th>
+                            <th class="text-center pe-4">Statut</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($versementsParMoto as $item)
-                        @php
-                            $taux = ($item['attendu'] ?? 0) > 0 ? round((($item['total'] ?? 0) / $item['attendu']) * 100, 1) : 0;
-                            $tauxColor = $taux >= 90 ? 'success' : ($taux >= 70 ? 'warning' : 'danger');
-                        @endphp
+                        @forelse($paiements ?? [] as $payment)
                         <tr>
                             <td class="ps-4">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="avatar avatar-sm bg-primary bg-opacity-10 text-primary rounded">
-                                        <i class="bi bi-bicycle"></i>
-                                    </div>
-                                    <div>
-                                        <span class="fw-medium d-block">{{ $item['moto']->plaque_immatriculation ?? 'N/A' }}</span>
-                                        <small class="text-muted">{{ $item['moto']->numero_matricule ?? '' }}</small>
-                                    </div>
-                                </div>
+                                <span class="fw-medium">{{ $payment->date_paiement?->format('d/m/Y') ?? $payment->created_at?->format('d/m/Y') }}</span>
+                                <small class="text-muted d-block">{{ $payment->created_at?->format('H:i') }}</small>
                             </td>
                             <td>
-                                @if($item['moto']->motard)
-                                {{ $item['moto']->motard->user->name ?? 'N/A' }}
-                                @else
-                                <span class="text-muted fst-italic">Non assigné</span>
-                                @endif
+                                @php
+                                    $modeIcons = ['mobile_money' => 'phone', 'mpesa' => 'phone', 'airtel_money' => 'phone', 'orange_money' => 'phone', 'virement_bancaire' => 'bank', 'cash' => 'cash'];
+                                @endphp
+                                <span class="badge bg-light text-dark">
+                                    <i class="bi bi-{{ $modeIcons[$payment->mode_paiement] ?? 'credit-card' }} me-1"></i>
+                                    {{ ucfirst(str_replace('_', ' ', $payment->mode_paiement ?? 'N/A')) }}
+                                </span>
                             </td>
-                            <td class="text-center">
-                                <span class="badge bg-light text-dark">{{ $item['nb_versements'] ?? 0 }}</span>
-                            </td>
-                            <td class="text-end fw-semibold text-success">{{ number_format($item['total'] ?? 0) }} FC</td>
-                            <td class="text-end text-muted">{{ number_format($item['attendu'] ?? 0) }} FC</td>
-                            <td class="text-end">
-                                @if(($item['arrieres'] ?? 0) > 0)
-                                <span class="text-danger fw-semibold">{{ number_format($item['arrieres']) }} FC</span>
-                                @else
-                                <span class="text-success"><i class="bi bi-check-circle"></i></span>
-                                @endif
-                            </td>
+                            <td><code>{{ $payment->reference_paiement ?? 'N/A' }}</code></td>
+                            <td class="text-end fw-semibold text-success">{{ number_format($payment->montant_usd ?? 0, 2) }} $</td>
                             <td class="text-center pe-4">
-                                <span class="badge badge-soft-{{ $tauxColor }}">{{ $taux }}%</span>
+                                @php
+                                    $statutColors = [
+                                        'paye' => 'success',
+                                        'payé' => 'success',
+                                        'valide' => 'success',
+                                        'en_attente' => 'warning',
+                                        'demande' => 'info',
+                                        'rejete' => 'danger',
+                                    ];
+                                @endphp
+                                <span class="badge badge-soft-{{ $statutColors[$payment->statut] ?? 'secondary' }}">
+                                    {{ ucfirst(str_replace('_', ' ', $payment->statut ?? 'N/A')) }}
+                                </span>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="bi bi-bicycle fs-1 d-block mb-3"></i>
-                                <p class="mb-0">Vous n'avez aucune moto enregistrée</p>
-                                <small>Les motos doivent être associées à votre compte propriétaire</small>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-receipt fs-1 d-block mb-3"></i>
+                                <p class="mb-0">Aucun paiement pour cette période</p>
                             </td>
                         </tr>
                         @endforelse
                     </tbody>
-                    @if(count($versementsParMoto) > 0)
+                    @if(count($paiements ?? []) > 0)
                     <tfoot class="bg-light">
                         <tr class="fw-bold">
                             <td class="ps-4" colspan="3">TOTAL</td>
-                            <td class="text-end text-success">{{ number_format($totalVersements) }} FC</td>
-                            <td class="text-end">{{ number_format($totalAttendu) }} FC</td>
-                            <td class="text-end text-danger">{{ number_format($totalArrieres) }} FC</td>
-                            <td class="text-center pe-4">
-                                @php
-                                    $tauxGlobal = $totalAttendu > 0 ? round(($totalVersements / $totalAttendu) * 100, 1) : 100;
-                                @endphp
-                                <span class="badge badge-soft-{{ $tauxGlobal >= 90 ? 'success' : ($tauxGlobal >= 70 ? 'warning' : 'danger') }}">
-                                    {{ $tauxGlobal }}%
-                                </span>
-                            </td>
+                            <td class="text-end text-success">{{ number_format($recuMoisUsd ?? 0, 2) }} $</td>
+                            <td></td>
                         </tr>
                     </tfoot>
                     @endif
@@ -190,13 +161,6 @@
         </div>
     </div>
 
-    <!-- Info paiements -->
-    @if($paiementsRecus > 0)
-    <div class="alert alert-success mt-4">
-        <i class="bi bi-check-circle me-2"></i>
-        <strong>Paiements reçus ce mois:</strong> {{ number_format($paiementsRecus) }} FC
-    </div>
-    @endif
 
     @endif {{-- End of @if($proprietaire) --}}
 </div>

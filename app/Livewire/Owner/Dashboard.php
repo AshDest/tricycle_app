@@ -5,10 +5,7 @@ namespace App\Livewire\Owner;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Proprietaire;
-use App\Models\Versement;
 use App\Models\Payment;
-use App\Models\Maintenance;
-use App\Services\RepartitionService;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -20,19 +17,11 @@ class Dashboard extends Component
     // Statistiques
     public $totalMotos = 0;
     public $motosActives = 0;
-    public $revenusMois = 0;
-    public $revenusTotal = 0;
-    public $prochainPaiement = 0;
-    public $maintenancesEnCours = 0;
-    public $totalArrieres = 0;
+    public $totalRecuUsd = 0;
+    public $recuMoisUsd = 0;
     public $paiementsEnAttente = 0;
 
-    // Répartition hebdomadaire
-    public $repartitionHebdo = null;
-    public $totalVerseHebdo = 0;
-
     // Listes
-    public $derniersVersements = [];
     public $derniersPaiements = [];
 
     public function mount()
@@ -46,53 +35,28 @@ class Dashboard extends Component
 
         // Charger les motos
         $this->motos = $this->proprietaire->motos()->with('motard.user')->get();
-        $motoIds = $this->motos->pluck('id');
 
         // Statistiques motos
         $this->totalMotos = $this->motos->count();
         $this->motosActives = $this->motos->where('statut', 'actif')->count();
 
-        // Versements du mois en cours
-        $this->revenusMois = Versement::whereIn('moto_id', $motoIds)
-            ->whereMonth('date_versement', now()->month)
-            ->whereYear('date_versement', now()->year)
-            ->sum('montant');
-
-        // Total des versements
-        $this->revenusTotal = Versement::whereIn('moto_id', $motoIds)->sum('montant');
-
-        // Arriérés = somme des écarts positifs (montant_attendu - montant)
-        $this->totalArrieres = Versement::whereIn('moto_id', $motoIds)
-            ->whereRaw('montant < montant_attendu')
-            ->selectRaw('SUM(montant_attendu - montant) as total')
-            ->value('total') ?? 0;
-
-        // Répartition hebdomadaire
-        $this->repartitionHebdo = RepartitionService::getRepartitionHebdomadaireProprietaire($this->proprietaire);
-        $this->totalVerseHebdo = $this->repartitionHebdo['total_verse'] ?? 0;
-
-        // Prochain paiement estimé = total versements non encore payé
-        $totalPayeAuProprietaire = $this->proprietaire->payments()
+        // Total reçu en USD (tous les paiements payés/validés)
+        $this->totalRecuUsd = $this->proprietaire->payments()
             ->whereIn('statut', ['paye', 'payé', 'valide'])
-            ->sum('total_paye');
-        $this->prochainPaiement = max(0, $this->revenusTotal - $totalPayeAuProprietaire);
+            ->sum('montant_usd') ?? 0;
 
-        // Maintenances en cours
-        $this->maintenancesEnCours = Maintenance::whereIn('moto_id', $motoIds)
-            ->whereIn('statut', ['en_attente', 'en_cours'])
-            ->count();
+        // Reçu ce mois en USD
+        $this->recuMoisUsd = $this->proprietaire->payments()
+            ->whereIn('statut', ['paye', 'payé', 'valide'])
+            ->whereMonth('date_paiement', now()->month)
+            ->whereYear('date_paiement', now()->year)
+            ->sum('montant_usd') ?? 0;
 
         // Paiements en attente
         $this->paiementsEnAttente = $this->proprietaire->payments()
             ->whereIn('statut', ['en_attente', 'demande'])
             ->count();
 
-        // Derniers versements (5)
-        $this->derniersVersements = Versement::whereIn('moto_id', $motoIds)
-            ->with(['motard.user', 'moto'])
-            ->orderBy('date_versement', 'desc')
-            ->take(5)
-            ->get();
 
         // Derniers paiements (5)
         $this->derniersPaiements = $this->proprietaire->payments()

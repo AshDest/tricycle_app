@@ -345,12 +345,6 @@
                     <span>Mes Motos</span>
                 </a>
             </li>
-            <li class="{{ request()->is('owner/versements*') ? 'active' : '' }}">
-                <a href="{{ route('owner.versements.index') }}">
-                    <i class="bi bi-cash-stack"></i>
-                    <span>Versements</span>
-                </a>
-            </li>
             <li class="{{ request()->is('owner/payments*') ? 'active' : '' }}">
                 <a href="{{ route('owner.payments.index') }}">
                     <i class="bi bi-wallet2"></i>
