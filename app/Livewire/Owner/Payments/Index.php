@@ -6,7 +6,6 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Payment;
-use App\Models\Versement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -23,10 +22,9 @@ class Index extends Component
     public $perPage = 15;
 
     // Stats
-    public $totalRecu = 0;
-    public $soldeDisponible = 0;
-    public $enAttente = 0;
-    public $arrieres = 0;
+    public $totalRecuUsd = 0;
+    public $recuMoisUsd = 0;
+    public $paiementsEnAttente = 0;
 
     // Message
     public $message = '';
@@ -45,7 +43,6 @@ class Index extends Component
         $this->reset(['search', 'filterStatut', 'filterPeriode', 'dateFrom', 'dateTo']);
         $this->resetPage();
     }
-
 
     public function closeMessage()
     {
@@ -107,7 +104,7 @@ class Index extends Component
 
         $stats = [
             'total' => $payments->count(),
-            'total_montant' => $payments->sum('total_du'),
+            'total_montant_usd' => $payments->sum('montant_usd'),
             'payes' => $payments->where('statut', 'paye')->count(),
             'en_attente' => $payments->where('statut', 'en_attente')->count(),
         ];
@@ -136,28 +133,21 @@ class Index extends Component
         $proprietaire = auth()->user()->proprietaire;
         $proprietaire_id = $proprietaire?->id;
 
-        // Calculer les statistiques
+        // Calculer les statistiques en USD
         if ($proprietaire) {
-            $this->totalRecu = Payment::where('proprietaire_id', $proprietaire_id)
-                ->where('statut', 'paye')
-                ->sum('total_paye') ?? 0;
+            $this->totalRecuUsd = Payment::where('proprietaire_id', $proprietaire_id)
+                ->whereIn('statut', ['paye', 'payé', 'valide'])
+                ->sum('montant_usd') ?? 0;
 
-            $this->enAttente = Payment::where('proprietaire_id', $proprietaire_id)
-                ->where('statut', 'en_attente')
-                ->sum('total_du') ?? 0;
+            $this->recuMoisUsd = Payment::where('proprietaire_id', $proprietaire_id)
+                ->whereIn('statut', ['paye', 'payé', 'valide'])
+                ->whereMonth('date_paiement', now()->month)
+                ->whereYear('date_paiement', now()->year)
+                ->sum('montant_usd') ?? 0;
 
-            // Solde disponible = versements des motos - paiements reçus
-            $totalVersements = $proprietaire->versements()
-                ->where('versements.statut', 'payé')
-                ->sum('versements.montant') ?? 0;
-
-            $this->soldeDisponible = max(0, $totalVersements - $this->totalRecu);
-
-            // Arriérés = versements en retard des motards
-            $this->arrieres = $proprietaire->versements()
-                ->whereIn('versements.statut', ['en_retard', 'partiellement_payé'])
-                ->selectRaw('COALESCE(SUM(versements.montant_attendu - COALESCE(versements.montant, 0)), 0) as total')
-                ->value('total') ?? 0;
+            $this->paiementsEnAttente = Payment::where('proprietaire_id', $proprietaire_id)
+                ->whereIn('statut', ['en_attente', 'demande'])
+                ->count();
         }
 
         $payments = Payment::where('proprietaire_id', $proprietaire_id)

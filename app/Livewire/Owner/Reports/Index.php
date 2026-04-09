@@ -4,8 +4,6 @@ namespace App\Livewire\Owner\Reports;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use App\Models\Versement;
-use App\Models\Moto;
 use App\Models\Payment;
 use App\Models\Proprietaire;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -19,11 +17,9 @@ class Index extends Component
     public $annee;
 
     // Données du relevé
-    public $totalVersements = 0;
-    public $totalAttendu = 0;
-    public $totalArrieres = 0;
-    public $paiementsRecus = 0;
-    public $soldeDisponible = 0;
+    public $totalRecuUsd = 0;
+    public $recuMoisUsd = 0;
+    public $nbPaiements = 0;
 
     public function mount()
     {
@@ -41,7 +37,7 @@ class Index extends Component
         return Proprietaire::with('user')->find($this->proprietaireId);
     }
 
-    public function getVersementsParMoto()
+    public function getPaiementsMois()
     {
         $proprietaire = $this->getProprietaire();
 
@@ -49,81 +45,39 @@ class Index extends Component
             return [];
         }
 
-        $motos = $proprietaire->motos()->with('motard.user')->get();
-        $motoIds = $motos->pluck('id');
-
         $dateDebut = Carbon::createFromDate($this->annee, $this->mois, 1)->startOfMonth();
         $dateFin = Carbon::createFromDate($this->annee, $this->mois, 1)->endOfMonth();
-        $joursOuvrables = $dateFin->day;
 
-        $versementsParMoto = [];
-        $this->totalVersements = 0;
-        $this->totalAttendu = 0;
-        $this->totalArrieres = 0;
+        $paiements = $proprietaire->payments()
+            ->whereBetween('date_paiement', [$dateDebut, $dateFin])
+            ->orderBy('date_paiement', 'desc')
+            ->get();
 
-        foreach ($motos as $moto) {
-            $versements = Versement::where('moto_id', $moto->id)
-                ->whereBetween('date_versement', [$dateDebut, $dateFin])
-                ->get();
+        $this->recuMoisUsd = $paiements->whereIn('statut', ['paye', 'payé', 'valide'])->sum('montant_usd') ?? 0;
+        $this->nbPaiements = $paiements->count();
 
-            $totalMoto = $versements->sum('montant');
-
-            if ($versements->count() > 0) {
-                $attenduMoto = $versements->sum('montant_attendu');
-            } else {
-                $tarifJournalier = $moto->montant_journalier_attendu ?? 0;
-                $attenduMoto = $tarifJournalier * $joursOuvrables;
-            }
-
-            $arrieresMoto = max(0, $attenduMoto - $totalMoto);
-            $nbVersements = $versements->count();
-
-            $versementsParMoto[] = [
-                'moto' => $moto,
-                'total' => $totalMoto,
-                'attendu' => $attenduMoto,
-                'arrieres' => $arrieresMoto,
-                'nb_versements' => $nbVersements,
-            ];
-
-            $this->totalVersements += $totalMoto;
-            $this->totalAttendu += $attenduMoto;
-            $this->totalArrieres += $arrieresMoto;
-        }
-
-        // Paiements reçus ce mois
-        $this->paiementsRecus = $proprietaire->payments()
+        // Total global reçu en USD
+        $this->totalRecuUsd = $proprietaire->payments()
             ->whereIn('statut', ['paye', 'payé', 'valide'])
-            ->whereMonth('date_paiement', $this->mois)
-            ->whereYear('date_paiement', $this->annee)
-            ->sum('total_paye');
+            ->sum('montant_usd') ?? 0;
 
-        // Solde disponible global
-        $totalVersementsTous = Versement::whereIn('moto_id', $motoIds)->sum('montant');
-        $totalPaiementsTous = $proprietaire->payments()
-            ->whereIn('statut', ['paye', 'payé', 'valide'])
-            ->sum('total_paye');
-        $this->soldeDisponible = max(0, $totalVersementsTous - $totalPaiementsTous);
-
-        return $versementsParMoto;
+        return $paiements;
     }
 
     public function exportPdf()
     {
         $proprietaire = $this->getProprietaire();
-        $versementsParMoto = $this->getVersementsParMoto();
+        $paiements = $this->getPaiementsMois();
 
         $dateDebut = Carbon::createFromDate($this->annee, $this->mois, 1);
         $moisNom = $dateDebut->translatedFormat('F Y');
 
         $pdf = Pdf::loadView('pdf.owner.releve-mensuel', [
             'proprietaire' => $proprietaire,
-            'versementsParMoto' => $versementsParMoto,
-            'totalVersements' => $this->totalVersements,
-            'totalAttendu' => $this->totalAttendu,
-            'totalArrieres' => $this->totalArrieres,
-            'paiementsRecus' => $this->paiementsRecus,
-            'soldeDisponible' => $this->soldeDisponible,
+            'paiements' => $paiements,
+            'totalRecuUsd' => $this->recuMoisUsd,
+            'totalGlobalUsd' => $this->totalRecuUsd,
+            'nbPaiements' => $this->nbPaiements,
             'mois' => $moisNom,
             'periode' => $dateDebut->format('m/Y'),
         ]);
@@ -151,12 +105,12 @@ class Index extends Component
         }
 
         $proprietaire = $this->getProprietaire();
-        $versementsParMoto = $this->getVersementsParMoto();
+        $paiements = $this->getPaiementsMois();
 
         return view('livewire.owner.reports.index', [
             'moisOptions' => $moisOptions,
             'anneeOptions' => $anneeOptions,
-            'versementsParMoto' => $versementsParMoto,
+            'paiements' => $paiements,
             'proprietaire' => $proprietaire,
         ]);
     }

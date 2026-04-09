@@ -218,7 +218,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::middleware(['role:owner'])->prefix('owner')->name('owner.')->group(function () {
         Route::get('/motos', \App\Livewire\Owner\Motos\Index::class)->name('motos.index');
-        Route::get('/versements', \App\Livewire\Owner\Versements\Index::class)->name('versements.index');
         Route::get('/payments', \App\Livewire\Owner\Payments\Index::class)->name('payments.index');
         Route::get('/reports', \App\Livewire\Owner\Reports\Index::class)->name('reports.index');
     });
