@@ -64,7 +64,7 @@ class Create extends Component
     public $numero_compte = '';
     public $notes = '';
 
-    // Conversion USD → CDF (pour paiement propriétaire)
+    // Conversion USD → CDF (pour tous les paiements)
     public $taux_usd_cdf = 2800;
     public $montant_usd = '';  // Montant saisi en USD
 
@@ -74,6 +74,7 @@ class Create extends Component
             'source_caisse' => 'required|in:proprietaire,okami,lavage,commission',
             'semaine_selectionnee' => 'required|integer|min:0',
             'montant' => 'required|numeric|min:1',
+            'montant_usd' => 'required|numeric|min:0.01',
             'mode_paiement' => 'required|in:cash,mpesa,airtel_money,orange_money,virement_bancaire',
             'numero_compte' => 'nullable|string|max:50',
             'notes' => 'nullable|string|max:500',
@@ -81,7 +82,6 @@ class Create extends Component
 
         if ($this->source_caisse === 'proprietaire') {
             $rules['proprietaire_id'] = 'required|exists:proprietaires,id';
-            $rules['montant_usd'] = 'required|numeric|min:0.01';
         } elseif (in_array($this->source_caisse, ['okami', 'lavage', 'commission'])) {
             $rules['beneficiaire_nom'] = 'required|string|max:100';
             $rules['beneficiaire_telephone'] = 'nullable|string|max:20';
@@ -326,7 +326,7 @@ class Create extends Component
      */
     public function updatedMontantUsd($value)
     {
-        if ($this->source_caisse === 'proprietaire' && is_numeric($value) && $value > 0) {
+        if (is_numeric($value) && $value > 0) {
             $this->montant = round($value * $this->taux_usd_cdf, 2);
         } elseif (empty($value)) {
             $this->montant = '';
@@ -438,16 +438,18 @@ class Create extends Component
      */
     public function remplirMontantSemaine()
     {
+        $montantFc = 0;
         if ($this->source_caisse === 'proprietaire') {
-            $this->montant = $this->soldeHebdomadaire;
-            $this->montant_usd = $this->taux_usd_cdf > 0 ? round($this->soldeHebdomadaire / $this->taux_usd_cdf, 2) : 0;
+            $montantFc = $this->soldeHebdomadaire;
         } elseif ($this->source_caisse === 'okami') {
-            $this->montant = $this->soldeOkamiSemaine;
+            $montantFc = $this->soldeOkamiSemaine;
         } elseif ($this->source_caisse === 'lavage') {
-            $this->montant = $this->soldeLavageOkamiSemaine;
+            $montantFc = $this->soldeLavageOkamiSemaine;
         } elseif ($this->source_caisse === 'commission') {
-            $this->montant = $this->soldeCommissionOkamiDisponible;
+            $montantFc = $this->soldeCommissionOkamiDisponible;
         }
+        $this->montant = $montantFc;
+        $this->montant_usd = $this->taux_usd_cdf > 0 ? round($montantFc / $this->taux_usd_cdf, 2) : 0;
     }
 
     /**
@@ -455,16 +457,18 @@ class Create extends Component
      */
     public function remplirMontantTotal()
     {
+        $montantFc = 0;
         if ($this->source_caisse === 'proprietaire') {
-            $this->montant = $this->soldeDisponible;
-            $this->montant_usd = $this->taux_usd_cdf > 0 ? round($this->soldeDisponible / $this->taux_usd_cdf, 2) : 0;
+            $montantFc = $this->soldeDisponible;
         } elseif ($this->source_caisse === 'okami') {
-            $this->montant = $this->soldeOkamiDisponible;
+            $montantFc = $this->soldeOkamiDisponible;
         } elseif ($this->source_caisse === 'lavage') {
-            $this->montant = $this->soldeLavageOkamiDisponible;
+            $montantFc = $this->soldeLavageOkamiDisponible;
         } elseif ($this->source_caisse === 'commission') {
-            $this->montant = $this->soldeCommissionOkamiDisponible;
+            $montantFc = $this->soldeCommissionOkamiDisponible;
         }
+        $this->montant = $montantFc;
+        $this->montant_usd = $this->taux_usd_cdf > 0 ? round($montantFc / $this->taux_usd_cdf, 2) : 0;
     }
 
     /**
@@ -484,7 +488,8 @@ class Create extends Component
         };
 
         if ($this->montant > $soldeMax) {
-            $this->addError('montant', "Le montant demandé dépasse le solde disponible (" . number_format($soldeMax) . " FC).");
+            $soldeMaxUsd = $this->taux_usd_cdf > 0 ? round($soldeMax / $this->taux_usd_cdf, 2) : 0;
+            $this->addError('montant_usd', "Le montant demandé dépasse le solde disponible ({$soldeMaxUsd} $ ≈ " . number_format($soldeMax) . " FC).");
             return;
         }
 
@@ -523,6 +528,8 @@ class Create extends Component
                     'beneficiaire_telephone' => $this->beneficiaire_telephone,
                     'beneficiaire_motif' => $this->beneficiaire_motif,
                     'montant' => $this->montant,
+                    'montant_usd' => $this->montant_usd,
+                    'taux_conversion' => $this->taux_usd_cdf,
                     'mode_paiement' => $this->mode_paiement,
                     'numero_compte' => $this->numero_compte ?: $this->beneficiaire_telephone,
                     'notes' => $this->notes,
@@ -539,6 +546,8 @@ class Create extends Component
                     'beneficiaire_telephone' => $this->beneficiaire_telephone,
                     'beneficiaire_motif' => $this->beneficiaire_motif,
                     'montant' => $this->montant,
+                    'montant_usd' => $this->montant_usd,
+                    'taux_conversion' => $this->taux_usd_cdf,
                     'mode_paiement' => $this->mode_paiement,
                     'numero_compte' => $this->numero_compte ?: $this->beneficiaire_telephone,
                     'notes' => $this->notes,
@@ -555,6 +564,8 @@ class Create extends Component
                     'beneficiaire_telephone' => $this->beneficiaire_telephone,
                     'beneficiaire_motif' => $this->beneficiaire_motif,
                     'montant' => $this->montant,
+                    'montant_usd' => $this->montant_usd,
+                    'taux_conversion' => $this->taux_usd_cdf,
                     'mode_paiement' => $this->mode_paiement,
                     'numero_compte' => $this->numero_compte ?: $this->beneficiaire_telephone,
                     'notes' => $this->notes,

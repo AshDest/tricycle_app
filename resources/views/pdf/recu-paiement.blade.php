@@ -175,28 +175,32 @@
         </div>
 
         <!-- Montant payé -->
+        @php
+            $tauxRecu = ($payment->taux_conversion && $payment->taux_conversion > 0) ? $payment->taux_conversion : \App\Models\SystemSetting::getTauxUsdCdf();
+            $montantPayeUsdRecu = ($payment->montant_usd && $payment->montant_usd > 0) ? $payment->montant_usd : ($tauxRecu > 0 ? round($payment->total_paye / $tauxRecu, 2) : 0);
+            $montantDemandeUsdRecu = ($payment->montant_usd && $payment->montant_usd > 0) ? $payment->montant_usd : ($tauxRecu > 0 ? round($payment->total_du / $tauxRecu, 2) : 0);
+        @endphp
         <div class="amount-box">
             <div class="amount-label">MONTANT PAYÉ</div>
-            <div class="amount-value">{{ number_format($payment->total_paye ?? 0, 0, ',', ' ') }} FC</div>
+            <div class="amount-value">${{ number_format($montantPayeUsdRecu, 2, ',', ' ') }} USD</div>
+            <div style="font-size: 8px; opacity: 0.8; margin-top: 2px;">≈ {{ number_format($payment->total_paye ?? 0, 0, ',', ' ') }} FC</div>
         </div>
 
         <!-- Détails du paiement -->
         <div class="section">
             <div class="section-title">Détails</div>
             <table class="info">
-                @if($payment->montant_usd)
                 <tr>
-                    <td class="label">Montant (USD)</td>
-                    <td class="value">${{ number_format($payment->montant_usd, 2, ',', ' ') }} USD</td>
+                    <td class="label">Montant demandé</td>
+                    <td class="value">${{ number_format($montantDemandeUsdRecu, 2, ',', ' ') }} USD</td>
+                </tr>
+                <tr>
+                    <td class="label">Équiv. en FC</td>
+                    <td class="value">{{ number_format($payment->total_du ?? 0, 0, ',', ' ') }} FC</td>
                 </tr>
                 <tr>
                     <td class="label">Taux de conversion</td>
-                    <td class="value">1 USD = {{ number_format($payment->taux_conversion, 2, ',', ' ') }} FC</td>
-                </tr>
-                @endif
-                <tr>
-                    <td class="label">Montant demandé</td>
-                    <td class="value">{{ number_format($payment->total_du ?? 0, 0, ',', ' ') }} FC</td>
+                    <td class="value">1 USD = {{ number_format($tauxRecu, 2, ',', ' ') }} FC</td>
                 </tr>
                 <tr>
                     <td class="label">Mode</td>

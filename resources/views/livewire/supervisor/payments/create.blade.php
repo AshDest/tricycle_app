@@ -67,7 +67,7 @@
                                             <strong class="d-block">Caisse OKAMI</strong>
                                             <small class="text-muted">Dépenses OKAMI</small>
                                             <div class="mt-1">
-                                                <span class="badge bg-warning text-dark">{{ number_format($soldeOkamiDisponible) }} FC dispo</span>
+                                                <span class="badge bg-warning text-dark">{{ $taux_usd_cdf > 0 ? number_format($soldeOkamiDisponible / $taux_usd_cdf, 2) : '0' }} $ dispo</span>
                                             </div>
                                         </div>
                                     </label>
@@ -82,7 +82,7 @@
                                             <strong class="d-block">Part Lavage</strong>
                                             <small class="text-muted">20% lavages</small>
                                             <div class="mt-1">
-                                                <span class="badge bg-info">{{ number_format($soldeLavageOkamiDisponible) }} FC</span>
+                                                <span class="badge bg-info">{{ $taux_usd_cdf > 0 ? number_format($soldeLavageOkamiDisponible / $taux_usd_cdf, 2) : '0' }} $</span>
                                             </div>
                                         </div>
                                     </label>
@@ -97,7 +97,7 @@
                                             <strong class="d-block">Part Commission</strong>
                                             <small class="text-muted">30% commissions</small>
                                             <div class="mt-1">
-                                                <span class="badge" style="background-color: #6f42c1;">{{ number_format($soldeCommissionOkamiDisponible) }} FC</span>
+                                                <span class="badge" style="background-color: #6f42c1;">{{ $taux_usd_cdf > 0 ? number_format($soldeCommissionOkamiDisponible / $taux_usd_cdf, 2) : '0' }} $</span>
                                             </div>
                                         </div>
                                     </label>
@@ -122,7 +122,7 @@
                                 <option value="{{ $prop->id }}">
                                     {{ $prop->user->name ?? $prop->raison_sociale }}
                                     - {{ $prop->motos_actives ?? 0 }} moto(s)
-                                    - Solde total: {{ number_format($prop->solde_disponible ?? 0) }} FC
+                                    - Solde total: {{ $taux_usd_cdf > 0 ? number_format(($prop->solde_disponible ?? 0) / $taux_usd_cdf, 2) : '0' }} $
                                 </option>
                                 @endforeach
                             </select>
@@ -166,7 +166,7 @@
                                 @foreach($semainesProprietaire as $sem)
                                 <option value="{{ $sem['index'] }}" {{ $sem['deja_paye'] ? 'class=text-muted' : '' }}>
                                     {{ $sem['label'] }}
-                                    @if($sem['total_versements'] > 0) — {{ number_format($sem['total_versements']) }} FC collectés @endif
+                                    @if($sem['total_versements'] > 0) — {{ $taux_usd_cdf > 0 ? number_format($sem['total_versements'] / $taux_usd_cdf, 2) : '0' }} $ collectés @endif
                                     @if($sem['deja_paye']) ✓ Déjà demandé @endif
                                 </option>
                                 @endforeach
@@ -186,10 +186,10 @@
                                 </div>
                                 <div class="text-end">
                                     <div class="mb-1">
-                                        <span class="badge bg-success fs-6">Solde total: {{ number_format($soldeDisponible) }} FC</span>
+                                        <span class="badge bg-success fs-6">Solde total: {{ $taux_usd_cdf > 0 ? number_format($soldeDisponible / $taux_usd_cdf, 2) : '0' }} $</span>
                                     </div>
                                     <div>
-                                        <span class="badge bg-primary">Semaine: {{ number_format($soldeHebdomadaire) }} FC</span>
+                                        <span class="badge bg-primary">Semaine: {{ $taux_usd_cdf > 0 ? number_format($soldeHebdomadaire / $taux_usd_cdf, 2) : '0' }} $</span>
                                     </div>
                                 </div>
                             </div>
@@ -230,16 +230,16 @@
                                                 <td><small>{{ $v['date'] }}</small></td>
                                                 <td><small>{{ $v['motard'] }}</small></td>
                                                 <td><small>{{ $v['moto'] }}</small></td>
-                                                <td class="text-end"><small>{{ number_format($v['montant']) }} FC</small></td>
-                                                <td class="text-end"><small class="text-success fw-bold">{{ number_format($v['part_proprietaire']) }} FC</small></td>
+                                                <td class="text-end"><small>{{ $taux_usd_cdf > 0 ? number_format($v['montant'] / $taux_usd_cdf, 2) : '0' }} $</small></td>
+                                                <td class="text-end"><small class="text-success fw-bold">{{ $taux_usd_cdf > 0 ? number_format($v['part_proprietaire'] / $taux_usd_cdf, 2) : '0' }} $</small></td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot class="bg-light">
                                             <tr class="fw-bold">
                                                 <td colspan="3">Total</td>
-                                                <td class="text-end">{{ number_format($totalVersementsSemaine) }} FC</td>
-                                                <td class="text-end text-success">{{ number_format($partProprietaireSemaine) }} FC</td>
+                                                <td class="text-end">{{ $taux_usd_cdf > 0 ? number_format($totalVersementsSemaine / $taux_usd_cdf, 2) : '0' }} $</td>
+                                                <td class="text-end text-success">{{ $taux_usd_cdf > 0 ? number_format($partProprietaireSemaine / $taux_usd_cdf, 2) : '0' }} $</td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -269,8 +269,8 @@
                                     <strong>Solde OKAMI</strong>
                                 </div>
                                 <div>
-                                    <span class="badge bg-warning text-dark me-2">Total: {{ number_format($soldeOkamiDisponible) }} FC</span>
-                                    <span class="badge bg-secondary">Semaine: {{ number_format($soldeOkamiSemaine) }} FC</span>
+                                    <span class="badge bg-warning text-dark me-2">Total: {{ $taux_usd_cdf > 0 ? number_format($soldeOkamiDisponible / $taux_usd_cdf, 2) : '0' }} $</span>
+                                    <span class="badge bg-secondary">Semaine: {{ $taux_usd_cdf > 0 ? number_format($soldeOkamiSemaine / $taux_usd_cdf, 2) : '0' }} $</span>
                                 </div>
                             </div>
                         </div>
@@ -320,8 +320,8 @@
                                     <strong>Part OKAMI Lavage (20%)</strong>
                                 </div>
                                 <div>
-                                    <span class="badge bg-info me-2">Total: {{ number_format($soldeLavageOkamiDisponible) }} FC</span>
-                                    <span class="badge bg-secondary">Semaine: {{ number_format($soldeLavageOkamiSemaine) }} FC</span>
+                                    <span class="badge bg-info me-2">Total: {{ $taux_usd_cdf > 0 ? number_format($soldeLavageOkamiDisponible / $taux_usd_cdf, 2) : '0' }} $</span>
+                                    <span class="badge bg-secondary">Semaine: {{ $taux_usd_cdf > 0 ? number_format($soldeLavageOkamiSemaine / $taux_usd_cdf, 2) : '0' }} $</span>
                                 </div>
                             </div>
                         </div>
@@ -352,14 +352,14 @@
                                                 <td><small>{{ $l['date'] }}</small></td>
                                                 <td><small>{{ $l['moto'] }}</small></td>
                                                 <td><small>{{ $l['laveur'] }}</small></td>
-                                                <td class="text-end"><small class="text-info fw-bold">{{ number_format($l['part_okami']) }} FC</small></td>
+                                                <td class="text-end"><small class="text-info fw-bold">{{ $taux_usd_cdf > 0 ? number_format($l['part_okami'] / $taux_usd_cdf, 2) : '0' }} $</small></td>
                                             </tr>
                                             @endforeach
                                         </tbody>
                                         <tfoot class="bg-light">
                                             <tr class="fw-bold">
                                                 <td colspan="3">Total Part OKAMI</td>
-                                                <td class="text-end text-info">{{ number_format($partOkamiLavageSemaine) }} FC</td>
+                                                <td class="text-end text-info">{{ $taux_usd_cdf > 0 ? number_format($partOkamiLavageSemaine / $taux_usd_cdf, 2) : '0' }} $</td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -414,7 +414,7 @@
                                     <br><small class="text-muted">70% va à LATEM, 30% à OKAMI</small>
                                 </div>
                                 <div>
-                                    <span class="badge" style="background-color: #6f42c1;">Disponible: {{ number_format($soldeCommissionOkamiDisponible) }} FC</span>
+                                    <span class="badge" style="background-color: #6f42c1;">Disponible: {{ $taux_usd_cdf > 0 ? number_format($soldeCommissionOkamiDisponible / $taux_usd_cdf, 2) : '0' }} $</span>
                                 </div>
                             </div>
                         </div>
@@ -444,8 +444,8 @@
                                             <tr>
                                                 <td><small>{{ $c['periode'] }}</small></td>
                                                 <td><small>{{ $c['collecteur'] }}</small></td>
-                                                <td class="text-end"><small class="text-success">{{ number_format($c['part_nth']) }} FC</small></td>
-                                                <td class="text-end"><small class="fw-bold" style="color: #6f42c1;">{{ number_format($c['part_okami']) }} FC</small></td>
+                                                <td class="text-end"><small class="text-success">{{ $taux_usd_cdf > 0 ? number_format($c['part_nth'] / $taux_usd_cdf, 2) : '0' }} $</small></td>
+                                                <td class="text-end"><small class="fw-bold" style="color: #6f42c1;">{{ $taux_usd_cdf > 0 ? number_format($c['part_okami'] / $taux_usd_cdf, 2) : '0' }} $</small></td>
                                             </tr>
                                             @endforeach
                                         </tbody>
@@ -494,8 +494,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            @if($source_caisse === 'proprietaire')
-                            {{-- Paiement propriétaire: saisie en USD avec conversion automatique en CDF --}}
+                            {{-- Saisie en USD avec conversion automatique en CDF pour toutes les sources --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-currency-dollar me-1 text-success"></i>
@@ -536,64 +535,48 @@
 
                                 <!-- Boutons de remplissage rapide -->
                                 <div class="mt-2 d-flex gap-2 flex-wrap">
-                                    @if($soldeHebdomadaire > 0)
-                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeHebdomadaire) }} FC ≈ ${{ $taux_usd_cdf > 0 ? number_format($soldeHebdomadaire / $taux_usd_cdf, 2) : '0' }})
-                                    </button>
-                                    @endif
-                                    @if($soldeDisponible > 0)
-                                    <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-wallet2 me-1"></i>Total ({{ number_format($soldeDisponible) }} FC ≈ ${{ $taux_usd_cdf > 0 ? number_format($soldeDisponible / $taux_usd_cdf, 2) : '0' }})
-                                    </button>
-                                    @endif
-                                </div>
-                            </div>
-                            @else
-                            {{-- Autres sources de caisse: saisie en FC directement --}}
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Montant à payer <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" wire:model="montant"
-                                           class="form-control @error('montant') is-invalid @enderror"
-                                           placeholder="0" min="1">
-                                    <span class="input-group-text">FC</span>
-                                </div>
-                                @error('montant')
-                                <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-
-                                <!-- Boutons de remplissage rapide -->
-                                <div class="mt-2 d-flex gap-2 flex-wrap">
-                                    @if($source_caisse === 'okami' && $soldeOkamiSemaine > 0)
-                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-warning">
-                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeOkamiSemaine) }} FC)
-                                    </button>
-                                    @elseif($source_caisse === 'lavage' && $soldeLavageOkamiSemaine > 0)
-                                    <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-info">
-                                        <i class="bi bi-calendar-week me-1"></i>Semaine ({{ number_format($soldeLavageOkamiSemaine) }} FC)
-                                    </button>
-                                    @elseif($source_caisse === 'commission' && $soldeCommissionOkamiDisponible > 0)
-                                    <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm" style="border-color: #6f42c1; color: #6f42c1;">
-                                        <i class="bi bi-wallet me-1"></i>Total ({{ number_format($soldeCommissionOkamiDisponible) }} FC)
-                                    </button>
-                                    @endif
-
-                                    @php
-                                        $soldeTotal = match($source_caisse) {
-                                            'okami' => $soldeOkamiDisponible,
-                                            'lavage' => $soldeLavageOkamiDisponible,
-                                            'commission' => $soldeCommissionOkamiDisponible,
-                                            default => 0,
-                                        };
-                                    @endphp
-                                    @if($soldeTotal > 0 && $source_caisse !== 'commission')
-                                    <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-wallet2 me-1"></i>Total ({{ number_format($soldeTotal) }} FC)
-                                    </button>
+                                    @if($source_caisse === 'proprietaire')
+                                        @if($soldeHebdomadaire > 0)
+                                        <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-calendar-week me-1"></i>Semaine (${{ $taux_usd_cdf > 0 ? number_format($soldeHebdomadaire / $taux_usd_cdf, 2) : '0' }})
+                                        </button>
+                                        @endif
+                                        @if($soldeDisponible > 0)
+                                        <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-wallet2 me-1"></i>Total (${{ $taux_usd_cdf > 0 ? number_format($soldeDisponible / $taux_usd_cdf, 2) : '0' }})
+                                        </button>
+                                        @endif
+                                    @elseif($source_caisse === 'okami')
+                                        @if($soldeOkamiSemaine > 0)
+                                        <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-calendar-week me-1"></i>Semaine (${{ $taux_usd_cdf > 0 ? number_format($soldeOkamiSemaine / $taux_usd_cdf, 2) : '0' }})
+                                        </button>
+                                        @endif
+                                        @if($soldeOkamiDisponible > 0)
+                                        <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-wallet2 me-1"></i>Total (${{ $taux_usd_cdf > 0 ? number_format($soldeOkamiDisponible / $taux_usd_cdf, 2) : '0' }})
+                                        </button>
+                                        @endif
+                                    @elseif($source_caisse === 'lavage')
+                                        @if($soldeLavageOkamiSemaine > 0)
+                                        <button type="button" wire:click="remplirMontantSemaine" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-calendar-week me-1"></i>Semaine (${{ $taux_usd_cdf > 0 ? number_format($soldeLavageOkamiSemaine / $taux_usd_cdf, 2) : '0' }})
+                                        </button>
+                                        @endif
+                                        @if($soldeLavageOkamiDisponible > 0)
+                                        <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-wallet2 me-1"></i>Total (${{ $taux_usd_cdf > 0 ? number_format($soldeLavageOkamiDisponible / $taux_usd_cdf, 2) : '0' }})
+                                        </button>
+                                        @endif
+                                    @elseif($source_caisse === 'commission')
+                                        @if($soldeCommissionOkamiDisponible > 0)
+                                        <button type="button" wire:click="remplirMontantTotal" class="btn btn-sm" style="border-color: #6f42c1; color: #6f42c1;">
+                                            <i class="bi bi-wallet me-1"></i>Total (${{ $taux_usd_cdf > 0 ? number_format($soldeCommissionOkamiDisponible / $taux_usd_cdf, 2) : '0' }})
+                                        </button>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
-                            @endif
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Mode de paiement <span class="text-danger">*</span></label>
@@ -710,6 +693,7 @@
                 </div>
             </div>
             @endif
+            @endif
 
             <div class="card mb-4 border-success">
                 <div class="card-header py-3 bg-success text-white">
@@ -727,7 +711,6 @@
                     </small>
                 </div>
             </div>
-            @endif
 
             <div class="card mb-4">
                 <div class="card-header py-3">
@@ -776,11 +759,7 @@
                         <li class="d-flex align-items-start gap-2 mb-3">
                             <i class="bi bi-4-circle text-primary mt-1"></i>
                             <span>
-                                @if($source_caisse === 'proprietaire')
                                 Entrez le montant en USD (converti automatiquement en FC)
-                                @else
-                                Entrez le montant et le mode de paiement
-                                @endif
                             </span>
                         </li>
                         <li class="d-flex align-items-start gap-2">
