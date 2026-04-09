@@ -104,8 +104,8 @@
                             <div class="card-body">
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label small">Plaque <span class="text-danger">*</span></label>
-                                        <input type="text" wire:model="plaque_externe" class="form-control @error('plaque_externe') is-invalid @enderror" placeholder="Ex: AB1234CD">
+                                        <label class="form-label small">Plaque</label>
+                                        <input type="text" wire:model="plaque_externe" class="form-control @error('plaque_externe') is-invalid @enderror" placeholder="Ex: AB1234CD (optionnel)">
                                         @error('plaque_externe')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -163,11 +163,12 @@
                         <!-- Prix et remise -->
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Prix de base</label>
+                                <label class="form-label fw-semibold">Prix suggéré</label>
                                 <div class="input-group">
                                     <input type="number" wire:model="prix_base" class="form-control" readonly>
                                     <span class="input-group-text">FC</span>
                                 </div>
+                                <small class="text-muted">Basé sur le type de lavage</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Remise</label>
@@ -177,11 +178,15 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Prix final</label>
+                                <label class="form-label fw-semibold">Montant à payer <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="number" wire:model="prix_final" class="form-control form-control-lg fw-bold text-success" readonly>
+                                    <input type="number" wire:model.live="prix_final" class="form-control form-control-lg fw-bold text-success @error('prix_final') is-invalid @enderror" min="0" placeholder="0">
                                     <span class="input-group-text">FC</span>
                                 </div>
+                                @error('prix_final')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Vous pouvez saisir le montant voulu</small>
                             </div>
                         </div>
 
