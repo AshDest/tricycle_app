@@ -67,7 +67,7 @@
                     <label class="form-label small fw-semibold">Rechercher</label>
                     <input type="text" wire:model.live="search" class="form-control" placeholder="Propriétaire...">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small fw-semibold">Statut</label>
                     <select wire:model.live="filterStatut" class="form-select">
                         <option value="">Tous</option>
@@ -77,7 +77,7 @@
                         <option value="rejete">Rejeté</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small fw-semibold">Propriétaire</label>
                     <select wire:model.live="filterProprietaire" class="form-select">
                         <option value="">Tous</option>
@@ -86,9 +86,17 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <button wire:click="resetFilters" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-x-lg me-1"></i>Réinitialiser
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">Date début</label>
+                    <input type="date" wire:model.live="filterDateDebut" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">Date fin</label>
+                    <input type="date" wire:model.live="filterDateFin" class="form-control">
+                </div>
+                <div class="col-md-1">
+                    <button wire:click="resetFilters" class="btn btn-outline-secondary w-100" title="Réinitialiser">
+                        <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
             </div>
