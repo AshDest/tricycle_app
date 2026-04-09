@@ -37,6 +37,8 @@ class Create extends Component
     public $versementsSemaine = [];
     public $totalVersementsSemaine = 0;
     public $partProprietaireSemaine = 0;
+    public $dateDebutService = null;  // Date la plus ancienne de contrat_debut des motos du propriétaire
+    public $semainesProprietaire = []; // Semaines spécifiques au propriétaire (depuis contrat_debut)
 
     // Pour caisse OKAMI
     public $beneficiaire_nom = '';
@@ -301,6 +303,8 @@ class Create extends Component
         $this->versementsSemaine = [];
         $this->totalVersementsSemaine = 0;
         $this->partProprietaireSemaine = 0;
+        $this->dateDebutService = null;
+        $this->semainesProprietaire = [];
         $this->beneficiaire_nom = '';
         $this->beneficiaire_telephone = '';
         $this->beneficiaire_motif = '';
