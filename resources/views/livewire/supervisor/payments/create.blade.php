@@ -16,7 +16,8 @@
         <!-- Formulaire -->
         <div class="col-lg-8">
             <form wire:submit="submit">
-                <!-- Sélection de la semaine -->
+                <!-- Sélection de la semaine (pour les sources non-propriétaire) -->
+                @if($source_caisse !== 'proprietaire')
                 <div class="card mb-4 border-primary">
                     <div class="card-header py-3 bg-primary text-white">
                         <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-week me-2"></i>Période Hebdomadaire</h6>
@@ -36,6 +37,7 @@
                         <small class="text-muted">Les versements de cette semaine seront utilisés pour calculer le montant disponible.</small>
                     </div>
                 </div>
+                @endif
 
                 <!-- Choix de la source de caisse -->
                 <div class="card mb-4">
@@ -130,6 +132,52 @@
                         </div>
 
                         @if($proprietaireSelectionne)
+                        {{-- Info date de début de service --}}
+                        @if($dateDebutService)
+                        <div class="alert alert-light border mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-calendar-event text-primary fs-5"></i>
+                                <div>
+                                    <strong>Début de service:</strong>
+                                    <span class="text-primary">{{ \Carbon\Carbon::parse($dateDebutService)->format('d/m/Y') }}</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        Les semaines disponibles sont calculées depuis cette date
+                                        ({{ \Carbon\Carbon::parse($dateDebutService)->diffForHumans() }})
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        @else
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <small>Aucune date de début de contrat définie pour les motos de ce propriétaire. Les semaines affichées sont basées sur les versements existants.</small>
+                        </div>
+                        @endif
+
+                        {{-- Sélection de la semaine spécifique au propriétaire --}}
+                        @if(count($semainesProprietaire) > 0)
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-calendar-week me-1 text-primary"></i>
+                                Semaine de paiement <span class="text-danger">*</span>
+                            </label>
+                            <select wire:model.live="semaine_selectionnee" class="form-select @error('semaine_selectionnee') is-invalid @enderror">
+                                @foreach($semainesProprietaire as $sem)
+                                <option value="{{ $sem['index'] }}" {{ $sem['deja_paye'] ? 'class=text-muted' : '' }}>
+                                    {{ $sem['label'] }}
+                                    @if($sem['total_versements'] > 0) — {{ number_format($sem['total_versements']) }} FC collectés @endif
+                                    @if($sem['deja_paye']) ✓ Déjà demandé @endif
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('semaine_selectionnee')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">{{ count($semainesProprietaire) }} semaine(s) depuis le début de service</small>
+                        </div>
+                        @endif
+
                         <div class="alert alert-info mb-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -146,6 +194,14 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Info si la semaine a déjà été payée --}}
+                        @if(isset($semainesProprietaire[$semaine_selectionnee]) && $semainesProprietaire[$semaine_selectionnee]['deja_paye'])
+                        <div class="alert alert-warning mb-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Attention:</strong> Une demande de paiement existe déjà pour cette semaine.
+                        </div>
+                        @endif
 
                         <!-- Détail des versements de la semaine -->
                         @if(count($versementsSemaine) > 0)
@@ -595,8 +651,13 @@
         <!-- Sidebar - Infos -->
         <div class="col-lg-4">
             <!-- Résumé de la semaine sélectionnée -->
-            @if(isset($semaines[$semaine_selectionnee]))
-            @php $semaineActuelle = $semaines[$semaine_selectionnee]; @endphp
+            @php
+                $semainesAffichees = ($source_caisse === 'proprietaire' && count($semainesProprietaire ?? []) > 0)
+                    ? $semainesProprietaire
+                    : ($semaines ?? []);
+            @endphp
+            @if(isset($semainesAffichees[$semaine_selectionnee]))
+            @php $semaineActuelle = $semainesAffichees[$semaine_selectionnee]; @endphp
             <div class="card mb-4 border-primary">
                 <div class="card-header py-3 bg-primary text-white">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-week me-2"></i>Semaine {{ $semaineActuelle['numero'] }}</h6>
@@ -614,6 +675,42 @@
             @endif
 
             @if($source_caisse === 'proprietaire')
+            {{-- Info propriétaire et début de service --}}
+            @if($proprietaireSelectionne && $dateDebutService)
+            <div class="card mb-4 border-info">
+                <div class="card-header py-3 bg-info text-white">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-check me-2"></i>Service du Propriétaire</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Début service:</span>
+                        <strong class="text-primary">{{ \Carbon\Carbon::parse($dateDebutService)->format('d/m/Y') }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Semaines actives:</span>
+                        <strong>{{ count($semainesProprietaire ?? []) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Motos en service:</span>
+                        <strong>{{ $proprietaireSelectionne->motos->where('statut', 'actif')->count() }}</strong>
+                    </div>
+                    @php
+                        $motosAvecContrat = $proprietaireSelectionne->motos->whereNotNull('contrat_debut');
+                    @endphp
+                    @if($motosAvecContrat->count() > 0)
+                    <hr class="my-2">
+                    <small class="text-muted fw-bold d-block mb-1">Motos & Contrats:</small>
+                    @foreach($motosAvecContrat as $m)
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>{{ $m->plaque_immatriculation }}</span>
+                        <span class="text-muted">{{ $m->contrat_debut?->format('d/m/Y') }} → {{ $m->contrat_fin?->format('d/m/Y') }}</span>
+                    </div>
+                    @endforeach
+                    @endif
+                </div>
+            </div>
+            @endif
+
             <div class="card mb-4 border-success">
                 <div class="card-header py-3 bg-success text-white">
                     <h6 class="mb-0 fw-bold"><i class="bi bi-currency-exchange me-2"></i>Conversion USD → FC</h6>
