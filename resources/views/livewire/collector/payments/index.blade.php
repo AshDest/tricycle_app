@@ -146,17 +146,17 @@
                                 </div>
                             </td>
                             <td class="text-center">
+                                @php
+                                    $tauxPmt = ($payment->taux_conversion && $payment->taux_conversion > 0) ? $payment->taux_conversion : \App\Models\SystemSetting::getTauxUsdCdf();
+                                    $montantUsdCalc = ($payment->montant_usd && $payment->montant_usd > 0) ? $payment->montant_usd : ($tauxPmt > 0 ? round($payment->total_du / $tauxPmt, 2) : 0);
+                                @endphp
                                 <span class="fw-bold {{ $payment->peut_etre_paye ? 'text-success' : 'text-danger' }} fs-5">
-                                    {{ number_format($payment->total_du) }} FC
+                                    {{ number_format($montantUsdCalc, 2) }} $
                                 </span>
-                                @if($payment->montant_usd)
                                 <br><small class="text-muted">
-                                    <i class="bi bi-currency-dollar"></i>{{ number_format($payment->montant_usd, 2) }} USD
-                                    <span class="text-info" title="Taux: 1 USD = {{ number_format($payment->taux_conversion, 2) }} FC">
-                                        (×{{ number_format($payment->taux_conversion) }})
-                                    </span>
+                                    ≈ {{ number_format($payment->total_du) }} FC
+                                    <span class="text-info">(×{{ number_format($tauxPmt) }})</span>
                                 </small>
-                                @endif
                                 @if($payment->numero_compte)
                                 <br><code class="small">{{ $payment->numero_compte }}</code>
                                 @endif
@@ -262,13 +262,15 @@
                                 </span>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-dark fs-6">{{ number_format($paymentEnCours->total_du) }} FC</span>
-                                @if($paymentEnCours->montant_usd)
+                                @php
+                                    $tauxModal = ($paymentEnCours->taux_conversion && $paymentEnCours->taux_conversion > 0) ? $paymentEnCours->taux_conversion : \App\Models\SystemSetting::getTauxUsdCdf();
+                                    $montantUsdModal = ($paymentEnCours->montant_usd && $paymentEnCours->montant_usd > 0) ? $paymentEnCours->montant_usd : ($tauxModal > 0 ? round($paymentEnCours->total_du / $tauxModal, 2) : 0);
+                                @endphp
+                                <span class="badge bg-success fs-6">{{ number_format($montantUsdModal, 2) }} $</span>
                                 <br><small class="text-muted mt-1 d-inline-block">
-                                    <i class="bi bi-currency-dollar"></i>{{ number_format($paymentEnCours->montant_usd, 2) }} USD
-                                    <br><span class="text-info">Taux: 1 USD = {{ number_format($paymentEnCours->taux_conversion, 2) }} FC</span>
+                                    ≈ {{ number_format($paymentEnCours->total_du) }} FC
+                                    <br><span class="text-info">Taux: 1 USD = {{ number_format($tauxModal) }} FC</span>
                                 </small>
-                                @endif
                             </div>
                         </div>
                         <hr class="my-2">

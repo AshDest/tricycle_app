@@ -16,8 +16,8 @@
                 <div class="label">Total Paiements</div>
             </div>
             <div class="stat-item">
-                <div class="value">{{ number_format($stats['total_montant'] ?? 0) }} FC</div>
-                <div class="label">Montant Total</div>
+                <div class="value">{{ number_format($stats['total_montant_usd'] ?? 0, 2) }} $</div>
+                <div class="label">Montant Total (USD)</div>
             </div>
             <div class="stat-item">
                 <div class="value">{{ number_format($stats['payes'] ?? 0) }}</div>
@@ -35,7 +35,7 @@
             <tr>
                 <th style="width: 12%">Date</th>
                 <th style="width: 18%">Propriétaire</th>
-                <th style="width: 12%" class="text-right">Montant</th>
+                <th style="width: 12%" class="text-right">Montant (USD)</th>
                 <th style="width: 12%">Mode</th>
                 <th style="width: 10%">Statut</th>
                 <th style="width: 18%">Référence</th>
@@ -44,10 +44,14 @@
         </thead>
         <tbody>
             @forelse($payments as $payment)
+                @php
+                    $tauxPdf = ($payment->taux_conversion && $payment->taux_conversion > 0) ? $payment->taux_conversion : \App\Models\SystemSetting::getTauxUsdCdf();
+                    $montantUsdPdf = ($payment->montant_usd && $payment->montant_usd > 0) ? $payment->montant_usd : ($tauxPdf > 0 ? round($payment->total_du / $tauxPdf, 2) : 0);
+                @endphp
                 <tr class="no-break">
                     <td>{{ $payment->created_at?->format('d/m/Y') ?? '-' }}</td>
                     <td>{{ $payment->proprietaire?->user?->name ?? '-' }}</td>
-                    <td class="amount">{{ number_format($payment->total_du ?? 0) }} FC</td>
+                    <td class="amount">{{ number_format($montantUsdPdf, 2) }} $</td>
                     <td>
                         @php
                             $modes = [
@@ -85,7 +89,15 @@
             <tfoot>
                 <tr class="total-row">
                     <td colspan="2"><strong>TOTAL</strong></td>
-                    <td class="amount"><strong>{{ number_format($payments->sum('total_du') ?? 0) }} FC</strong></td>
+                    <td class="amount">
+                        @php
+                            $totalUsdPdf = $payments->sum(function($p) {
+                                $t = ($p->taux_conversion && $p->taux_conversion > 0) ? $p->taux_conversion : \App\Models\SystemSetting::getTauxUsdCdf();
+                                return ($p->montant_usd && $p->montant_usd > 0) ? $p->montant_usd : ($t > 0 ? round($p->total_du / $t, 2) : 0);
+                            });
+                        @endphp
+                        <strong>{{ number_format($totalUsdPdf, 2) }} $</strong>
+                    </td>
                     <td colspan="4"></td>
                 </tr>
             </tfoot>

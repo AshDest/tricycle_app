@@ -52,8 +52,8 @@
         <div class="col-sm-6 col-lg-4">
             <div class="card bg-success bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
-                    <h4 class="fw-bold text-success mb-1">{{ number_format($totalPaye) }} FC</h4>
-                    <small class="text-muted">Total payé (validé)</small>
+                    <h4 class="fw-bold text-success mb-1">{{ number_format($totalPayeUsd, 2) }} $</h4>
+                    <small class="text-muted">Total payé (USD)</small>
                 </div>
             </div>
         </div>
@@ -112,8 +112,8 @@
                         <tr>
                             <th class="ps-4">Date</th>
                             <th>Propriétaire</th>
-                            <th>Montant demandé</th>
-                            <th>Montant payé</th>
+                            <th>Montant demandé (USD)</th>
+                            <th>Montant payé (USD)</th>
                             <th>Mode</th>
                             <th>N° Envoi</th>
                             <th>Statut</th>
@@ -122,6 +122,12 @@
                     </thead>
                     <tbody>
                         @forelse($payments as $payment)
+                        @php
+                            // Calculer le montant en USD
+                            $tauxPaiement = ($payment->taux_conversion && $payment->taux_conversion > 0) ? $payment->taux_conversion : $tauxUsdCdf;
+                            $montantDemandeUsd = ($payment->montant_usd && $payment->montant_usd > 0) ? $payment->montant_usd : ($tauxPaiement > 0 ? round($payment->total_du / $tauxPaiement, 2) : 0);
+                            $montantPayeUsd = $tauxPaiement > 0 ? round($payment->total_paye / $tauxPaiement, 2) : 0;
+                        @endphp
                         <tr class="{{ $payment->statut === 'paye' ? 'table-info' : '' }}">
                             <td class="ps-4">
                                 <span class="fw-medium">{{ $payment->date_demande?->format('d/m/Y') }}</span>
@@ -139,15 +145,18 @@
                                 </div>
                             </td>
                             <td class="fw-semibold">
-                                {{ number_format($payment->total_du) }} FC
-                                @if($payment->montant_usd)
+                                {{ number_format($montantDemandeUsd, 2) }} $
                                 <br><small class="text-muted fw-normal">
-                                    <i class="bi bi-currency-dollar"></i>{{ number_format($payment->montant_usd, 2) }} USD
-                                    <span class="text-info">(×{{ number_format($payment->taux_conversion) }})</span>
+                                    ≈ {{ number_format($payment->total_du) }} FC
+                                    <span class="text-info">(×{{ number_format($tauxPaiement) }})</span>
                                 </small>
+                            </td>
+                            <td class="fw-semibold text-success">
+                                {{ number_format($montantPayeUsd, 2) }} $
+                                @if($payment->total_paye > 0)
+                                <br><small class="text-muted fw-normal">≈ {{ number_format($payment->total_paye) }} FC</small>
                                 @endif
                             </td>
-                            <td class="fw-semibold text-success">{{ number_format($payment->total_paye) }} FC</td>
                             <td>
                                 <span class="badge bg-light text-dark">
                                     {{ \App\Models\Payment::getModesPaiement()[$payment->mode_paiement] ?? $payment->mode_paiement }}
@@ -254,14 +263,22 @@
 
                     <!-- Montant -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Montant demandé <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Montant demandé (USD) <span class="text-danger">*</span></label>
                         <div class="input-group">
+                            <span class="input-group-text bg-success text-white">$</span>
                             <input type="number" wire:model="editMontant"
                                    class="form-control form-control-lg @error('editMontant') is-invalid @enderror"
-                                   placeholder="0">
-                            <span class="input-group-text">FC</span>
+                                   placeholder="0.00" step="0.01">
+                            <span class="input-group-text">USD</span>
                         </div>
                         @error('editMontant') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                        @if($editMontant && is_numeric($editMontant) && $editMontant > 0)
+                        <small class="text-muted mt-1 d-block">
+                            <i class="bi bi-arrow-left-right me-1"></i>
+                            Équivalent: <strong>{{ number_format($editMontant * $tauxUsdCdf, 2) }} FC</strong>
+                            (1 USD = {{ number_format($tauxUsdCdf) }} FC)
+                        </small>
+                        @endif
                     </div>
 
                     <!-- Mode de paiement -->

@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Payment;
 use App\Models\Proprietaire;
+use App\Models\SystemSetting;
 use App\Services\PaymentService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -32,7 +33,8 @@ class Index extends Component
     // Stats
     public $demandesEnAttente = 0;
     public $paiementsAValider = 0;
-    public $totalPaye = 0;
+    public $totalPayeUsd = 0;
+    public $tauxUsdCdf = 2800;
 
     // Modal d'édition
     public $showEditModal = false;
@@ -86,7 +88,11 @@ class Index extends Component
         }
 
         $this->editPayment = $payment;
-        $this->editMontant = $payment->total_du;
+        // Afficher le montant en USD
+        $taux = ($payment->taux_conversion && $payment->taux_conversion > 0) ? $payment->taux_conversion : $this->tauxUsdCdf;
+        $this->editMontant = ($payment->montant_usd && $payment->montant_usd > 0)
+            ? $payment->montant_usd
+            : ($taux > 0 ? round($payment->total_du / $taux, 2) : $payment->total_du);
         $this->editModePaiement = $payment->mode_paiement;
         $this->editNumeroCompte = $payment->numero_compte;
         $this->editNotes = $payment->notes;
@@ -109,7 +115,7 @@ class Index extends Component
     public function sauvegarderModification()
     {
         $this->validate([
-            'editMontant' => 'required|numeric|min:1',
+            'editMontant' => 'required|numeric|min:0.01',
             'editModePaiement' => 'required|in:cash,mpesa,airtel_money,orange_money,virement_bancaire',
         ], [
             'editMontant.required' => 'Le montant est obligatoire.',
@@ -123,17 +129,26 @@ class Index extends Component
             return;
         }
 
-        // Vérifier que le montant ne dépasse pas le solde disponible
-        $paymentService = new PaymentService();
-        $soldeDisponible = $paymentService->getSoldeDisponibleProprietaire($this->editPayment->proprietaire);
+        // Le montant est en USD, convertir en FC
+        $montantUsd = $this->editMontant;
+        $montantCdf = round($montantUsd * $this->tauxUsdCdf, 2);
 
-        if ($this->editMontant > $soldeDisponible) {
-            $this->addError('editMontant', "Le montant dépasse le solde disponible ({$soldeDisponible} FC).");
-            return;
+        // Vérifier que le montant ne dépasse pas le solde disponible
+        if ($this->editPayment->proprietaire_id) {
+            $paymentService = new PaymentService();
+            $soldeDisponible = $paymentService->getSoldeDisponibleProprietaire($this->editPayment->proprietaire);
+
+            if ($montantCdf > $soldeDisponible) {
+                $soldeUsd = $this->tauxUsdCdf > 0 ? round($soldeDisponible / $this->tauxUsdCdf, 2) : 0;
+                $this->addError('editMontant', "Le montant dépasse le solde disponible ({$soldeUsd} USD ≈ {$soldeDisponible} FC).");
+                return;
+            }
         }
 
         $this->editPayment->update([
-            'total_du' => $this->editMontant,
+            'total_du' => $montantCdf,
+            'montant_usd' => $montantUsd,
+            'taux_conversion' => $this->tauxUsdCdf,
             'mode_paiement' => $this->editModePaiement,
             'numero_compte' => $this->editNumeroCompte,
             'notes' => $this->editNotes,
@@ -193,9 +208,19 @@ class Index extends Component
     public function exportPdf()
     {
         $payments = $this->getBaseQuery()->get();
+        $tauxActuel = $this->tauxUsdCdf;
+
+        $totalUsd = $payments->sum(function ($p) use ($tauxActuel) {
+            if ($p->montant_usd && $p->montant_usd > 0) {
+                return $p->montant_usd;
+            }
+            $taux = ($p->taux_conversion && $p->taux_conversion > 0) ? $p->taux_conversion : $tauxActuel;
+            return $taux > 0 ? round($p->total_du / $taux, 2) : 0;
+        });
 
         $stats = [
             'total' => $payments->count(),
+            'total_montant_usd' => $totalUsd,
             'total_montant' => $payments->sum('total_du'),
             'payes' => $payments->whereIn('statut', ['paye', 'approuve'])->count(),
             'en_attente' => $payments->where('statut', 'en_attente')->count(),
@@ -222,11 +247,22 @@ class Index extends Component
     public function render()
     {
         $paymentService = new PaymentService();
+        $this->tauxUsdCdf = SystemSetting::getTauxUsdCdf();
 
         // Calculer les stats
         $this->demandesEnAttente = Payment::where('statut', 'en_attente')->count();
         $this->paiementsAValider = Payment::where('statut', 'paye')->count();
-        $this->totalPaye = Payment::where('statut', 'approuve')->sum('total_paye');
+
+        // Total payé en USD: utiliser montant_usd si disponible, sinon convertir total_paye
+        $payementsApprouves = Payment::where('statut', 'approuve')->get();
+        $this->totalPayeUsd = $payementsApprouves->sum(function ($p) {
+            if ($p->montant_usd && $p->montant_usd > 0) {
+                return $p->montant_usd;
+            }
+            // Convertir FC → USD avec le taux du paiement ou le taux actuel
+            $taux = ($p->taux_conversion && $p->taux_conversion > 0) ? $p->taux_conversion : $this->tauxUsdCdf;
+            return $taux > 0 ? round($p->total_paye / $taux, 2) : 0;
+        });
 
         // Liste des paiements
         $payments = $this->getBaseQuery()->paginate($this->perPage);
@@ -241,6 +277,7 @@ class Index extends Component
             'payments' => $payments,
             'proprietaires' => $proprietaires,
             'modesPaiement' => $modesPaiement,
+            'tauxUsdCdf' => $this->tauxUsdCdf,
         ]);
     }
 }

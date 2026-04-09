@@ -31,9 +31,16 @@
     </div>
     <div class="info-box">
         <span><strong>Total demandes:</strong> {{ $stats['total_demandes'] }}</span>
-        <span><strong>Montant total:</strong> {{ number_format($stats['total_montant']) }} FC</span>
-        <span><strong>Proprietaires:</strong> {{ $stats['demandes_proprietaire'] }}</span>
-        <span><strong>OKAMI:</strong> {{ $stats['demandes_okami'] }}</span>
+        <span><strong>Montant total:</strong>
+            @php
+                $tauxSys = \App\Models\SystemSetting::getTauxUsdCdf();
+                $totalUsdInfo = $payments->sum(function($p) use ($tauxSys) {
+                    $t = ($p->taux_conversion && $p->taux_conversion > 0) ? $p->taux_conversion : $tauxSys;
+                    return ($p->montant_usd && $p->montant_usd > 0) ? $p->montant_usd : ($t > 0 ? round($p->total_du / $t, 2) : 0);
+                });
+            @endphp
+            {{ number_format($totalUsdInfo, 2) }} $ (≈ {{ number_format($stats['total_montant']) }} FC)
+        </span>
     </div>
     <table>
         <thead>
@@ -42,14 +49,18 @@
                 <th>Source</th>
                 <th>Beneficiaire</th>
                 <th class="text-right">Solde dispo.</th>
-                <th class="text-right">Demande</th>
+                <th class="text-right">Demande (USD)</th>
                 <th>Mode</th>
                 <th class="text-center">Statut</th>
             </tr>
         </thead>
         <tbody>
             @forelse($payments as $payment)
-            @php $peutPayer = $payment->total_du <= $payment->solde_disponible; @endphp
+            @php
+                $peutPayer = $payment->total_du <= $payment->solde_disponible;
+                $tauxP = ($payment->taux_conversion && $payment->taux_conversion > 0) ? $payment->taux_conversion : $tauxSys;
+                $usdP = ($payment->montant_usd && $payment->montant_usd > 0) ? $payment->montant_usd : ($tauxP > 0 ? round($payment->total_du / $tauxP, 2) : 0);
+            @endphp
             <tr class="{{ !$peutPayer ? 'row-danger' : '' }}">
                 <td>{{ $payment->date_demande?->format('d/m/Y') }}</td>
                 <td>
@@ -67,7 +78,7 @@
                     @endif
                 </td>
                 <td class="text-right">{{ number_format($payment->solde_disponible) }} FC</td>
-                <td class="text-right">{{ number_format($payment->total_du) }} FC</td>
+                <td class="text-right">{{ number_format($usdP, 2) }} $<br><small style="color:#666;">≈ {{ number_format($payment->total_du) }} FC</small></td>
                 <td>{{ \App\Models\Payment::getModesPaiement()[$payment->mode_paiement] ?? $payment->mode_paiement }}</td>
                 <td class="text-center">
                     @if($peutPayer)
