@@ -24,6 +24,8 @@ class Index extends Component
 
     public $filterStatut = '';
     public $filterProprietaire = '';
+    public $filterDateDebut = '';
+    public $filterDateFin = '';
     public $search = '';
     public $perPage = 15;
 
@@ -40,15 +42,17 @@ class Index extends Component
     public $editNumeroCompte = '';
     public $editNotes = '';
 
-    protected $queryString = ['filterStatut', 'filterProprietaire', 'search'];
+    protected $queryString = ['filterStatut', 'filterProprietaire', 'filterDateDebut', 'filterDateFin', 'search'];
 
     public function updatingSearch() { $this->resetPage(); }
     public function updatingFilterStatut() { $this->resetPage(); }
     public function updatingFilterProprietaire() { $this->resetPage(); }
+    public function updatingFilterDateDebut() { $this->resetPage(); }
+    public function updatingFilterDateFin() { $this->resetPage(); }
 
     public function resetFilters()
     {
-        $this->reset(['filterStatut', 'filterProprietaire', 'search']);
+        $this->reset(['filterStatut', 'filterProprietaire', 'filterDateDebut', 'filterDateFin', 'search']);
         $this->resetPage();
     }
 
@@ -56,10 +60,15 @@ class Index extends Component
     {
         return Payment::with(['proprietaire.user', 'demandePar', 'traitePar', 'validePar'])
             ->when($this->search, function($q) {
-                $q->whereHas('proprietaire.user', fn($q2) => $q2->where('name', 'like', '%'.$this->search.'%'));
+                $q->where(function($q2) {
+                    $q2->whereHas('proprietaire.user', fn($q3) => $q3->where('name', 'like', '%'.$this->search.'%'))
+                       ->orWhere('beneficiaire_nom', 'like', '%'.$this->search.'%');
+                });
             })
             ->when($this->filterStatut, fn($q) => $q->where('statut', $this->filterStatut))
             ->when($this->filterProprietaire, fn($q) => $q->where('proprietaire_id', $this->filterProprietaire))
+            ->when($this->filterDateDebut, fn($q) => $q->whereDate('date_demande', '>=', $this->filterDateDebut))
+            ->when($this->filterDateFin, fn($q) => $q->whereDate('date_demande', '<=', $this->filterDateFin))
             ->orderByRaw("FIELD(statut, 'paye', 'en_attente', 'approuve', 'rejete')")
             ->orderBy('created_at', 'desc');
     }
