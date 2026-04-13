@@ -254,6 +254,7 @@
     </div>
 
     <!-- Solde OKAMI Commission -->
+    @php $tauxUsdCommission = \App\Models\SystemSetting::getTauxUsdCdf(); @endphp
     <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #6f42c1 0%, #9b6ed8 100%);">
         <div class="card-body text-white">
             <div class="row align-items-center">
@@ -271,7 +272,7 @@
                 <div class="col-lg-3 text-center">
                     <div class="bg-white bg-opacity-25 rounded p-3">
                         <small class="d-block opacity-75">Disponible</small>
-                        <h3 class="fw-bold mb-0">{{ number_format($soldeOkamiCommissionTotal ?? 0) }} FC</h3>
+                        <h3 class="fw-bold mb-0">{{ $tauxUsdCommission > 0 ? number_format(($soldeOkamiCommissionTotal ?? 0) / $tauxUsdCommission, 2) : '0.00' }} $</h3>
                     </div>
                 </div>
                 <div class="col-lg-4">
@@ -281,7 +282,7 @@
                         @foreach($commissionsParMois as $comm)
                         <div class="d-flex justify-content-between py-1 border-bottom border-white border-opacity-25">
                             <span>{{ $comm['periode'] }}</span>
-                            <span class="fw-bold">{{ number_format($comm['part_okami']) }} FC</span>
+                            <span class="fw-bold">{{ $tauxUsdCommission > 0 ? number_format($comm['part_okami'] / $tauxUsdCommission, 2) : '0.00' }} $</span>
                         </div>
                         @endforeach
                     </div>

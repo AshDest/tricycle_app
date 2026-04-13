@@ -17,6 +17,7 @@
     </div>
     @endif
     <!-- Stats -->
+    @php $tauxUsd = \App\Models\SystemSetting::getTauxUsdCdf(); @endphp
     <div class="row g-3 mb-4">
         <div class="col-md-6">
             <div class="card border-success">
@@ -34,8 +35,8 @@
                             <small class="text-muted">Validées</small>
                         </div>
                         <div class="col-4">
-                            <h4 class="text-primary mb-0">{{ number_format($statsCommissions['total']) }}</h4>
-                            <small class="text-muted">Total FC</small>
+                            <h4 class="text-primary mb-0">{{ $tauxUsd > 0 ? number_format($statsCommissions['total'] / $tauxUsd, 2) : '0.00' }}</h4>
+                            <small class="text-muted">Total $</small>
                         </div>
                     </div>
                     <!-- Répartition 70/30 -->
@@ -43,15 +44,15 @@
                         <h6 class="mb-2"><i class="bi bi-pie-chart me-1"></i>Répartition des Commissions Validées</h6>
                         <div class="row text-center">
                             <div class="col-4">
-                                <div class="text-success fw-bold">{{ number_format($statsCommissions['part_nth'] ?? 0) }} FC</div>
+                                <div class="text-success fw-bold">{{ $tauxUsd > 0 ? number_format(($statsCommissions['part_nth'] ?? 0) / $tauxUsd, 2) : '0.00' }} $</div>
                                 <small class="text-muted">Part LATEM (70%)</small>
                             </div>
                             <div class="col-4">
-                                <div class="fw-bold" style="color: #6f42c1;">{{ number_format($statsCommissions['part_okami'] ?? 0) }} FC</div>
+                                <div class="fw-bold" style="color: #6f42c1;">{{ $tauxUsd > 0 ? number_format(($statsCommissions['part_okami'] ?? 0) / $tauxUsd, 2) : '0.00' }} $</div>
                                 <small class="text-muted">Part OKAMI (30%)</small>
                             </div>
                             <div class="col-4">
-                                <div class="text-info fw-bold">{{ number_format($statsCommissions['solde_okami_disponible'] ?? 0) }} FC</div>
+                                <div class="text-info fw-bold">{{ $tauxUsd > 0 ? number_format(($statsCommissions['solde_okami_disponible'] ?? 0) / $tauxUsd, 2) : '0.00' }} $</div>
                                 <small class="text-muted">Disponible OKAMI</small>
                             </div>
                         </div>
@@ -158,9 +159,9 @@
                                 <small class="d-block text-muted">{{ $com->numero_reference }}</small>
                             </td>
                             <td><span class="badge bg-secondary">{{ $com->periode_label }}</span></td>
-                            <td class="text-end fw-bold text-success">{{ number_format($com->montant_total) }} FC</td>
-                            <td class="text-end text-primary">{{ number_format($com->part_nth) }} FC</td>
-                            <td class="text-end text-warning">{{ number_format($com->part_okami) }} FC</td>
+                            <td class="text-end fw-bold text-success">{{ $tauxUsd > 0 ? number_format($com->montant_total / $tauxUsd, 2) : '0.00' }} $</td>
+                            <td class="text-end text-primary">{{ $tauxUsd > 0 ? number_format($com->part_nth / $tauxUsd, 2) : '0.00' }} $</td>
+                            <td class="text-end text-warning">{{ $tauxUsd > 0 ? number_format($com->part_okami / $tauxUsd, 2) : '0.00' }} $</td>
                             <td>
                                 @if($com->preuve_paiement)
                                 <a href="{{ Storage::url($com->preuve_paiement) }}" target="_blank" class="btn btn-sm btn-outline-primary">
@@ -261,7 +262,11 @@
                         <strong>Collecteur:</strong> {{ $itemToValidate->collecteur->user->name ?? 'N/A' }}<br>
                         <strong>Montant:</strong>
                         <span class="text-success fw-bold">
-                            {{ number_format($itemType === 'commission' ? $itemToValidate->montant_total : $itemToValidate->benefice) }} FC
+                            @if($itemType === 'commission')
+                                {{ $tauxUsd > 0 ? number_format($itemToValidate->montant_total / $tauxUsd, 2) : '0.00' }} $
+                            @else
+                                {{ number_format($itemToValidate->benefice) }} FC
+                            @endif
                         </span>
                     </div>
                     @if($actionType === 'rejeter')

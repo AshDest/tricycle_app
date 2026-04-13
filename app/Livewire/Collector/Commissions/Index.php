@@ -19,7 +19,7 @@ class Index extends Component
     public $showCreateModal = false;
     public $annee = '';
     public $mois = '';
-    public $montant_total = '';
+    public $montant_total = ''; // Montant saisi en USD
     public $preuve_paiement;
     public $commentaire = '';
     // Stats
@@ -31,7 +31,7 @@ class Index extends Component
         return [
             'annee' => 'required|integer|min:2020|max:' . (now()->year + 1),
             'mois' => 'required|integer|min:1|max:12',
-            'montant_total' => 'required|numeric|min:1',
+            'montant_total' => 'required|numeric|min:0.01',
             'preuve_paiement' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'commentaire' => 'nullable|string|max:1000',
         ];
@@ -112,11 +112,16 @@ class Index extends Component
         try {
             // Enregistrer le fichier
             $path = $this->preuve_paiement->store('commissions/' . $this->annee, 'public');
+
+            // Convertir USD en FC pour le stockage
+            $tauxUsd = \App\Models\SystemSetting::getTauxUsdCdf();
+            $montantFc = round($this->montant_total * $tauxUsd, 2);
+
             $commission = CommissionMobileMensuelle::create([
                 'collecteur_id' => $collecteur->id,
                 'annee' => $this->annee,
                 'mois' => $this->mois,
-                'montant_total' => $this->montant_total,
+                'montant_total' => $montantFc,
                 'preuve_paiement' => $path,
                 'commentaire' => $this->commentaire,
                 'statut' => 'en_attente',
@@ -131,7 +136,7 @@ class Index extends Component
             );
             $this->fermerModal();
             $this->computeStats();
-            session()->flash('success', 'Commission de ' . number_format($this->montant_total) . ' FC enregistrée. En attente de validation.');
+            session()->flash('success', 'Commission de ' . number_format($this->montant_total, 2) . ' $ enregistrée. En attente de validation.');
         } catch (\Exception $e) {
             session()->flash('error', 'Erreur: ' . $e->getMessage());
         }
@@ -141,6 +146,7 @@ class Index extends Component
         if (!$this->montant_total || !is_numeric($this->montant_total)) {
             return ['nth' => 0, 'okami' => 0];
         }
+        // Preview en USD (le montant_total est saisi en USD)
         return [
             'nth' => round($this->montant_total * 0.7, 2),
             'okami' => round($this->montant_total * 0.3, 2),
@@ -161,7 +167,7 @@ class Index extends Component
             ],
             'title' => 'Commissions Mobile Money - ' . $this->filterAnnee,
         ]);
-        return response()->streamDownload(fn() => print($pdf->output()), 
+        return response()->streamDownload(fn() => print($pdf->output()),
             'commissions_mobile_' . $this->filterAnnee . '.pdf');
     }
     public function render()

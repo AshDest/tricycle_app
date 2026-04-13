@@ -107,7 +107,10 @@
         <div class="col-sm-6 col-lg-3">
             <div class="card border-0 bg-info bg-opacity-10">
                 <div class="card-body text-center py-3">
-                    <h4 class="fw-bold text-info mb-0">{{ number_format($totalCommissions) }} FC</h4>
+                    <h4 class="fw-bold text-info mb-0">
+                        @php $tauxUsdStatCard = \App\Models\SystemSetting::getTauxUsdCdf(); @endphp
+                        {{ $tauxUsdStatCard > 0 ? number_format($totalCommissions / $tauxUsdStatCard, 2) : '0.00' }} $
+                    </h4>
                     <small class="text-muted">Commissions totales</small>
                 </div>
             </div>
@@ -407,6 +410,7 @@
 
             @elseif($onglet === 'commissions')
                 {{-- Commissions Mobile Money --}}
+                @php $tauxUsdCom = \App\Models\SystemSetting::getTauxUsdCdf(); @endphp
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
@@ -429,9 +433,9 @@
                                     @endphp
                                     {{ $moisNoms[$commission->mois] ?? '' }} {{ $commission->annee }}
                                 </td>
-                                <td class="text-end fw-semibold">{{ number_format($commission->montant_total ?? 0) }} FC</td>
-                                <td class="text-end text-primary">{{ number_format($commission->part_nth ?? 0) }} FC</td>
-                                <td class="text-end text-warning">{{ number_format($commission->part_okami ?? 0) }} FC</td>
+                                <td class="text-end fw-semibold">{{ $tauxUsdCom > 0 ? number_format(($commission->montant_total ?? 0) / $tauxUsdCom, 2) : '0.00' }} $</td>
+                                <td class="text-end text-primary">{{ $tauxUsdCom > 0 ? number_format(($commission->part_nth ?? 0) / $tauxUsdCom, 2) : '0.00' }} $</td>
+                                <td class="text-end text-warning">{{ $tauxUsdCom > 0 ? number_format(($commission->part_okami ?? 0) / $tauxUsdCom, 2) : '0.00' }} $</td>
                                 <td class="text-center pe-4">
                                     @php
                                         $statutColors = ['en_attente' => 'warning', 'valide' => 'success', 'rejete' => 'danger'];

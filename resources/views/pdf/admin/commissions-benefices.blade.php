@@ -23,6 +23,7 @@
         <p>LATEM Sarl - Administration</p>
         <p>Généré le {{ now()->format('d/m/Y à H:i') }}</p>
     </div>
+    @php $tauxUsd = \App\Models\SystemSetting::getTauxUsdCdf(); @endphp
     <table>
         <thead>
             <tr>
@@ -48,9 +49,9 @@
                 @if($type === 'commissions')
                 <td>{{ $item->collecteur->user->name ?? 'N/A' }}</td>
                 <td>{{ $item->periode_label }}</td>
-                <td class="text-end text-success">{{ number_format($item->montant_total) }} FC</td>
-                <td class="text-end">{{ number_format($item->part_nth) }} FC</td>
-                <td class="text-end">{{ number_format($item->part_okami) }} FC</td>
+                <td class="text-end text-success">{{ $tauxUsd > 0 ? number_format($item->montant_total / $tauxUsd, 2) : '0.00' }} $</td>
+                <td class="text-end">{{ $tauxUsd > 0 ? number_format($item->part_nth / $tauxUsd, 2) : '0.00' }} $</td>
+                <td class="text-end">{{ $tauxUsd > 0 ? number_format($item->part_okami / $tauxUsd, 2) : '0.00' }} $</td>
                 <td class="text-center">{{ $item->statut_label }}</td>
                 @else
                 <td>{{ $item->collecteur->user->name ?? 'N/A' }}</td>
@@ -66,7 +67,7 @@
         </tbody>
     </table>
     <div class="footer">
-        <p>Total: {{ $type === 'commissions' ? number_format($items->sum('montant_total')) : number_format($items->sum('benefice')) }} FC</p>
+        <p>Total: {{ $type === 'commissions' ? ($tauxUsd > 0 ? number_format($items->sum('montant_total') / $tauxUsd, 2) : '0.00') . ' $' : number_format($items->sum('benefice')) . ' FC' }}</p>
     </div>
 </body>
 </html>

@@ -28,12 +28,13 @@
     </div>
     @endif
     <!-- Stats -->
+    @php $tauxUsd = \App\Models\SystemSetting::getTauxUsdCdf(); @endphp
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-lg-4">
             <div class="card bg-success bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <i class="bi bi-cash-stack fs-3 text-success"></i>
-                    <h4 class="fw-bold text-success mb-1">{{ number_format($totalCommissions) }} FC</h4>
+                    <h4 class="fw-bold text-success mb-1">{{ $tauxUsd > 0 ? number_format($totalCommissions / $tauxUsd, 2) : '0.00' }} $</h4>
                     <small class="text-muted">Total Commissions {{ $filterAnnee }}</small>
                 </div>
             </div>
@@ -42,7 +43,7 @@
             <div class="card bg-primary bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <i class="bi bi-building fs-3 text-primary"></i>
-                    <h4 class="fw-bold text-primary mb-1">{{ number_format($totalPartNth) }} FC</h4>
+                    <h4 class="fw-bold text-primary mb-1">{{ $tauxUsd > 0 ? number_format($totalPartNth / $tauxUsd, 2) : '0.00' }} $</h4>
                     <small class="text-muted">Part LATEM (70%)</small>
                 </div>
             </div>
@@ -51,7 +52,7 @@
             <div class="card bg-warning bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <i class="bi bi-star fs-3 text-warning"></i>
-                    <h4 class="fw-bold text-warning mb-1">{{ number_format($totalPartOkami) }} FC</h4>
+                    <h4 class="fw-bold text-warning mb-1">{{ $tauxUsd > 0 ? number_format($totalPartOkami / $tauxUsd, 2) : '0.00' }} $</h4>
                     <small class="text-muted">Part OKAMI (30%)</small>
                 </div>
             </div>
@@ -110,9 +111,9 @@
                             <td>
                                 <span class="badge bg-secondary">{{ $com->periode_label }}</span>
                             </td>
-                            <td class="text-end fw-bold text-success">{{ number_format($com->montant_total) }} FC</td>
-                            <td class="text-end text-primary">{{ number_format($com->part_nth) }} FC</td>
-                            <td class="text-end text-warning">{{ number_format($com->part_okami) }} FC</td>
+                            <td class="text-end fw-bold text-success">{{ $tauxUsd > 0 ? number_format($com->montant_total / $tauxUsd, 2) : '0.00' }} $</td>
+                            <td class="text-end text-primary">{{ $tauxUsd > 0 ? number_format($com->part_nth / $tauxUsd, 2) : '0.00' }} $</td>
+                            <td class="text-end text-warning">{{ $tauxUsd > 0 ? number_format($com->part_okami / $tauxUsd, 2) : '0.00' }} $</td>
                             <td>
                                 @if($com->preuve_paiement)
                                 <a href="{{ Storage::url($com->preuve_paiement) }}" target="_blank" class="btn btn-sm btn-outline-primary">
@@ -184,10 +185,10 @@
                                 @error('mois') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Montant total de la commission <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold">Montant total de la commission en USD <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="number" wire:model.live="montant_total" class="form-control form-control-lg @error('montant_total') is-invalid @enderror" placeholder="0" min="1">
-                                    <span class="input-group-text">FC</span>
+                                    <input type="number" wire:model.live="montant_total" class="form-control form-control-lg @error('montant_total') is-invalid @enderror" placeholder="0" min="1" step="0.01">
+                                    <span class="input-group-text">$</span>
                                 </div>
                                 @error('montant_total') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                             </div>
@@ -198,13 +199,13 @@
                                     <div class="col-6">
                                         <div class="alert alert-primary mb-0 py-2 text-center">
                                             <small class="d-block">Part LATEM (70%)</small>
-                                            <strong>{{ number_format($previewNth) }} FC</strong>
+                                            <strong>{{ number_format($previewNth, 2) }} $</strong>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="alert alert-warning mb-0 py-2 text-center">
                                             <small class="d-block">Part OKAMI (30%)</small>
-                                            <strong>{{ number_format($previewOkami) }} FC</strong>
+                                            <strong>{{ number_format($previewOkami, 2) }} $</strong>
                                         </div>
                                     </div>
                                 </div>
