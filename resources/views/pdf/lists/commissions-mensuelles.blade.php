@@ -31,17 +31,18 @@
         <p>Collecteur: {{ $collecteur->user->name ?? $collecteur->identifiant }}</p>
         @endif
     </div>
+    @php $tauxUsd = \App\Models\SystemSetting::getTauxUsdCdf(); @endphp
     <div class="stats">
         <div class="stat-box">
-            <h4 class="text-success">{{ number_format($stats['totalCommissions'] ?? 0) }} FC</h4>
+            <h4 class="text-success">{{ $tauxUsd > 0 ? number_format(($stats['totalCommissions'] ?? 0) / $tauxUsd, 2) : '0.00' }} $</h4>
             <p>Total Commissions</p>
         </div>
         <div class="stat-box">
-            <h4 class="text-primary">{{ number_format($stats['totalPartNth'] ?? 0) }} FC</h4>
+            <h4 class="text-primary">{{ $tauxUsd > 0 ? number_format(($stats['totalPartNth'] ?? 0) / $tauxUsd, 2) : '0.00' }} $</h4>
             <p>Part LATEM (70%)</p>
         </div>
         <div class="stat-box">
-            <h4 class="text-warning">{{ number_format($stats['totalPartOkami'] ?? 0) }} FC</h4>
+            <h4 class="text-warning">{{ $tauxUsd > 0 ? number_format(($stats['totalPartOkami'] ?? 0) / $tauxUsd, 2) : '0.00' }} $</h4>
             <p>Part OKAMI (30%)</p>
         </div>
     </div>
@@ -61,9 +62,9 @@
             <tr>
                 <td>{{ $com->numero_reference }}</td>
                 <td>{{ $com->periode_label }}</td>
-                <td class="text-end text-success">{{ number_format($com->montant_total) }} FC</td>
-                <td class="text-end text-primary">{{ number_format($com->part_nth) }} FC</td>
-                <td class="text-end text-warning">{{ number_format($com->part_okami) }} FC</td>
+                <td class="text-end text-success">{{ $tauxUsd > 0 ? number_format($com->montant_total / $tauxUsd, 2) : '0.00' }} $</td>
+                <td class="text-end text-primary">{{ $tauxUsd > 0 ? number_format($com->part_nth / $tauxUsd, 2) : '0.00' }} $</td>
+                <td class="text-end text-warning">{{ $tauxUsd > 0 ? number_format($com->part_okami / $tauxUsd, 2) : '0.00' }} $</td>
                 <td class="text-center">{{ $com->statut_label }}</td>
             </tr>
             @empty
