@@ -14,7 +14,7 @@
 
     <!-- Stats -->
     <div class="row g-3 mb-4">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-primary bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <h4 class="fw-bold text-primary mb-1">{{ $totalMotos ?? 0 }}</h4>
@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-success bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <h4 class="fw-bold text-success mb-1">{{ $motosActives ?? 0 }}</h4>
@@ -30,19 +30,11 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-sm-6 col-lg-4">
             <div class="card bg-warning bg-opacity-10 border-0">
                 <div class="card-body py-3 text-center">
                     <h4 class="fw-bold text-warning mb-1">{{ $motosEnMaintenance ?? 0 }}</h4>
                     <small class="text-muted">En maintenance</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card bg-info bg-opacity-10 border-0">
-                <div class="card-body py-3 text-center">
-                    <h4 class="fw-bold text-info mb-1">{{ number_format($revenusTotal ?? 0) }} FC</h4>
-                    <small class="text-muted">Revenus ce mois</small>
                 </div>
             </div>
         </div>
@@ -57,8 +49,6 @@
                         <tr>
                             <th class="ps-4">Moto</th>
                             <th>Motard assigné</th>
-                            <th>Tarif journalier</th>
-                            <th>Revenus ce mois</th>
                             <th>Statut</th>
                             <th class="text-end pe-4">Détails</th>
                         </tr>
@@ -89,8 +79,6 @@
                                 <span class="text-muted">Non assignée</span>
                                 @endif
                             </td>
-                            <td class="fw-semibold">{{ number_format($moto->montant_journalier_attendu ?? 0) }} FC</td>
-                            <td class="text-success fw-semibold">{{ number_format($moto->revenus_mois ?? 0) }} FC</td>
                             <td>
                                 @php
                                     $statutColors = [
@@ -111,7 +99,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="4" class="text-center py-5 text-muted">
                                 <i class="bi bi-bicycle fs-1 d-block mb-3"></i>
                                 <p class="mb-0">Aucune moto enregistrée</p>
                             </td>
