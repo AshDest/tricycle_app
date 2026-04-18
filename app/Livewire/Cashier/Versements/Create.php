@@ -8,6 +8,7 @@ use App\Models\Versement;
 use App\Models\Motard;
 use App\Models\SystemSetting;
 use App\Services\RepartitionService;
+use App\Services\CycleVersementService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
@@ -36,6 +37,15 @@ class Create extends Component
 
     // Vérification dimanche
     public $estDimanche = false;
+
+    // Cycle de versement (6 jours travail + 1 repos)
+    public $cycleInfo = [];
+    public $estJourRepos = false;
+    public $peutFaireVersement = true;
+    public $raisonBlocage = '';
+
+    // Cycle du motard secondaire
+    public $cycleInfoSecondaire = [];
 
     // Historique des arriérés détaillés
     public $arrieresDetails = [];
@@ -104,6 +114,9 @@ class Create extends Component
             // Reset le motard secondaire
             $this->motard_secondaire_id = '';
 
+            // Charger le cycle de versement du motard
+            $this->loadCycleInfo();
+
             // Charger les arriérés détaillés
             $this->loadArrieresDetails();
 
@@ -118,8 +131,13 @@ class Create extends Component
                 $this->estDimanche = Carbon::parse($this->date_versement)->isSunday();
             }
 
+            // Si c'est un jour de repos du cycle, basculer vers arriérés
+            if ($this->estJourRepos && $this->arrieresCumules > 0) {
+                $this->type_versement = 'arrieres';
+                $this->montant = $this->arrieresCumules;
+            }
             // Si on est en mode journalier, auto-sélectionner aujourd'hui s'il est dans les jours manquants
-            if ($this->type_versement === 'journalier') {
+            elseif ($this->type_versement === 'journalier' && !$this->estJourRepos) {
                 $today = Carbon::today()->format('Y-m-d');
                 if (in_array($today, array_column($this->joursManquants, 'date'))) {
                     $this->joursSelectionnes = [$today];
@@ -356,6 +374,61 @@ class Create extends Component
         $this->updateRepartitionPreview();
     }
 
+    /**
+     * Charger les informations du cycle de versement du motard
+     */
+    protected function loadCycleInfo()
+    {
+        $this->cycleInfo = [];
+        $this->estJourRepos = false;
+        $this->peutFaireVersement = true;
+        $this->raisonBlocage = '';
+
+        if (!$this->motardSelectionne) {
+            return;
+        }
+
+        // Charger le cycle du motard titulaire
+        $this->cycleInfo = CycleVersementService::getCycleInfo($this->motardSelectionne);
+        $this->estJourRepos = $this->cycleInfo['est_jour_repos'] ?? false;
+
+        // Si un motard secondaire est sélectionné, vérifier SON cycle (c'est lui qui travaille)
+        $motardEffectif = $this->motardSelectionne;
+        if ($this->motard_secondaire_id) {
+            $motardSec = Motard::find($this->motard_secondaire_id);
+            if ($motardSec) {
+                $this->cycleInfoSecondaire = CycleVersementService::getCycleInfo($motardSec);
+                $motardEffectif = $motardSec;
+                // Le jour de repos dépend du motard qui travaille réellement
+                $this->estJourRepos = $this->cycleInfoSecondaire['est_jour_repos'] ?? false;
+            }
+        }
+
+        // Vérifier s'il peut faire un versement (basé sur le motard qui travaille réellement)
+        $verification = CycleVersementService::peutFaireVersement(
+            $motardEffectif,
+            $this->date_versement ? Carbon::parse($this->date_versement) : null
+        );
+        $this->peutFaireVersement = $verification['peut_verser'];
+        $this->raisonBlocage = $verification['raison'];
+    }
+
+    /**
+     * Quand le motard secondaire change, charger son cycle
+     */
+    public function updatedMotardSecondaireId($value)
+    {
+        $this->cycleInfoSecondaire = [];
+        if ($value) {
+            $motardSec = Motard::find($value);
+            if ($motardSec) {
+                $this->cycleInfoSecondaire = CycleVersementService::getCycleInfo($motardSec);
+            }
+        }
+        // Recharger le cycle info complet (le jour de repos dépend de qui travaille)
+        $this->loadCycleInfo();
+    }
+
     protected function resetMotardData()
     {
         $this->motardSelectionne = null;
@@ -371,6 +444,11 @@ class Create extends Component
         $this->motardsSecondaires = [];
         $this->joursManquants = [];
         $this->joursSelectionnes = [];
+        $this->cycleInfo = [];
+        $this->cycleInfoSecondaire = [];
+        $this->estJourRepos = false;
+        $this->peutFaireVersement = true;
+        $this->raisonBlocage = '';
     }
 
     protected function updateRepartitionPreview()
@@ -423,6 +501,21 @@ class Create extends Component
         if ($dateVersement->isSunday() && $this->type_versement === 'journalier') {
             session()->flash('error', 'Les versements journaliers ne sont pas autorisés le dimanche. Seuls les remboursements d\'arriérés sont acceptés.');
             return;
+        }
+
+        // Vérifier le cycle de repos du motard qui travaille réellement (6 jours travaillés → 1 jour repos)
+        // Si un motard secondaire est sélectionné, c'est LUI qui travaille physiquement
+        $motardQuiTravaille = $this->motard_secondaire_id
+            ? Motard::find($this->motard_secondaire_id)
+            : Motard::find($this->motard_id);
+
+        if ($motardQuiTravaille && $this->type_versement === 'journalier') {
+            $verification = CycleVersementService::peutFaireVersement($motardQuiTravaille, $dateVersement);
+            if (!$verification['peut_verser'] && $verification['cycle_info']['est_jour_repos']) {
+                $nomMotard = $motardQuiTravaille->user?->name ?? 'Le motard';
+                session()->flash('error', "Jour de repos pour {$nomMotard} (cycle de 6 jours complété). Seul le remboursement d'arriérés est autorisé.");
+                return;
+            }
         }
 
         $motard = Motard::with('moto')->find($this->motard_id);

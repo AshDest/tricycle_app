@@ -20,6 +20,7 @@ class Index extends Component
     public $dateFrom = '';
     public $dateTo = '';
     public $perPage = 15;
+    public $confirmingDelete = null;
 
     protected $queryString = ['search', 'filterStatut', 'filterMode', 'dateFrom', 'dateTo'];
 
@@ -114,6 +115,28 @@ class Index extends Component
         return response()->streamDownload(function() use ($pdf) {
             echo $pdf->output();
         }, 'versements_' . Carbon::now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function confirmDelete($id)
+    {
+        $this->confirmingDelete = $id;
+    }
+
+    public function cancelDelete()
+    {
+        $this->confirmingDelete = null;
+    }
+
+    public function deleteVersement($id)
+    {
+        try {
+            $versement = Versement::findOrFail($id);
+            $versement->delete();
+            $this->confirmingDelete = null;
+            session()->flash('success', 'Versement supprimé avec succès.');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Erreur lors de la suppression: ' . $e->getMessage());
+        }
     }
 
     public function render()
