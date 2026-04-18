@@ -102,6 +102,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Versements
         Route::get('/versements', \App\Livewire\Admin\Versements\Index::class)->name('versements.index');
+        Route::get('/versements/{versement}/edit', \App\Livewire\Admin\Versements\Edit::class)->name('versements.edit');
         Route::get('/versements/{versement}', \App\Livewire\Admin\Versements\Show::class)->name('versements.show');
 
         // Paiements Propriétaires (visualisation uniquement)

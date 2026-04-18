@@ -52,6 +52,45 @@
     </div>
     @endif
 
+    {{-- ===== CYCLE DE VERSEMENT (6 jours + 1 repos) ===== --}}
+    @if(!empty($cycleInfo))
+    <div class="card mb-4 border-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }}">
+        <div class="card-body py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }} bg-opacity-10 text-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }}">
+                        <i class="bi bi-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'moon-stars' : 'recycle' }}"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Cycle de versement #{{ $cycleInfo['cycle_numero'] ?? 1 }}</h6>
+                        <small class="text-muted">{{ $cycleInfo['message'] ?? '' }}</small>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }} fs-6">
+                        {{ $cycleInfo['jours_travailles_cycle'] ?? 0 }} / 6
+                    </span>
+                    <small class="d-block text-muted mt-1">jours travaillés</small>
+                </div>
+            </div>
+            <div class="progress mt-3" style="height: 8px;">
+                @php $cyclePct = (($cycleInfo['jours_travailles_cycle'] ?? 0) / 6) * 100; @endphp
+                <div class="progress-bar bg-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }}"
+                     style="width: {{ $cyclePct }}%"></div>
+            </div>
+            @if(!empty($cycleInfo['dates_cycle_actuel']))
+            <div class="mt-2">
+                <small class="text-muted">
+                    @foreach($cycleInfo['dates_cycle_actuel'] as $dc)
+                        <span class="badge bg-light text-dark me-1">{{ \Carbon\Carbon::parse($dc)->format('d/m') }}</span>
+                    @endforeach
+                </small>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <!-- Stats Row -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-3">

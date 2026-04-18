@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Versement;
 use App\Models\SystemSetting;
+use App\Services\CycleVersementService;
 use Carbon\Carbon;
 
 #[Layout('components.dashlite-layout')]
@@ -29,6 +30,7 @@ class Dashboard extends Component
     public $statutDuJour = 'non_effectue';
     public $statutArriere = 'ok';
     public $derniersVersements = [];
+    public $cycleInfo = [];
 
     public function mount()
     {
@@ -88,6 +90,9 @@ class Dashboard extends Component
                 ->orderBy('date_versement', 'desc')
                 ->take(10)
                 ->get();
+
+            // Cycle de versement
+            $this->cycleInfo = CycleVersementService::getCycleInfo($this->motard);
         }
     }
 

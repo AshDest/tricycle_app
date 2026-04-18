@@ -95,6 +95,91 @@
                             </div>
                         </div>
 
+                        {{-- ===== CYCLE DE VERSEMENT (6 jours + 1 repos) ===== --}}
+                        @if(!empty($cycleInfo))
+                        <div class="card mb-4 border-{{ $estJourRepos ? 'success' : 'primary' }}">
+                            <div class="card-header py-2 bg-{{ $estJourRepos ? 'success' : 'primary' }} bg-opacity-10">
+                                <h6 class="mb-0 fw-bold text-{{ $estJourRepos ? 'success' : 'primary' }} small">
+                                    <i class="bi bi-{{ $estJourRepos ? 'moon-stars' : 'calendar-check' }} me-1"></i>
+                                    Cycle de versement
+                                </h6>
+                            </div>
+                            <div class="card-body py-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small">Cycle #{{ $cycleInfo['cycle_numero'] ?? 1 }}</span>
+                                    <span class="badge bg-{{ $estJourRepos ? 'success' : 'primary' }}">
+                                        {{ $cycleInfo['jours_travailles_cycle'] ?? 0 }}/6 jours
+                                    </span>
+                                </div>
+
+                                {{-- Barre de progression du cycle --}}
+                                <div class="progress mb-2" style="height: 10px;">
+                                    @php
+                                        $progressPct = (($cycleInfo['jours_travailles_cycle'] ?? 0) / 6) * 100;
+                                    @endphp
+                                    <div class="progress-bar bg-{{ $estJourRepos ? 'success' : 'primary' }}"
+                                         role="progressbar"
+                                         style="width: {{ $progressPct }}%"
+                                         aria-valuenow="{{ $progressPct }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+
+                                <p class="mb-0 small">{{ $cycleInfo['message'] ?? '' }}</p>
+
+                                @if($estJourRepos)
+                                <div class="alert alert-success py-2 mt-2 mb-0 small">
+                                    <i class="bi bi-moon-stars me-1"></i>
+                                    <strong>Jour de repos mérité!</strong> Le motard a complété 6 jours de travail.
+                                    @if($arrieresCumules > 0)
+                                    <br>Seul le <strong>remboursement d'arriérés</strong> est autorisé.
+                                    @endif
+                                </div>
+                                @else
+                                <div class="d-flex gap-2 mt-2 flex-wrap">
+                                    @if(!empty($cycleInfo['dates_cycle_actuel']))
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock-history me-1"></i>Jours travaillés ce cycle:
+                                        @foreach($cycleInfo['dates_cycle_actuel'] as $dateCycle)
+                                            <span class="badge bg-light text-dark">{{ \Carbon\Carbon::parse($dateCycle)->format('d/m') }}</span>
+                                        @endforeach
+                                    </small>
+                                    @endif
+                                </div>
+                                @endif
+
+                                @if(($cycleInfo['jours_restants_cycle'] ?? 0) > 0 && !$estJourRepos)
+                                <small class="text-muted mt-1 d-block">
+                                    <i class="bi bi-arrow-right me-1"></i>Encore {{ $cycleInfo['jours_restants_cycle'] }} jour(s) avant le repos.
+                                </small>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Cycle du motard secondaire --}}
+                        @if(!empty($cycleInfoSecondaire) && $motard_secondaire_id)
+                        <div class="card mb-4 border-info">
+                            <div class="card-header py-2 bg-info bg-opacity-10">
+                                <h6 class="mb-0 fw-bold text-info small">
+                                    <i class="bi bi-person-badge me-1"></i>Cycle du remplaçant
+                                </h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted small">Cycle #{{ $cycleInfoSecondaire['cycle_numero'] ?? 1 }}</span>
+                                    <span class="badge bg-info">{{ $cycleInfoSecondaire['jours_travailles_cycle'] ?? 0 }}/6 jours</span>
+                                </div>
+                                <div class="progress mb-1" style="height: 6px;">
+                                    @php $pctSec = (($cycleInfoSecondaire['jours_travailles_cycle'] ?? 0) / 6) * 100; @endphp
+                                    <div class="progress-bar bg-info" style="width: {{ $pctSec }}%"></div>
+                                </div>
+                                <p class="mb-0 small">{{ $cycleInfoSecondaire['message'] ?? '' }}</p>
+                            </div>
+                        </div>
+                        @endif
+
                         {{-- ===== JOURS MANQUANTS (SANS VERSEMENT) ===== --}}
                         @if($type_versement === 'journalier' && count($joursManquants) > 0)
                         <div class="card mb-4 border-danger">
@@ -272,15 +357,17 @@
                             <label class="form-label fw-semibold">Type de versement <span class="text-danger">*</span></label>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'journalier' ? 'border-primary bg-primary bg-opacity-10' : '' }} {{ $estDimanche ? 'opacity-50' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="journalier" id="typeJournalier" {{ $estDimanche ? 'disabled' : '' }}>
+                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'journalier' ? 'border-primary bg-primary bg-opacity-10' : '' }} {{ ($estDimanche || $estJourRepos) ? 'opacity-50' : '' }}">
+                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="journalier" id="typeJournalier" {{ ($estDimanche || $estJourRepos) ? 'disabled' : '' }}>
                                         <label class="form-check-label d-block" for="typeJournalier">
                                             <div class="d-flex align-items-center gap-2 mb-2">
                                                 <i class="bi bi-calendar-day fs-4 text-primary"></i>
                                                 <strong>Versement Journalier</strong>
                                             </div>
                                             <small class="text-muted">
-                                                @if($estDimanche)
+                                                @if($estJourRepos)
+                                                <span class="text-success"><i class="bi bi-moon-stars me-1"></i>Jour de repos (cycle complété)</span>
+                                                @elseif($estDimanche)
                                                 <span class="text-danger"><i class="bi bi-x-circle me-1"></i>Non disponible le dimanche</span>
                                                 @else
                                                 Payer la journée sélectionnée
@@ -388,7 +475,15 @@
 
                         <!-- Bouton de soumission -->
                         <div class="d-grid">
-                            @if($estDimanche && $type_versement === 'journalier')
+                            @if($estJourRepos && $type_versement === 'journalier')
+                            <div class="alert alert-success mb-0">
+                                <i class="bi bi-moon-stars me-2"></i>
+                                <strong>Jour de repos</strong> - Le motard a complété son cycle de 6 jours de travail.
+                                @if($arrieresCumules > 0)
+                                <br><small>Vous pouvez uniquement enregistrer un <strong>remboursement d'arriérés</strong>.</small>
+                                @endif
+                            </div>
+                            @elseif($estDimanche && $type_versement === 'journalier')
                             <div class="alert alert-danger mb-0">
                                 <i class="bi bi-calendar-x me-2"></i>
                                 <strong>Enregistrement bloqué</strong> - Les versements journaliers ne sont pas autorisés le dimanche.
@@ -403,7 +498,7 @@
                                 <a href="{{ route('cashier.versements.index') }}" class="alert-link">Compléter via la liste</a>
                             </div>
                             @else
-                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled" {{ (($versementExistantJour && $type_versement === 'journalier') || ($estDimanche && $type_versement === 'journalier')) ? 'disabled' : '' }}>
+                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled" {{ (($versementExistantJour && $type_versement === 'journalier') || ($estDimanche && $type_versement === 'journalier') || ($estJourRepos && $type_versement === 'journalier')) ? 'disabled' : '' }}>
                                 <span wire:loading.remove wire:target="enregistrer">
                                     <i class="bi bi-check-circle me-2"></i>Enregistrer le Versement
                                 </span>
@@ -435,6 +530,56 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Résumé du cycle --}}
+            @if($motardSelectionne && !empty($cycleInfo))
+            <div class="card mb-4 border-{{ $estJourRepos ? 'success' : 'primary' }}">
+                <div class="card-header py-2">
+                    <h6 class="mb-0 fw-bold small">
+                        <i class="bi bi-recycle me-1 text-primary"></i>Résumé Cycle
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Cycle actuel</span>
+                            <strong>#{{ $cycleInfo['cycle_numero'] ?? 1 }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Jours travaillés</span>
+                            <strong>{{ $cycleInfo['jours_travailles_cycle'] ?? 0 }} / 6</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Avant repos</span>
+                            <strong class="text-{{ ($cycleInfo['jours_restants_cycle'] ?? 0) <= 1 ? 'warning' : 'primary' }}">
+                                {{ $cycleInfo['jours_restants_cycle'] ?? 0 }} jour(s)
+                            </strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Total jours</span>
+                            <strong>{{ $cycleInfo['total_jours_travailles'] ?? 0 }}</strong>
+                        </li>
+                        @if($cycleInfo['dernier_versement'] ?? null)
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="text-muted">Dernier versement</span>
+                            <strong>{{ $cycleInfo['dernier_versement'] }}</strong>
+                        </li>
+                        @endif
+                        <li class="list-group-item">
+                            <span class="badge bg-{{ $estJourRepos ? 'success' : ($peutFaireVersement ? 'primary' : 'warning') }} w-100 py-2">
+                                @if($estJourRepos)
+                                    <i class="bi bi-moon-stars me-1"></i>Jour de repos
+                                @elseif($peutFaireVersement)
+                                    <i class="bi bi-check-circle me-1"></i>Peut verser
+                                @else
+                                    <i class="bi bi-exclamation-triangle me-1"></i>{{ $raisonBlocage }}
+                                @endif
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            @endif
 
             @if($motardSelectionne && (float)$montant > 0)
             <!-- Aperçu de la répartition -->

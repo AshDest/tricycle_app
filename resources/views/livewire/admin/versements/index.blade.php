@@ -1,4 +1,18 @@
 <div>
+    <!-- Flash Messages -->
+    @if(session()->has('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+    @if(session()->has('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
     <!-- Page Header -->
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
@@ -141,9 +155,26 @@
                                 <i class="bi bi-calendar3 me-1"></i>{{ $versement->date_versement?->format('d/m/Y') ?? '-' }}
                             </td>
                             <td class="text-end pe-4">
-                                <a href="{{ route('admin.versements.show', $versement) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i>
-                                </a>
+                                <div class="d-flex justify-content-end gap-1">
+                                    <a href="{{ route('admin.versements.show', $versement) }}" class="btn btn-sm btn-outline-primary" title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('admin.versements.edit', $versement) }}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    @if($confirmingDelete === $versement->id)
+                                    <button wire:click="deleteVersement({{ $versement->id }})" class="btn btn-sm btn-danger" title="Confirmer">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <button wire:click="cancelDelete" class="btn btn-sm btn-secondary" title="Annuler">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                    @else
+                                    <button wire:click="confirmDelete({{ $versement->id }})" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                         @empty
