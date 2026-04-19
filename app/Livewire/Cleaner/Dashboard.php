@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use App\Models\Lavage;
 use App\Models\DepenseLavage;
 use App\Models\KwadoService;
+use App\Models\Moto;
 use App\Models\SystemSetting;
 use Carbon\Carbon;
 
@@ -39,6 +40,13 @@ class Dashboard extends Component
     public $prixSimple = 0;
     public $prixComplet = 0;
     public $prixPremium = 0;
+
+    // Conformité lavage hebdomadaire
+    public $motosNonConformes = [];
+    public $totalMotosSysteme = 0;
+    public $motosConformes = 0;
+    public $tauxConformite = 0;
+    public $semaineLabel = '';
 
     public function mount()
     {
@@ -126,6 +134,55 @@ class Dashboard extends Component
         $this->prixSimple = Lavage::getPrixLavage('simple');
         $this->prixComplet = Lavage::getPrixLavage('complet');
         $this->prixPremium = Lavage::getPrixLavage('premium');
+
+        // Conformité lavage hebdomadaire (3 lavages/semaine requis)
+        $this->loadConformiteLavage();
+    }
+
+    /**
+     * Charger les statistiques de conformité lavage hebdomadaire
+     */
+    protected function loadConformiteLavage()
+    {
+        $debutSemaine = Carbon::now()->startOfWeek(Carbon::MONDAY);
+        $finSemaine = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+        $this->semaineLabel = $debutSemaine->format('d/m') . ' - ' . $finSemaine->format('d/m/Y');
+
+        // Toutes les motos actives du système
+        $motosActives = Moto::where('statut', 'actif')
+            ->with(['proprietaire.user', 'motard.user'])
+            ->get();
+
+        $this->totalMotosSysteme = $motosActives->count();
+
+        $this->motosNonConformes = [];
+        $conformes = 0;
+
+        foreach ($motosActives as $moto) {
+            $nbLavages = Lavage::where('moto_id', $moto->id)
+                ->where('is_externe', false)
+                ->whereBetween('date_lavage', [$debutSemaine, $finSemaine])
+                ->where('statut_paiement', 'payé')
+                ->count();
+
+            if ($nbLavages >= 3) {
+                $conformes++;
+            } else {
+                $this->motosNonConformes[] = [
+                    'id' => $moto->id,
+                    'plaque' => $moto->plaque_immatriculation,
+                    'proprietaire' => $moto->proprietaire?->user?->name ?? 'N/A',
+                    'motard' => $moto->motard?->user?->name ?? 'Non assigné',
+                    'nb_lavages' => $nbLavages,
+                    'manquants' => 3 - $nbLavages,
+                ];
+            }
+        }
+
+        $this->motosConformes = $conformes;
+        $this->tauxConformite = $this->totalMotosSysteme > 0
+            ? round(($conformes / $this->totalMotosSysteme) * 100, 1)
+            : 0;
     }
 
     public function render()
