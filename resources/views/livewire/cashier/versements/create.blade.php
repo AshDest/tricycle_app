@@ -299,21 +299,6 @@
                             </div>
                             @endif
 
-                            <!-- Alerte Dimanche -->
-                            @if($estDimanche)
-                            <div class="alert alert-danger mt-3 mb-0 border-danger">
-                                <div class="d-flex align-items-center gap-3">
-                                    <i class="bi bi-calendar-x fs-3 text-danger"></i>
-                                    <div>
-                                        <strong class="d-block mb-1">Dimanche - Jour de repos</strong>
-                                        <small>Les versements journaliers ne sont pas autorisés le dimanche.</small>
-                                        @if($arrieresCumules > 0)
-                                        <br><small class="text-muted">Seuls les <strong>remboursements d'arriérés</strong> sont acceptés.</small>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
 
                             <!-- Statut du jour sélectionné -->
                             @if($versementExistantJour)
@@ -357,8 +342,8 @@
                             <label class="form-label fw-semibold">Type de versement <span class="text-danger">*</span></label>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'journalier' ? 'border-primary bg-primary bg-opacity-10' : '' }} {{ ($estDimanche || $estJourRepos) ? 'opacity-50' : '' }}">
-                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="journalier" id="typeJournalier" {{ ($estDimanche || $estJourRepos) ? 'disabled' : '' }}>
+                                    <div class="form-check card p-3 h-100 {{ $type_versement === 'journalier' ? 'border-primary bg-primary bg-opacity-10' : '' }} {{ $estJourRepos ? 'opacity-50' : '' }}">
+                                        <input class="form-check-input" type="radio" wire:model.live="type_versement" value="journalier" id="typeJournalier" {{ $estJourRepos ? 'disabled' : '' }}>
                                         <label class="form-check-label d-block" for="typeJournalier">
                                             <div class="d-flex align-items-center gap-2 mb-2">
                                                 <i class="bi bi-calendar-day fs-4 text-primary"></i>
@@ -367,8 +352,6 @@
                                             <small class="text-muted">
                                                 @if($estJourRepos)
                                                 <span class="text-success"><i class="bi bi-moon-stars me-1"></i>Jour de repos (cycle complété)</span>
-                                                @elseif($estDimanche)
-                                                <span class="text-danger"><i class="bi bi-x-circle me-1"></i>Non disponible le dimanche</span>
                                                 @else
                                                 Payer la journée sélectionnée
                                                 @endif
@@ -479,14 +462,6 @@
                             <div class="alert alert-success mb-0">
                                 <i class="bi bi-moon-stars me-2"></i>
                                 <strong>Jour de repos</strong> - Le motard a complété son cycle de 6 jours de travail.
-                                @if($arrieresCumules > 0)
-                                <br><small>Vous pouvez uniquement enregistrer un <strong>remboursement d'arriérés</strong>.</small>
-                                @endif
-                            </div>
-                            @elseif($estDimanche && $type_versement === 'journalier')
-                            <div class="alert alert-danger mb-0">
-                                <i class="bi bi-calendar-x me-2"></i>
-                                <strong>Enregistrement bloqué</strong> - Les versements journaliers ne sont pas autorisés le dimanche.
                                 @if($arrieresCumules > 0)
                                 <br><small>Vous pouvez uniquement enregistrer un <strong>remboursement d'arriérés</strong>.</small>
                                 @endif

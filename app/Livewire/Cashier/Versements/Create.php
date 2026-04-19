@@ -126,10 +126,6 @@ class Create extends Component
             // Vérifier le versement existant pour le jour sélectionné
             $this->verifierVersementExistant();
 
-            // Vérifier si c'est un dimanche
-            if ($this->date_versement) {
-                $this->estDimanche = Carbon::parse($this->date_versement)->isSunday();
-            }
 
             // Si c'est un jour de repos du cycle, basculer vers arriérés
             if ($this->estJourRepos && $this->arrieresCumules > 0) {
@@ -155,10 +151,6 @@ class Create extends Component
                 }
             }
 
-            if ($this->estDimanche && $this->arrieresCumules > 0) {
-                $this->type_versement = 'arrieres';
-                $this->montant = $this->arrieresCumules;
-            }
         } else {
             $this->resetMotardData();
         }
@@ -180,19 +172,19 @@ class Create extends Component
 
     public function updatedDateVersement($value)
     {
-        // Vérifier si la date est un dimanche
         if ($value) {
-            $this->estDimanche = Carbon::parse($value)->isSunday();
+            // Recharger le cycle pour vérifier si c'est un jour de repos
+            if ($this->motardSelectionne) {
+                $this->loadCycleInfo();
 
-            // Si c'est dimanche et qu'on est en mode journalier, basculer vers arriérés si disponible
-            if ($this->estDimanche && $this->type_versement === 'journalier') {
-                if ($this->arrieresCumules > 0) {
-                    $this->type_versement = 'arrieres';
-                    $this->montant = $this->arrieresCumules;
+                // Si c'est un jour de repos du cycle et qu'on est en mode journalier
+                if ($this->estJourRepos && $this->type_versement === 'journalier') {
+                    if ($this->arrieresCumules > 0) {
+                        $this->type_versement = 'arrieres';
+                        $this->montant = $this->arrieresCumules;
+                    }
                 }
             }
-        } else {
-            $this->estDimanche = false;
         }
 
         if ($this->motardSelectionne) {
@@ -262,18 +254,16 @@ class Create extends Component
         $jours = [];
 
         while ($cursor->lte($today)) {
-            // Exclure les dimanches
-            if (!$cursor->isSunday()) {
-                $dateStr = $cursor->format('Y-m-d');
-                if (!in_array($dateStr, $datesAvecVersement)) {
-                    $jours[] = [
-                        'date' => $dateStr,
-                        'date_formatted' => $cursor->translatedFormat('D d/m/Y'),
-                        'jour_semaine' => $cursor->translatedFormat('l'),
-                        'est_aujourdhui' => $cursor->isToday(),
-                        'est_cette_semaine' => $cursor->isCurrentWeek(),
-                    ];
-                }
+            // Inclure tous les jours (le repos dépend du cycle, pas du jour de la semaine)
+            $dateStr = $cursor->format('Y-m-d');
+            if (!in_array($dateStr, $datesAvecVersement)) {
+                $jours[] = [
+                    'date' => $dateStr,
+                    'date_formatted' => $cursor->translatedFormat('D d/m/Y'),
+                    'jour_semaine' => $cursor->translatedFormat('l'),
+                    'est_aujourdhui' => $cursor->isToday(),
+                    'est_cette_semaine' => $cursor->isCurrentWeek(),
+                ];
             }
             $cursor->addDay();
         }
@@ -496,15 +486,9 @@ class Create extends Component
             return;
         }
 
-        // Vérifier si c'est un dimanche pour les versements journaliers
-        $dateVersement = Carbon::parse($this->date_versement);
-        if ($dateVersement->isSunday() && $this->type_versement === 'journalier') {
-            session()->flash('error', 'Les versements journaliers ne sont pas autorisés le dimanche. Seuls les remboursements d\'arriérés sont acceptés.');
-            return;
-        }
-
         // Vérifier le cycle de repos du motard qui travaille réellement (6 jours travaillés → 1 jour repos)
         // Si un motard secondaire est sélectionné, c'est LUI qui travaille physiquement
+        $dateVersement = Carbon::parse($this->date_versement);
         $motardQuiTravaille = $this->motard_secondaire_id
             ? Motard::find($this->motard_secondaire_id)
             : Motard::find($this->motard_id);
