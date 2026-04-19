@@ -389,8 +389,8 @@
                                 <i class="bi bi-cash me-1 text-success"></i>Montant versé <span class="text-danger">*</span>
                             </label>
                             <div class="input-group input-group-lg">
-                                <input type="text" wire:model.live="montant" class="form-control text-end @error('montant') is-invalid @enderror"
-                                       placeholder="0" inputmode="numeric" pattern="[0-9]*">
+                                <input type="number" wire:model.live="montant" class="form-control text-end @error('montant') is-invalid @enderror"
+                                       placeholder="0" inputmode="numeric" min="1" step="1" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();">
                                 <span class="input-group-text">FC</span>
                             </div>
                             @error('montant')
