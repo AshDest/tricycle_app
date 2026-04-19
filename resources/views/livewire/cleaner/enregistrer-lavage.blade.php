@@ -172,7 +172,7 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Prix suggéré</label>
                                 <div class="input-group">
-                                    <input type="number" wire:model="prix_base" class="form-control" readonly>
+                                    <input type="number" wire:model="prix_base" class="form-control" readonly step="1">
                                     <span class="input-group-text">FC</span>
                                 </div>
                                 <small class="text-muted">Basé sur le type de lavage</small>
@@ -180,14 +180,14 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Remise</label>
                                 <div class="input-group">
-                                    <input type="number" wire:model.live="remise" class="form-control" min="0" placeholder="0">
+                                    <input type="number" wire:model.live="remise" class="form-control" min="0" step="1" placeholder="0" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();">
                                     <span class="input-group-text">FC</span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Montant à payer <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <input type="number" wire:model.live="prix_final" class="form-control form-control-lg fw-bold text-success @error('prix_final') is-invalid @enderror" min="0" placeholder="0">
+                                    <input type="number" wire:model.live="prix_final" class="form-control form-control-lg fw-bold text-success @error('prix_final') is-invalid @enderror" min="0" step="1" placeholder="0" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();">
                                     <span class="input-group-text">FC</span>
                                 </div>
                                 @error('prix_final')
