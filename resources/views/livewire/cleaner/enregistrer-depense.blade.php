@@ -75,7 +75,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Montant (FC) <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="number" wire:model.live="montant" class="form-control form-control-lg @error('montant') is-invalid @enderror" placeholder="0" min="1">
+                                <input type="number" wire:model.live="montant" class="form-control form-control-lg @error('montant') is-invalid @enderror" placeholder="0" min="1" step="1" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();">
                                 <span class="input-group-text">FC</span>
                             </div>
                             @error('montant')

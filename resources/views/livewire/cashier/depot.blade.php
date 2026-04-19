@@ -164,7 +164,7 @@
                             <div class="input-group">
                                 <input type="number" wire:model="montant"
                                        class="form-control form-control-lg @error('montant') is-invalid @enderror"
-                                       placeholder="0" min="1" max="{{ $soldeActuel }}">
+                                       placeholder="0" min="1" max="{{ $soldeActuel }}" step="1" onkeydown="if(event.key==='.' || event.key===',') event.preventDefault();">
                                 <span class="input-group-text">FC</span>
                                 <button type="button" class="btn btn-outline-primary" wire:click="deposerTout">
                                     Tout
