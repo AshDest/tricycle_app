@@ -69,7 +69,7 @@ class Create extends Component
         $rules = [
             'motard_id' => 'required|exists:motards,id',
             'motard_secondaire_id' => 'nullable|exists:motards,id',
-            'montant' => 'required|numeric|min:1',
+            'montant' => 'required|integer|min:1',
             'mode_paiement' => 'required|in:cash,mobile_money,depot',
             'type_versement' => 'required|in:journalier,arrieres',
             'date_versement' => 'required|date',
