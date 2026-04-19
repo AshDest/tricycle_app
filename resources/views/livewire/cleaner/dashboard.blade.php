@@ -330,6 +330,93 @@
         </div>
     </div>
 
+    <!-- Conformité Lavage Hebdomadaire (3x/semaine) -->
+    <div class="card border-0 shadow-sm mb-4 border-start border-4 border-{{ count($motosNonConformes) > 0 ? 'danger' : 'success' }}">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">
+                <i class="bi bi-clipboard-check me-2 text-{{ count($motosNonConformes) > 0 ? 'danger' : 'success' }}"></i>
+                Conformité lavage hebdomadaire (3x/semaine)
+            </h6>
+            <span class="badge bg-light text-dark">{{ $semaineLabel }}</span>
+        </div>
+        <div class="card-body">
+            <!-- Stats résumé -->
+            <div class="row g-3 text-center mb-3">
+                <div class="col-md-3">
+                    <div class="p-3 bg-primary bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-primary mb-0">{{ $totalMotosSysteme }}</h4>
+                        <small class="text-muted">Motos actives</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-success bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-success mb-0">{{ $motosConformes }}</h4>
+                        <small class="text-muted">Conformes (≥3)</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-danger bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-danger mb-0">{{ count($motosNonConformes) }}</h4>
+                        <small class="text-muted">Non conformes</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-{{ $tauxConformite >= 80 ? 'success' : ($tauxConformite >= 50 ? 'warning' : 'danger') }} bg-opacity-10 rounded">
+                        <h4 class="fw-bold text-{{ $tauxConformite >= 80 ? 'success' : ($tauxConformite >= 50 ? 'warning' : 'danger') }} mb-0">{{ $tauxConformite }}%</h4>
+                        <small class="text-muted">Taux conformité</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barre de progression -->
+            <div class="progress mb-3" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: {{ $tauxConformite }}%"></div>
+                <div class="progress-bar bg-danger" style="width: {{ 100 - $tauxConformite }}%"></div>
+            </div>
+
+            @if(count($motosNonConformes) > 0)
+            <h6 class="fw-bold small text-danger mb-2">
+                <i class="bi bi-exclamation-triangle me-1"></i>Motos n'ayant pas atteint 3 lavages cette semaine
+            </h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Plaque</th>
+                            <th>Propriétaire</th>
+                            <th>Motard</th>
+                            <th class="text-center">Lavages effectués</th>
+                            <th class="text-center">Manquants</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($motosNonConformes as $moto)
+                        <tr>
+                            <td class="fw-semibold">{{ $moto['plaque'] }}</td>
+                            <td>{{ $moto['proprietaire'] }}</td>
+                            <td>{{ $moto['motard'] }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-{{ $moto['nb_lavages'] == 0 ? 'danger' : 'warning' }}">
+                                    {{ $moto['nb_lavages'] }} / 3
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">{{ $moto['manquants'] }}</span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="alert alert-success mb-0">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Toutes les motos sont conformes!</strong> Chaque moto a atteint au moins 3 lavages cette semaine.
+            </div>
+            @endif
+        </div>
+    </div>
+
     <!-- Derniers lavages -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">

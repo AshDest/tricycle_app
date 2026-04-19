@@ -370,7 +370,7 @@
                                             <small class="text-muted">
                                                 @if($arrieresCumules > 0)
                                                 Total: <strong class="text-danger">{{ number_format($arrieresCumules) }} FC</strong>
-                                                @if($estDimanche)
+                                                @if($estJourRepos)
                                                 <span class="badge bg-success ms-1">Disponible</span>
                                                 @endif
                                                 @else
@@ -473,7 +473,7 @@
                                 <a href="{{ route('cashier.versements.index') }}" class="alert-link">Compléter via la liste</a>
                             </div>
                             @else
-                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled" {{ (($versementExistantJour && $type_versement === 'journalier') || ($estDimanche && $type_versement === 'journalier') || ($estJourRepos && $type_versement === 'journalier')) ? 'disabled' : '' }}>
+                            <button type="submit" class="btn btn-success btn-lg" wire:loading.attr="disabled" {{ (($versementExistantJour && $type_versement === 'journalier') || ($estJourRepos && $type_versement === 'journalier')) ? 'disabled' : '' }}>
                                 <span wire:loading.remove wire:target="enregistrer">
                                     <i class="bi bi-check-circle me-2"></i>Enregistrer le Versement
                                 </span>
