@@ -190,7 +190,7 @@
                     <li><a href="{{ route('admin.reports.daily') }}">Rapport Quotidien</a></li>
                     <li><a href="{{ route('admin.reports.weekly') }}">Rapport Hebdomadaire</a></li>
                     <li><a href="{{ route('admin.reports.monthly') }}">Rapport Mensuel</a></li>
-                    <li><a href="{{ route('admin.reports.repartition') }}"><i class="bi bi-pie-chart me-1"></i>Répartition (5/6 - 1/6)</a></li>
+                    <li><a href="{{ route('admin.reports.repartition') }}"><i class="bi bi-pie-chart me-1"></i>Répartition Hebdomadaire</a></li>
                 </ul>
             </li>
 
@@ -308,7 +308,7 @@
                     <li><a href="{{ route('supervisor.reports.daily') }}">Quotidien</a></li>
                     <li><a href="{{ route('supervisor.reports.weekly') }}">Hebdomadaire</a></li>
                     <li><a href="{{ route('supervisor.reports.monthly') }}">Mensuel</a></li>
-                    <li><a href="{{ route('supervisor.reports.repartition') }}"><i class="bi bi-pie-chart me-1"></i>Répartition (5/6 - 1/6)</a></li>
+                    <li><a href="{{ route('supervisor.reports.repartition') }}"><i class="bi bi-pie-chart me-1"></i>Répartition Hebdomadaire</a></li>
                 </ul>
             </li>
             <li class="has-submenu {{ request()->is('supervisor/recompenses*') ? 'active' : '' }}">

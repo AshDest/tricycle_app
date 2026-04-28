@@ -95,7 +95,7 @@
                             </div>
                         </div>
 
-                        {{-- ===== CYCLE DE VERSEMENT (6 jours + 1 repos) ===== --}}
+                        {{-- ===== CYCLE DE VERSEMENT (5 jours + 1 repos) ===== --}}
                         @if(!empty($cycleInfo))
                         <div class="card mb-4 border-{{ $estJourRepos ? 'success' : 'primary' }}">
                             <div class="card-header py-2 bg-{{ $estJourRepos ? 'success' : 'primary' }} bg-opacity-10">
@@ -108,14 +108,14 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted small">Cycle #{{ $cycleInfo['cycle_numero'] ?? 1 }}</span>
                                     <span class="badge bg-{{ $estJourRepos ? 'success' : 'primary' }}">
-                                        {{ $cycleInfo['jours_travailles_cycle'] ?? 0 }}/6 jours
+                                        {{ $cycleInfo['jours_travailles_cycle'] ?? 0 }}/5 jours
                                     </span>
                                 </div>
 
                                 {{-- Barre de progression du cycle --}}
                                 <div class="progress mb-2" style="height: 10px;">
                                     @php
-                                        $progressPct = (($cycleInfo['jours_travailles_cycle'] ?? 0) / 6) * 100;
+                                        $progressPct = (($cycleInfo['jours_travailles_cycle'] ?? 0) / 5) * 100;
                                     @endphp
                                     <div class="progress-bar bg-{{ $estJourRepos ? 'success' : 'primary' }}"
                                          role="progressbar"
@@ -131,7 +131,7 @@
                                 @if($estJourRepos)
                                 <div class="alert alert-success py-2 mt-2 mb-0 small">
                                     <i class="bi bi-moon-stars me-1"></i>
-                                    <strong>Jour de repos mérité!</strong> Le motard a complété 6 jours de travail.
+                                    <strong>Jour de repos mérité!</strong> Le motard a complété 5 jours de travail.
                                     @if($arrieresCumules > 0)
                                     <br>Seul le <strong>remboursement d'arriérés</strong> est autorisé.
                                     @endif
@@ -169,10 +169,10 @@
                             <div class="card-body py-2">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="text-muted small">Cycle #{{ $cycleInfoSecondaire['cycle_numero'] ?? 1 }}</span>
-                                    <span class="badge bg-info">{{ $cycleInfoSecondaire['jours_travailles_cycle'] ?? 0 }}/6 jours</span>
+                                    <span class="badge bg-info">{{ $cycleInfoSecondaire['jours_travailles_cycle'] ?? 0 }}/5 jours</span>
                                 </div>
                                 <div class="progress mb-1" style="height: 6px;">
-                                    @php $pctSec = (($cycleInfoSecondaire['jours_travailles_cycle'] ?? 0) / 6) * 100; @endphp
+                                    @php $pctSec = (($cycleInfoSecondaire['jours_travailles_cycle'] ?? 0) / 5) * 100; @endphp
                                     <div class="progress-bar bg-info" style="width: {{ $pctSec }}%"></div>
                                 </div>
                                 <p class="mb-0 small">{{ $cycleInfoSecondaire['message'] ?? '' }}</p>
@@ -461,7 +461,7 @@
                             @if($estJourRepos && $type_versement === 'journalier')
                             <div class="alert alert-success mb-0">
                                 <i class="bi bi-moon-stars me-2"></i>
-                                <strong>Jour de repos</strong> - Le motard a complété son cycle de 6 jours de travail.
+                                <strong>Jour de repos</strong> - Le motard a complété son cycle de 5 jours de travail.
                                 @if($arrieresCumules > 0)
                                 <br><small>Vous pouvez uniquement enregistrer un <strong>remboursement d'arriérés</strong>.</small>
                                 @endif
@@ -522,7 +522,7 @@
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span class="text-muted">Jours travaillés</span>
-                            <strong>{{ $cycleInfo['jours_travailles_cycle'] ?? 0 }} / 6</strong>
+                            <strong>{{ $cycleInfo['jours_travailles_cycle'] ?? 0 }} / 5</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span class="text-muted">Avant repos</span>

@@ -52,7 +52,7 @@
     </div>
     @endif
 
-    {{-- ===== CYCLE DE VERSEMENT (6 jours + 1 repos) ===== --}}
+    {{-- ===== CYCLE DE VERSEMENT (5 jours + 1 repos) ===== --}}
     @if(!empty($cycleInfo))
     <div class="card mb-4 border-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }}">
         <div class="card-body py-3">
@@ -68,13 +68,13 @@
                 </div>
                 <div class="text-end">
                     <span class="badge bg-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }} fs-6">
-                        {{ $cycleInfo['jours_travailles_cycle'] ?? 0 }} / 6
+                        {{ $cycleInfo['jours_travailles_cycle'] ?? 0 }} / 5
                     </span>
                     <small class="d-block text-muted mt-1">jours travaillés</small>
                 </div>
             </div>
             <div class="progress mt-3" style="height: 8px;">
-                @php $cyclePct = (($cycleInfo['jours_travailles_cycle'] ?? 0) / 6) * 100; @endphp
+                @php $cyclePct = (($cycleInfo['jours_travailles_cycle'] ?? 0) / 5) * 100; @endphp
                 <div class="progress-bar bg-{{ ($cycleInfo['est_jour_repos'] ?? false) ? 'success' : 'primary' }}"
                      style="width: {{ $cyclePct }}%"></div>
             </div>

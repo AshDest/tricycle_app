@@ -38,7 +38,7 @@ class Create extends Component
     // Vérification dimanche
     public $estDimanche = false;
 
-    // Cycle de versement (6 jours travail + 1 repos)
+    // Cycle de versement (5 jours travail + 1 repos)
     public $cycleInfo = [];
     public $estJourRepos = false;
     public $peutFaireVersement = true;
@@ -194,6 +194,35 @@ class Create extends Component
     }
 
     /**
+     * Date de référence pour le suivi des versements.
+     * Priorité: début contrat moto, sinon création moto, sinon création motard.
+     */
+    protected function getDateDebutReference(): Carbon
+    {
+        $today = Carbon::today();
+
+        $dateReference = $this->motardSelectionne?->moto?->contrat_debut
+            ?? $this->motardSelectionne?->moto?->created_at
+            ?? $this->motardSelectionne?->created_at
+            ?? $today;
+
+        $dateReference = Carbon::parse($dateReference)->startOfDay();
+
+        // Si la date de référence est dans le futur, on limite à aujourd'hui.
+        return $dateReference->gt($today) ? $today : $dateReference;
+    }
+
+    /**
+     * Détermine si une date est un jour de versement requis selon le cycle 5/2.
+     * Cycle fixe: 5 jours de versement puis 2 jours sautés, à partir du début contrat.
+     */
+    protected function isJourVersementRequis(Carbon $date, Carbon $dateDebutReference): bool
+    {
+        $indexJour = $dateDebutReference->diffInDays($date) % 7;
+        return $indexJour < 5;
+    }
+
+    /**
      * Charger les détails des arriérés par jour
      */
     protected function loadArrieresDetails()
@@ -204,26 +233,77 @@ class Create extends Component
             return;
         }
 
+        $montantJournalierAttendu = $this->motardSelectionne?->moto?->montant_journalier_attendu
+            ?? SystemSetting::getMontantJournalierDefaut();
+
+        $dateDebut = $this->getDateDebutReference();
+        $today = Carbon::today();
+
+        // 1) Jours avec versement journalier (payé ou partiel) pour éviter le double comptage.
+        $datesAvecVersementJournalier = Versement::where('motard_id', $this->motardSelectionne->id)
+            ->whereBetween('date_versement', [$dateDebut, $today])
+            ->whereNull('semaine_debut')
+            ->where(function ($query) {
+                $query->where('type', 'journalier')
+                      ->orWhereNull('type');
+            })
+            ->pluck('date_versement')
+            ->map(fn($d) => Carbon::parse($d)->format('Y-m-d'))
+            ->flip();
+
+        // 2) Arriérés implicites: jours sans versement depuis début contrat.
+        $arrieresJoursManquants = [];
+        $cursor = $dateDebut->copy();
+        while ($cursor->lte($today)) {
+            $dateStr = $cursor->format('Y-m-d');
+            // Arriéré implicite uniquement sur les jours requis du cycle 5/2.
+            if ($this->isJourVersementRequis($cursor, $dateDebut) && !isset($datesAvecVersementJournalier[$dateStr])) {
+                $arrieresJoursManquants[] = [
+                    'id' => null,
+                    'date' => $cursor->format('d/m/Y'),
+                    'montant_attendu' => $montantJournalierAttendu,
+                    'montant_verse' => 0,
+                    'arrieres' => $montantJournalierAttendu,
+                    'source' => 'jour_manquant',
+                    'date_sort' => $dateStr,
+                ];
+            }
+            $cursor->addDay();
+        }
+
         $versementsAvecArrieres = Versement::where('motard_id', $this->motardSelectionne->id)
             ->where('arrieres', '>', 0)
             ->orderBy('date_versement', 'desc')
             ->get();
 
-        $this->arrieresDetails = $versementsAvecArrieres->map(function ($v) {
+        $arrieresPartiels = $versementsAvecArrieres->map(function ($v) {
             return [
                 'id' => $v->id,
                 'date' => $v->date_versement?->format('d/m/Y'),
                 'montant_attendu' => $v->montant_attendu,
                 'montant_verse' => $v->montant,
                 'arrieres' => $v->arrieres,
+                'source' => 'versement_partiel',
+                'date_sort' => $v->date_versement?->format('Y-m-d'),
             ];
         })->toArray();
 
-        $this->arrieresCumules = $versementsAvecArrieres->sum('arrieres');
+        $detailsFusionnes = array_merge($arrieresPartiels, $arrieresJoursManquants);
+
+        usort($detailsFusionnes, function ($a, $b) {
+            return strcmp($b['date_sort'] ?? '', $a['date_sort'] ?? '');
+        });
+
+        $this->arrieresDetails = array_map(function ($item) {
+            unset($item['date_sort']);
+            return $item;
+        }, $detailsFusionnes);
+
+        $this->arrieresCumules = array_sum(array_map(fn($item) => (float) ($item['arrieres'] ?? 0), $detailsFusionnes));
     }
 
     /**
-     * Charger les jours ouvrables sans versement (Lun-Sam) sur les 30 derniers jours
+     * Charger les jours sans versement requis depuis le début contrat (cycle 5/2).
      */
     protected function loadJoursManquants()
     {
@@ -235,12 +315,12 @@ class Create extends Component
         }
 
         $today = Carbon::today();
-        // Remonter jusqu'à 30 jours en arrière (ou début du mois précédent)
-        $dateDebut = $today->copy()->subDays(30)->startOfDay();
+        $dateDebut = $this->getDateDebutReference();
 
         // Récupérer toutes les dates ayant un versement journalier pour ce motard
         $datesAvecVersement = Versement::where('motard_id', $this->motardSelectionne->id)
             ->whereBetween('date_versement', [$dateDebut, $today])
+            ->whereNull('semaine_debut')
             ->where(function ($query) {
                 $query->where('type', 'journalier')
                       ->orWhereNull('type');
@@ -254,9 +334,8 @@ class Create extends Component
         $jours = [];
 
         while ($cursor->lte($today)) {
-            // Inclure tous les jours (le repos dépend du cycle, pas du jour de la semaine)
             $dateStr = $cursor->format('Y-m-d');
-            if (!in_array($dateStr, $datesAvecVersement)) {
+            if ($this->isJourVersementRequis($cursor, $dateDebut) && !in_array($dateStr, $datesAvecVersement)) {
                 $jours[] = [
                     'date' => $dateStr,
                     'date_formatted' => $cursor->translatedFormat('D d/m/Y'),
@@ -486,7 +565,7 @@ class Create extends Component
             return;
         }
 
-        // Vérifier le cycle de repos du motard qui travaille réellement (6 jours travaillés → 1 jour repos)
+        // Verifier le cycle de repos du motard qui travaille reellement (5 jours travailles -> 1 jour repos)
         // Si un motard secondaire est sélectionné, c'est LUI qui travaille physiquement
         $dateVersement = Carbon::parse($this->date_versement);
         $motardQuiTravaille = $this->motard_secondaire_id
@@ -497,7 +576,7 @@ class Create extends Component
             $verification = CycleVersementService::peutFaireVersement($motardQuiTravaille, $dateVersement);
             if (!$verification['peut_verser'] && $verification['cycle_info']['est_jour_repos']) {
                 $nomMotard = $motardQuiTravaille->user?->name ?? 'Le motard';
-                session()->flash('error', "Jour de repos pour {$nomMotard} (cycle de 6 jours complété). Seul le remboursement d'arriérés est autorisé.");
+                session()->flash('error', "Jour de repos pour {$nomMotard} (cycle de 5 jours complete). Seul le remboursement d'arrieres est autorise.");
                 return;
             }
         }

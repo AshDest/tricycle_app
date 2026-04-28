@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Collecte = Ramassage de l'argent par le collecteur chez un CAISSIER (point de collecte).
  * Le collecteur visite plusieurs caissiers pendant sa tournée.
- * La somme collectée est répartie: 1/6 pour OKAMI, 5/6 pour les Propriétaires.
+ * La somme collectée est versée dans une caisse unique (pas de split).
  */
 class Collecte extends Model
 {

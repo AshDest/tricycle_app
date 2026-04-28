@@ -11,8 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Workflow: OKAMI soumet une demande → Collecteur traite → OKAMI valide → Bénéficiaire visualise
  *
  * Sources de caisse:
- * - 'proprietaire': Paiement depuis la caisse des propriétaires (5/6)
- * - 'okami': Paiement depuis la caisse OKAMI (1/6)
+ * - 'proprietaire': Paiement depuis la caisse des propriétaires
+ * - 'okami': Paiement depuis la caisse OKAMI
  * - 'lavage': Paiement depuis la caisse Lavage (80% du service de lavage)
  *
  * Modes supportés: M-PESA, Airtel Money, Orange Money, Virement bancaire, Cash
@@ -176,8 +176,8 @@ class Payment extends Model
     public static function getSourcesCaisse(): array
     {
         return [
-            'proprietaire' => 'Part Propriétaires (5/6 versements)',
-            'okami' => 'Part OKAMI Versements (1/6)',
+            'proprietaire' => 'Part Propriétaires (versements)',
+            'okami' => 'Part OKAMI Versements',
             'lavage' => 'Part OKAMI Lavage (20%)',
             'commission' => 'Part OKAMI Commission (30%)',
         ];

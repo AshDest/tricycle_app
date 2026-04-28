@@ -52,7 +52,7 @@ class SoldeOkami extends Component
         // Solde caisse actuel du collecteur
         $soldeOkamiCollecteur = $collecteur?->solde_caisse ?? 0;
 
-        // Total part OKAMI des versements (1/6 de tous les versements)
+        // Total part OKAMI des versements (caisse unique)
         $totalPartOkamiVersements = Versement::whereBetween('date_versement', [$this->dateDebut, $this->dateFin])
             ->whereIn('statut', ['payé', 'partiellement_payé'])
             ->sum('part_okami');

@@ -60,7 +60,7 @@ class Collecteur extends Model
 
     /**
      * Ajouter un montant à la caisse unique
-     * Tout l'argent des 6 jours de versement va dans la même caisse
+     * Tout l'argent des 5 jours de versement va dans la même caisse
      */
     public function ajouterMontantAvecRepartition(float $montant): array
     {
