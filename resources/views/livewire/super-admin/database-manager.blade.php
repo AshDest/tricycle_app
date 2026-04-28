@@ -217,7 +217,7 @@
                     <p>Pour confirmer, tapez <strong>SUPPRIMER</strong> ci-dessous:</p>
                     @endif
 
-                    <input type="text" wire:model="deleteConfirmText" class="form-control form-control-lg text-center"
+                    <input type="text" wire:model.live="deleteConfirmText" class="form-control form-control-lg text-center"
                            placeholder="{{ $confirmDelete === 'all' ? 'SUPPRIMER TOUT' : 'SUPPRIMER' }}"
                            autocomplete="off">
                 </div>

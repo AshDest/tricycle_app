@@ -109,7 +109,7 @@
 
     <!-- Info système -->
     <div class="info-box">
-        <strong>Système:</strong> Semaine = 6 jours de travail | Caisse unique
+        <strong>Système:</strong> Semaine = 5 jours de travail | Caisse unique
     </div>
 
     <!-- Statistiques globales -->
@@ -138,20 +138,20 @@
     <div style="margin-bottom: 15px;">
         <div class="repartition-box" style="margin-right: 2%;">
             <div class="repartition-header proprietaire">
-                <i>●</i> PART PROPRIÉTAIRES (5/6)
+                <i>●</i> TOTAL VERSÉ (Caisse unique)
             </div>
             <div class="repartition-body">
-                <div>Attendue: <span class="amount">{{ number_format($resume['repartition_attendue']['part_proprietaires']) }} FC</span></div>
-                <div>Réelle: <span class="amount text-warning">{{ number_format($resume['repartition_verse']['part_proprietaires']) }} FC</span></div>
+                <div>Attendu: <span class="amount">{{ number_format($resume['repartition_attendue']['part_proprietaires']) }} FC</span></div>
+                <div>Réel: <span class="amount text-warning">{{ number_format($resume['repartition_verse']['part_proprietaires']) }} FC</span></div>
             </div>
         </div>
         <div class="repartition-box">
             <div class="repartition-header okami">
-                <i>●</i> PART OKAMI (1/6)
+                <i>●</i> TAUX DE RECOUVREMENT
             </div>
             <div class="repartition-body">
-                <div>Attendue: <span class="amount">{{ number_format($resume['repartition_attendue']['part_okami']) }} FC</span></div>
-                <div>Réelle: <span class="amount text-info">{{ number_format($resume['repartition_verse']['part_okami']) }} FC</span></div>
+                <div>Taux: <span class="amount {{ $resume['taux_recouvrement'] >= 80 ? 'text-success' : 'text-warning' }}">{{ $resume['taux_recouvrement'] }}%</span></div>
+                <div>Écart: <span class="amount {{ $resume['ecart'] >= 0 ? 'text-success' : 'text-danger' }}">{{ number_format($resume['ecart']) }} FC</span></div>
             </div>
         </div>
     </div>
@@ -162,10 +162,9 @@
             <tr>
                 <th>Propriétaire</th>
                 <th class="text-center">Motos</th>
-                <th class="text-right">Attendu</th>
+                <th class="text-right">Attendu (5j)</th>
                 <th class="text-right">Versé</th>
-                <th class="text-right">Part Propriétaire</th>
-                <th class="text-right">Part OKAMI</th>
+                <th class="text-center">Taux</th>
                 <th class="text-center">Écart</th>
             </tr>
         </thead>
@@ -176,15 +175,16 @@
                 <td class="text-center">{{ $detail['nb_motos'] }}</td>
                 <td class="text-right">{{ number_format($detail['total_attendu']) }} FC</td>
                 <td class="text-right text-success">{{ number_format($detail['total_verse']) }} FC</td>
-                <td class="text-right text-warning">{{ number_format($detail['total_part_proprietaire']) }} FC</td>
-                <td class="text-right text-info">{{ number_format($detail['total_part_okami']) }} FC</td>
+                <td class="text-center {{ $detail['total_attendu'] > 0 ? (($detail['total_verse'] / $detail['total_attendu']) >= 0.8 ? 'text-success' : 'text-warning') : '' }}">
+                    {{ $detail['total_attendu'] > 0 ? round(($detail['total_verse'] / $detail['total_attendu']) * 100, 1) : 0 }}%
+                </td>
                 <td class="text-center {{ $detail['ecart'] >= 0 ? 'text-success' : 'text-danger' }}">
                     {{ $detail['ecart'] >= 0 ? '+' : '' }}{{ number_format($detail['ecart']) }} FC
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center">Aucune donnée</td>
+                <td colspan="6" class="text-center">Aucune donnée</td>
             </tr>
             @endforelse
         </tbody>
@@ -195,8 +195,7 @@
                 <td class="text-center">{{ $resume['nb_motos_actives'] }}</td>
                 <td class="text-right">{{ number_format($resume['total_attendu']) }} FC</td>
                 <td class="text-right text-success">{{ number_format($resume['total_verse']) }} FC</td>
-                <td class="text-right text-warning">{{ number_format($resume['repartition_verse']['part_proprietaires']) }} FC</td>
-                <td class="text-right text-info">{{ number_format($resume['repartition_verse']['part_okami']) }} FC</td>
+                <td class="text-center {{ $resume['taux_recouvrement'] >= 80 ? 'text-success' : 'text-warning' }}">{{ $resume['taux_recouvrement'] }}%</td>
                 <td class="text-center {{ $resume['ecart'] >= 0 ? 'text-success' : 'text-danger' }}">
                     {{ $resume['ecart'] >= 0 ? '+' : '' }}{{ number_format($resume['ecart']) }} FC
                 </td>

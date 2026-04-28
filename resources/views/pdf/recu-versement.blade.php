@@ -231,7 +231,7 @@
                 </tr>
                 <tr>
                     <td class="label">Jours</td>
-                    <td class="value">Lundi - Samedi (6 jours)</td>
+                    <td class="value">Lundi - Vendredi (5 jours)</td>
                 </tr>
                 @endif
                 <tr>

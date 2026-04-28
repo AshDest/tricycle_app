@@ -10,16 +10,16 @@ use Carbon\Carbon;
  * Service de gestion du cycle de versement des motards.
  *
  * Principe:
- * - Un motard doit totaliser 6 jours de travail (versements journaliers).
+ * - Un motard doit totaliser 5 jours de travail (versements journaliers).
  * - Ce cycle ne dépend PAS de la semaine civile.
- * - Après 6 jours travaillés, le 7ème jour est un jour de repos (pas de versement requis).
+ * - Après 5 jours travaillés, le jour suivant est un jour de repos (pas de versement requis).
  * - Si le motard ne travaille pas certains jours, le cycle reprend là où il s'est arrêté.
  * - Chaque motard (titulaire et secondaire) a son propre cycle indépendant.
  * - Une moto peut être utilisée par un motard secondaire qui a son propre cycle.
  */
 class CycleVersementService
 {
-    const JOURS_TRAVAIL_PAR_CYCLE = 6;
+    const JOURS_TRAVAIL_PAR_CYCLE = 5;
 
     /**
      * Obtenir les informations du cycle actuel d'un motard.
@@ -92,21 +92,21 @@ class CycleVersementService
         $joursDepuisDernier = $dernierVersementDate->diffInDays(Carbon::today());
 
         // Déterminer si aujourd'hui est un jour de repos
-        // Repos = le cycle est complet (6 jours travaillés) ET le dernier versement est récent
+        // Repos = le cycle est complet (5 jours travaillés) ET le dernier versement est recent
         $cycleComplet = ($joursDansCycleActuel == self::JOURS_TRAVAIL_PAR_CYCLE);
         $estJourRepos = false;
 
         if ($cycleComplet) {
             // Le cycle est complet. Le prochain jour calendaire après le dernier versement est repos.
-            // Si on est le jour juste après le 6ème versement → repos
+            // Si on est le jour juste après le 5eme versement -> repos
             // Si on est 2+ jours après → le repos a été "consommé", nouveau cycle
             if ($joursDepuisDernier == 1) {
                 $estJourRepos = true;
             } elseif ($joursDepuisDernier == 0) {
-                // Le 6ème versement est aujourd'hui → demain sera repos
+                // Le 5eme versement est aujourd'hui -> demain sera repos
                 $estJourRepos = false;
             } else {
-                // Plus d'1 jour depuis le 6ème versement → repos consommé, nouveau cycle
+                // Plus d'1 jour depuis le 5eme versement -> repos consomme, nouveau cycle
                 $joursDansCycleActuel = 0;
                 $cycleNumero++;
             }

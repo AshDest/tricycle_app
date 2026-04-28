@@ -12,12 +12,12 @@ use Carbon\Carbon;
  * Service de calcul de répartition des recettes
  *
  * Principe:
- * - Semaine = 6 jours de travail
+ * - Semaine = 5 jours de travail
  * - Tous les versements vont dans une caisse unique (plus de split OKAMI/Propriétaire)
  */
 class RepartitionService
 {
-    const JOURS_SEMAINE = 6;
+    const JOURS_SEMAINE = 5;
 
     /**
      * Obtenir le montant journalier attendu (depuis les paramètres système ou défaut)

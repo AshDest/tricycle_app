@@ -184,7 +184,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="opacity-75">
                         <i class="bi bi-info-circle me-1"></i>
-                        Les 6 jours de versement vont dans une caisse unique
+                        Les 5 jours de versement vont dans une caisse unique
                     </small>
                     <a href="{{ route('supervisor.reports.repartition') }}" class="btn btn-sm btn-light">
                         <i class="bi bi-bar-chart me-1"></i>Voir les rapports détaillés

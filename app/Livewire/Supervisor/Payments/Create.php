@@ -12,12 +12,13 @@ use App\Models\Lavage;
 use App\Models\Cleaner;
 use App\Models\SystemSetting;
 use App\Services\PaymentService;
+use App\Services\RepartitionService;
 use Carbon\Carbon;
 
 /**
  * Formulaire de création de demande de paiement par OKAMI
  * Les demandes de paiement sont hebdomadaires (basées sur les versements journaliers de la semaine)
- * Sources: Propriétaire (5/6), OKAMI (1/6), Lavage (80%)
+ * Sources: Proprietaire, OKAMI, Lavage, Commission
  */
 #[Layout('components.dashlite-layout')]
 class Create extends Component
@@ -126,7 +127,7 @@ class Create extends Component
         // Ajouter la semaine courante et les 4 semaines précédentes
         for ($i = 0; $i < 5; $i++) {
             $debut = $debutSemaine->copy()->subWeeks($i);
-            $fin = $debut->copy()->addDays(6); // Dimanche
+            $fin = $debut->copy()->addDays(RepartitionService::JOURS_SEMAINE - 1);
 
             $numeroSemaine = $debut->weekOfYear;
             $annee = $debut->year;

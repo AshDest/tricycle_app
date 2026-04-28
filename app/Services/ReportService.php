@@ -8,6 +8,7 @@ use App\Models\Tournee;
 use App\Models\Collecte;
 use App\Models\Zone;
 use App\Models\Maintenance;
+use App\Services\RepartitionService;
 use App\Models\Accident;
 use Carbon\Carbon;
 
@@ -64,13 +65,13 @@ class ReportService
      */
     public function generateWeeklyReport(Carbon $dateDebut): array
     {
-        $dateFin = $dateDebut->copy()->addDays(6);
+        $dateFin = $dateDebut->copy()->addDays(RepartitionService::JOURS_SEMAINE - 1);
 
         $versements = Versement::whereBetween('date_versement', [$dateDebut, $dateFin])->get();
 
         // Détails par jour
         $parJour = [];
-        for ($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < RepartitionService::JOURS_SEMAINE; $i++) {
             $jour = $dateDebut->copy()->addDays($i);
             $jourVersements = $versements->filter(function ($v) use ($jour) {
                 return $v->date_versement->isSameDay($jour);
