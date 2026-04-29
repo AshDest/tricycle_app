@@ -121,6 +121,23 @@
                     </div>
 
                     <div class="col-12 mt-4">
+                        <h6 class="fw-semibold text-primary mb-0"><i class="bi bi-file-earmark-text me-1"></i> Contrat</h6>
+                        <hr class="mt-2">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Date de début du contrat</label>
+                        <input type="date" wire:model="contrat_debut" class="form-control @error('contrat_debut') is-invalid @enderror">
+                        @error('contrat_debut') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Date de fin du contrat</label>
+                        <input type="date" wire:model="contrat_fin" class="form-control @error('contrat_fin') is-invalid @enderror">
+                        @error('contrat_fin') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 mt-4">
                         <hr>
                         <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="save"><i class="bi bi-check-lg me-1"></i> Mettre &agrave; jour</span>
