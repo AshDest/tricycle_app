@@ -24,6 +24,8 @@ class Edit extends Component
     public $motard_id = '';
     public $montant_journalier_attendu = '';
     public $statut = 'actif';
+    public $contrat_debut = '';
+    public $contrat_fin = '';
 
     public function mount(Moto $moto)
     {
@@ -39,6 +41,8 @@ class Edit extends Component
         $this->motard_id = $moto->motard_id ?? '';
         $this->montant_journalier_attendu = $moto->montant_journalier_attendu;
         $this->statut = $moto->statut;
+        $this->contrat_debut = $moto->contrat_debut?->format('Y-m-d') ?? '';
+        $this->contrat_fin = $moto->contrat_fin?->format('Y-m-d') ?? '';
     }
 
     protected function rules()
@@ -55,6 +59,8 @@ class Edit extends Component
             'motard_id' => 'nullable|exists:motards,id',
             'montant_journalier_attendu' => 'required|numeric|min:0',
             'statut' => 'required|in:actif,suspendu,maintenance',
+            'contrat_debut' => 'nullable|date',
+            'contrat_fin' => 'nullable|date|after_or_equal:contrat_debut',
         ];
     }
 
@@ -74,6 +80,8 @@ class Edit extends Component
             'motard_id' => $this->motard_id ?: null,
             'montant_journalier_attendu' => $this->montant_journalier_attendu,
             'statut' => $this->statut,
+            'contrat_debut' => $this->contrat_debut ?: null,
+            'contrat_fin' => $this->contrat_fin ?: null,
         ]);
 
         session()->flash('success', 'Moto mise a jour avec succes.');
