@@ -274,7 +274,7 @@
                                     </div>
                                     <div class="card-body py-2">
                                         <small class="text-muted d-block mb-2">
-                                            Si un autre motard (sans moto assignée) a travaillé ce jour à la place du titulaire, sélectionnez-le ci-dessous. Sinon, laissez vide.
+                                            Si un autre motard actif a travaillé ce jour à la place du titulaire, sélectionnez-le ci-dessous (même s'il a déjà une autre moto).
                                         </small>
                                         <select wire:model="motard_secondaire_id" class="form-select form-select-sm @error('motard_secondaire_id') is-invalid @enderror">
                                             <option value="">-- Motard titulaire ({{ $motardSelectionne?->user?->name ?? 'N/A' }}) --</option>

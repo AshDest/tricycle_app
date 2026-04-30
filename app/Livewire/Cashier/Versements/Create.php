@@ -57,7 +57,7 @@ class Create extends Component
     // Pour le téléchargement du reçu
     public $dernierVersementId = null;
 
-    // Liste des motards secondaires (sans moto assignée)
+    // Liste des motards secondaires (tout motard actif sauf titulaire)
     public $motardsSecondaires = [];
 
     // Jours manquants (sans versement) et jours sélectionnés par le caissier
@@ -68,7 +68,7 @@ class Create extends Component
     {
         $rules = [
             'motard_id' => 'required|exists:motards,id',
-            'motard_secondaire_id' => 'nullable|exists:motards,id',
+            'motard_secondaire_id' => 'nullable|different:motard_id|exists:motards,id',
             'montant' => 'required|integer|min:1',
             'mode_paiement' => 'required|in:cash,mobile_money,depot',
             'type_versement' => 'required|in:journalier,arrieres',
@@ -101,13 +101,10 @@ class Create extends Component
             $this->montantJournalierAttendu = $this->motardSelectionne?->moto?->montant_journalier_attendu
                 ?? SystemSetting::getMontantJournalierDefaut();
 
-            // Charger les motards secondaires (sans moto assignée, différents du titulaire)
+            // Charger les motards secondaires (tout motard actif, différent du titulaire)
             $this->motardsSecondaires = Motard::with('user')
                 ->where('is_active', true)
                 ->where('id', '!=', $value)
-                ->whereDoesntHave('moto', function ($q) {
-                    $q->where('statut', 'actif');
-                })
                 ->get()
                 ->toArray();
 
@@ -902,15 +899,12 @@ class Create extends Component
             ->whereHas('moto')
             ->get();
 
-        // Motards secondaires (sans moto assignée active)
+        // Motards secondaires (tout motard actif sauf titulaire)
         $motardsSecondairesList = [];
         if ($this->motard_id) {
             $motardsSecondairesList = Motard::with('user')
                 ->where('is_active', true)
                 ->where('id', '!=', $this->motard_id)
-                ->whereDoesntHave('moto', function ($q) {
-                    $q->where('statut', 'actif');
-                })
                 ->get();
         }
 
