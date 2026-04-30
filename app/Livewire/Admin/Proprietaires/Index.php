@@ -6,8 +6,10 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Proprietaire;
+use App\Services\UserAccountCleanupService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -104,15 +106,15 @@ class Index extends Component
             return;
         }
 
-        // Supprimer le propriétaire (soft delete)
-        $proprietaire->delete();
+        $cleanup = null;
 
-        // Désactiver le compte utilisateur associé
-        if ($proprietaire->user) {
-            $proprietaire->user->removeRole('owner');
-        }
+        DB::transaction(function () use ($proprietaire, &$cleanup) {
+            $user = $proprietaire->user;
+            $proprietaire->delete();
+            $cleanup = app(UserAccountCleanupService::class)->cleanupAfterProfileDeletion($user, 'owner');
+        });
 
-        session()->flash('success', 'Propriétaire supprimé avec succès.');
+        session()->flash('success', 'Propriétaire supprimé avec succès. ' . ($cleanup['message'] ?? ''));
         $this->confirmingDelete = null;
     }
 

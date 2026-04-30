@@ -6,8 +6,10 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Collecteur;
+use App\Services\UserAccountCleanupService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -49,15 +51,15 @@ class Index extends Component
 
     public function delete(Collecteur $collecteur)
     {
-        // Soft delete le collecteur
-        $collecteur->delete();
+        $cleanup = null;
 
-        // Optionnel: désactiver l'utilisateur associé
-        if ($collecteur->user) {
-            $collecteur->user->update(['is_active' => false]);
-        }
+        DB::transaction(function () use ($collecteur, &$cleanup) {
+            $user = $collecteur->user;
+            $collecteur->delete();
+            $cleanup = app(UserAccountCleanupService::class)->cleanupAfterProfileDeletion($user, 'collector');
+        });
 
-        session()->flash('success', 'Collecteur supprimé avec succès.');
+        session()->flash('success', 'Collecteur supprimé avec succès. ' . ($cleanup['message'] ?? ''));
     }
 
     protected function getBaseQuery()

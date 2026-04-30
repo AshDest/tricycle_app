@@ -6,8 +6,10 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Motard;
+use App\Services\UserAccountCleanupService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -43,8 +45,15 @@ class Index extends Component
 
     public function delete(Motard $motard)
     {
-        $motard->delete();
-        session()->flash('success', 'Motard supprime avec succes.');
+        $cleanup = null;
+
+        DB::transaction(function () use ($motard, &$cleanup) {
+            $user = $motard->user;
+            $motard->delete();
+            $cleanup = app(UserAccountCleanupService::class)->cleanupAfterProfileDeletion($user, 'driver');
+        });
+
+        session()->flash('success', 'Motard supprimé avec succès. ' . ($cleanup['message'] ?? ''));
     }
 
     protected function getBaseQuery()

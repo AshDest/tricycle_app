@@ -6,8 +6,10 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use App\Models\Caissier;
+use App\Services\UserAccountCleanupService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -43,8 +45,15 @@ class Index extends Component
 
     public function delete(Caissier $caissier)
     {
-        $caissier->delete();
-        session()->flash('success', 'Caissier supprime avec succes.');
+        $cleanup = null;
+
+        DB::transaction(function () use ($caissier, &$cleanup) {
+            $user = $caissier->user;
+            $caissier->delete();
+            $cleanup = app(UserAccountCleanupService::class)->cleanupAfterProfileDeletion($user, 'cashier');
+        });
+
+        session()->flash('success', 'Caissier supprime avec succes. ' . ($cleanup['message'] ?? ''));
     }
 
     protected function getBaseQuery()
