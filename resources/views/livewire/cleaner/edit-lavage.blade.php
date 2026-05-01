@@ -7,10 +7,18 @@
             </h4>
             <p class="text-muted mb-0">{{ $lavage->numero_lavage }}</p>
         </div>
-        <a href="{{ route('cleaner.lavages.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route($retourRoute) }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Retour
         </a>
     </div>
+
+    @if($isAdminContext)
+    <div class="alert alert-warning">
+        <i class="bi bi-clock-history me-2"></i>
+        Modification admin autorisée uniquement pendant <strong>{{ $editWindowMinutes }} minutes</strong> après création.
+        <span class="ms-1">Temps restant: <strong>{{ $lavage->remainingEditMinutes($editWindowMinutes) }} min</strong>.</span>
+    </div>
+    @endif
 
     <!-- Messages flash -->
     @if(session('error'))
@@ -252,10 +260,12 @@
                                     <span class="spinner-border spinner-border-sm me-1"></span>Enregistrement...
                                 </span>
                             </button>
-                            <a href="{{ route('cleaner.lavages.index') }}" class="btn btn-outline-secondary">Annuler</a>
+                            <a href="{{ route($retourRoute) }}" class="btn btn-outline-secondary">Annuler</a>
+                            @if(!$isAdminContext)
                             <button type="button" wire:click="annuler" wire:confirm="Êtes-vous sûr de vouloir annuler ce lavage? Cette action est irréversible." class="btn btn-outline-danger ms-auto">
                                 <i class="bi bi-x-circle me-1"></i>Annuler le lavage
                             </button>
+                            @endif
                         </div>
                     </form>
                 </div>

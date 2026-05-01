@@ -192,5 +192,34 @@ class Lavage extends Model
             default => 2000,
         };
     }
+
+    /**
+     * Détermine si le lavage est modifiable dans une fenêtre de temps donnée.
+     */
+    public function canBeEditedWithinMinutes(int $minutes = 20): bool
+    {
+        if (!$this->created_at) {
+            return false;
+        }
+
+        return $this->created_at->copy()->addMinutes($minutes)->gte(now());
+    }
+
+    /**
+     * Temps restant (en minutes) avant expiration de la fenêtre de modification.
+     */
+    public function remainingEditMinutes(int $minutes = 20): int
+    {
+        if (!$this->created_at) {
+            return 0;
+        }
+
+        $deadline = $this->created_at->copy()->addMinutes($minutes);
+        if ($deadline->lte(now())) {
+            return 0;
+        }
+
+        return (int) ceil(now()->diffInSeconds($deadline) / 60);
+    }
 }
 

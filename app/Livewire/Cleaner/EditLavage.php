@@ -11,6 +11,9 @@ use App\Models\Moto;
 class EditLavage extends Component
 {
     public Lavage $lavage;
+    public bool $isAdminContext = false;
+    public string $retourRoute = 'cleaner.lavages.index';
+    public int $editWindowMinutes = 20;
 
     // Type de moto
     public $is_externe = false;
@@ -64,18 +67,34 @@ class EditLavage extends Component
     public function mount(Lavage $lavage)
     {
         $this->lavage = $lavage;
+        $user = auth()->user();
+        $this->isAdminContext = (bool) ($user && $user->hasRole('admin'));
+        $this->retourRoute = $this->isAdminContext ? 'admin.lavages.index' : 'cleaner.lavages.index';
 
-        // Vérifier que le lavage appartient au cleaner connecté
-        $cleaner = auth()->user()->cleaner;
-        if (!$cleaner || $lavage->cleaner_id !== $cleaner->id) {
-            session()->flash('error', 'Vous n\'êtes pas autorisé à modifier ce lavage.');
-            return redirect()->route('cleaner.lavages.index');
+        if ($this->isAdminContext) {
+            if (!$lavage->canBeEditedWithinMinutes($this->editWindowMinutes)) {
+                session()->flash('error', 'Modification impossible: ce lavage a dépassé le délai de 20 minutes.');
+                return redirect()->route($this->retourRoute);
+            }
+        } else {
+            // Vérifier que le lavage appartient au cleaner connecté
+            $cleaner = $user?->cleaner;
+            if (!$cleaner || $lavage->cleaner_id !== $cleaner->id) {
+                session()->flash('error', 'Vous n\'êtes pas autorisé à modifier ce lavage.');
+                return redirect()->route($this->retourRoute);
+            }
+
+            // Côté cleaner, un lavage payé ne peut pas être modifié
+            if ($lavage->statut_paiement === 'payé') {
+                session()->flash('error', 'Ce lavage a déjà été payé et ne peut plus être modifié.');
+                return redirect()->route($this->retourRoute);
+            }
         }
 
-        // Vérifier que le lavage n'est pas déjà payé
-        if ($lavage->statut_paiement === 'payé') {
-            session()->flash('error', 'Ce lavage a déjà été payé et ne peut plus être modifié.');
-            return redirect()->route('cleaner.lavages.index');
+        // Un lavage annulé ne doit plus être modifié
+        if ($lavage->statut_paiement === 'annulé') {
+            session()->flash('error', 'Ce lavage est annulé et ne peut pas être modifié.');
+            return redirect()->route($this->retourRoute);
         }
 
         // Charger les prix configurés
@@ -165,15 +184,26 @@ class EditLavage extends Component
 
     public function save()
     {
-        // Double vérification: empêcher la modification d'un lavage déjà payé
-        if ($this->lavage->statut_paiement === 'payé') {
+        // Contrôle serveur: délai strict de 20 minutes pour l'admin
+        if ($this->isAdminContext && !$this->lavage->fresh()->canBeEditedWithinMinutes($this->editWindowMinutes)) {
+            session()->flash('error', 'Modification impossible: le délai de 20 minutes est dépassé.');
+            return redirect()->route($this->retourRoute);
+        }
+
+        // Côté cleaner, empêcher la modification d'un lavage payé
+        if (!$this->isAdminContext && $this->lavage->fresh()->statut_paiement === 'payé') {
             session()->flash('error', 'Ce lavage a déjà été payé et ne peut plus être modifié.');
-            return redirect()->route('cleaner.lavages.index');
+            return redirect()->route($this->retourRoute);
+        }
+
+        if ($this->lavage->fresh()->statut_paiement === 'annulé') {
+            session()->flash('error', 'Ce lavage est annulé et ne peut pas être modifié.');
+            return redirect()->route($this->retourRoute);
         }
 
         $this->validate();
 
-        $cleaner = auth()->user()->cleaner;
+        $cleaner = $this->lavage->cleaner;
 
         // Calculer l'ancienne part du cleaner pour ajuster le solde
         $anciennePartCleaner = $this->lavage->part_cleaner;
@@ -196,26 +226,33 @@ class EditLavage extends Component
         // Ajuster le solde du laveur
         $nouvellePartCleaner = $this->lavage->fresh()->part_cleaner;
         $difference = $nouvellePartCleaner - $anciennePartCleaner;
-        if ($difference != 0) {
+        if ($cleaner && $difference != 0) {
             $cleaner->increment('solde_actuel', $difference);
         }
 
         session()->flash('success', 'Lavage modifié avec succès!');
-        return redirect()->route('cleaner.lavages.index');
+        return redirect()->route($this->retourRoute);
     }
 
     public function annuler()
     {
-        $cleaner = auth()->user()->cleaner;
+        if ($this->isAdminContext) {
+            session()->flash('error', 'Annulation non autorisée depuis cette interface.');
+            return redirect()->route($this->retourRoute);
+        }
+
+        $cleaner = $this->lavage->cleaner;
 
         // Rembourser le solde du cleaner
-        $cleaner->decrement('solde_actuel', $this->lavage->part_cleaner);
+        if ($cleaner) {
+            $cleaner->decrement('solde_actuel', $this->lavage->part_cleaner);
+        }
 
         // Supprimer le lavage
         $this->lavage->update(['statut_paiement' => 'annulé']);
 
         session()->flash('success', 'Lavage annulé avec succès!');
-        return redirect()->route('cleaner.lavages.index');
+        return redirect()->route($this->retourRoute);
     }
 
     public function render()

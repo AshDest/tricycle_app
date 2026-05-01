@@ -117,6 +117,7 @@
                             <th>Part Laveur</th>
                             <th>Part OKAMI</th>
                             <th>Date</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,10 +164,22 @@
                                 <small>{{ $lavage->date_lavage->format('d/m/Y') }}</small><br>
                                 <small class="text-muted">{{ $lavage->date_lavage->format('H:i') }}</small>
                             </td>
+                            <td class="text-end">
+                                @if($lavage->canBeEditedWithinMinutes(20) && $lavage->statut_paiement !== 'annulé')
+                                <a href="{{ route('admin.lavages.edit', $lavage) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                @else
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="Modification expirée">
+                                    <i class="bi bi-lock"></i>
+                                </button>
+                                <small class="d-block text-muted mt-1">Délai expiré</small>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                 Aucun lavage trouvé
                             </td>
