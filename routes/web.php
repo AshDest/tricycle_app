@@ -96,6 +96,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Lavages (Admin vue)
         Route::get('/lavages', \App\Livewire\Admin\Lavages\Index::class)->name('lavages.index');
+        Route::get('/lavages/{lavage}/edit', \App\Livewire\Cleaner\EditLavage::class)->name('lavages.edit');
 
         // KWADO Services (Admin vue)
         Route::get('/kwado', \App\Livewire\Admin\Kwado\Index::class)->name('kwado.index');
