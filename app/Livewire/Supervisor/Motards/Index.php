@@ -168,8 +168,7 @@ class Index extends Component
                     $query->whereHas('user', function ($q2) {
                         $q2->where('name', 'like', '%' . $this->search . '%')
                            ->orWhere('email', 'like', '%' . $this->search . '%');
-                    })->orWhere('numero_identifiant', 'like', '%' . $this->search . '%')
-                      ->orWhere('telephone', 'like', '%' . $this->search . '%');
+                    })->orWhere('numero_identifiant', 'like', '%' . $this->search . '%');
                 });
             })
             ->when($this->filterZone, function ($q) {
