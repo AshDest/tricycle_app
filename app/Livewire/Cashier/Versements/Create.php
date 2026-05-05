@@ -670,7 +670,7 @@ class Create extends Component
             'notes' => trim(($this->notes ? $this->notes . "\n" : '') . $notesSupplementaires),
         ]);
 
-        $caissier->increment('solde_actuel', $montantVerse);
+        // Le solde_actuel du caissier est recalculé automatiquement par VersementObserver::created()
 
         session()->flash('success', 'Versement journalier de ' . number_format($montantVerse) . ' FC enregistré pour le ' . $dateVersement->format('d/m/Y') . '.');
         session()->flash('dernierVersementId', $versement->id);
@@ -733,7 +733,7 @@ class Create extends Component
         }
 
         if ($joursEnregistres > 0) {
-            $caissier->increment('solde_actuel', $montantTotal);
+            // Le solde_actuel du caissier est recalculé automatiquement par VersementObserver::created()
 
             $premierJour = Carbon::parse($this->joursSelectionnes[0])->format('d/m/Y');
             $dernierJour = Carbon::parse(end($this->joursSelectionnes))->format('d/m/Y');
@@ -780,7 +780,7 @@ class Create extends Component
             'notes' => ($versement->notes ? $versement->notes . "\n" : '') . $noteComplement . ($this->notes ? "\n" . $this->notes : ''),
         ]);
 
-        $caissier->increment('solde_actuel', $montantVerse);
+        // Le solde_actuel du caissier est recalculé automatiquement par VersementObserver::updated()
 
         // Si excédent, rembourser les arriérés
         $excedent = $nouveauMontant - $montantJournalierAttendu;
@@ -826,10 +826,10 @@ class Create extends Component
             'part_proprietaire' => $partProprietaire,
             'part_okami' => $partOkami,
             'validated_by_caissier_at' => Carbon::now(),
-            'notes' => "Remboursement arriérés" . ($this->notes ? ": " . $this->notes : ''),
+            'notes' => "Remboursement arrirs" . ($this->notes ? ": " . $this->notes : ''),
         ]);
 
-        $caissier->increment('solde_actuel', $montantEffectif);
+        // Le solde_actuel du caissier est recalculé automatiquement par VersementObserver::created()
 
         session()->flash('success', 'Remboursement de ' . number_format($montantEffectif) . ' FC effectué sur les arriérés.');
         session()->flash('dernierVersementId', $versement->id);
