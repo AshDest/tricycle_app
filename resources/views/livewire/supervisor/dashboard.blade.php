@@ -145,7 +145,7 @@
     <!-- Total Versements -->
     <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #00838f 0%, #006064 100%);">
         <div class="card-body text-white">
-            <div class="row align-items-center">
+            <div class="row align-items-center mb-3">
                 <div class="col-lg-4 mb-3 mb-lg-0">
                     <div class="d-flex align-items-center gap-3">
                         <div class="bg-white bg-opacity-25 rounded-circle p-3">
@@ -153,7 +153,7 @@
                         </div>
                         <div>
                             <h5 class="mb-1 fw-bold">Total Versements</h5>
-                            <small class="opacity-75">Montant total des versements collectés</small>
+                            <small class="opacity-75">Historique et disponibilité en caisse</small>
                         </div>
                     </div>
                 </div>
@@ -173,22 +173,36 @@
                         </div>
                         <div class="col-4">
                             <div class="bg-white bg-opacity-25 rounded p-3">
-                                <small class="d-block opacity-75">Total cumulé</small>
+                                <small class="d-block opacity-75">Historique total</small>
                                 <h4 class="fw-bold mb-0">{{ number_format($soldeVersementsTotal ?? 0) }} FC</h4>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="mt-3 pt-3 border-top border-white border-opacity-25">
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="opacity-75">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Les 5 jours de versement vont dans une caisse unique
-                    </small>
-                    <a href="{{ route('supervisor.reports.repartition') }}" class="btn btn-sm btn-light">
-                        <i class="bi bi-bar-chart me-1"></i>Voir les rapports détaillés
-                    </a>
+            {{-- Ligne séparatrice expliquant la différence avec le disponible en caisse --}}
+            <div class="pt-3 border-top border-white border-opacity-25">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <div class="d-flex align-items-center gap-3 p-2 rounded" style="background: rgba(255,255,255,0.15);">
+                            <i class="bi bi-safe2 fs-4 text-warning"></i>
+                            <div>
+                                <small class="d-block opacity-75 fw-semibold">💡 En caisse (non encore prélevé)</small>
+                                <h5 class="fw-bold mb-0">{{ number_format($soldeCaissiersActuel ?? 0) }} FC</h5>
+                                <small class="opacity-75">Versements chez les caissiers, en attente de collecte</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 text-end mt-2 mt-lg-0">
+                        <small class="opacity-75 d-block mb-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            L'historique total inclut les fonds déjà prélevés par les collecteurs.
+                            Le montant "en caisse" est ce qui est encore disponible chez les caissiers.
+                        </small>
+                        <a href="{{ route('supervisor.reports.repartition') }}" class="btn btn-sm btn-light">
+                            <i class="bi bi-bar-chart me-1"></i>Voir les rapports détaillés
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

@@ -6,8 +6,10 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use App\Models\Versement;
+use App\Models\Caissier;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Index extends Component
@@ -130,8 +132,23 @@ class Index extends Component
     public function deleteVersement($id)
     {
         try {
-            $versement = Versement::findOrFail($id);
-            $versement->delete();
+            DB::transaction(function () use ($id) {
+                $versement = Versement::findOrFail($id);
+                $caissierId = $versement->caissier_id;
+
+                $versement->delete();
+
+                if ($caissierId) {
+                    $caissier = Caissier::find($caissierId);
+                    if ($caissier) {
+                        // Recalcule après suppression pour éviter tout écart de caisse.
+                        $caissier->update([
+                            'solde_actuel' => $caissier->calculerSoldeActuel(),
+                        ]);
+                    }
+                }
+            });
+
             $this->confirmingDelete = null;
             session()->flash('success', 'Versement supprimé avec succès.');
         } catch (\Exception $e) {

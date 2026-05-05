@@ -32,6 +32,8 @@ class Dashboard extends Component
     public $soldeVersementsTotal = 0;
     public $soldeVersementsSemaine = 0;
     public $soldeVersementsMois = 0;
+    // Montant des versements non encore collectés (réellement en caisse chez les caissiers)
+    public $soldeCaissiersActuel = 0;
     public $repartitionHebdo = [];
 
     // Solde OKAMI des lavages (20% des lavages internes)
@@ -107,7 +109,7 @@ class Dashboard extends Component
             ->get();
 
         // Calcul du total des versements
-        // Total historique
+        // Total historique (tous versements depuis toujours)
         $this->soldeVersementsTotal = Versement::sum('montant') ?? 0;
 
         // Total versements cette semaine
@@ -117,6 +119,11 @@ class Dashboard extends Component
         // Total versements ce mois
         $versementsMois = Versement::whereBetween('date_versement', [$startOfMonth, $today])->get();
         $this->soldeVersementsMois = $versementsMois->sum('montant') ?? 0;
+
+        // Solde réellement en caisse = versements non encore prélevés par un collecteur
+        $this->soldeCaissiersActuel = Versement::whereNull('collecte_id')
+            ->where('statut', '!=', 'non_effectué')
+            ->sum('montant') ?? 0;
 
         // ===== Calcul du solde OKAMI des lavages (20% des lavages internes) =====
 
