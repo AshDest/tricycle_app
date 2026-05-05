@@ -5,6 +5,8 @@ namespace App\Livewire\Admin\Versements;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Versement;
+use App\Models\Caissier;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Edit extends Component
@@ -46,15 +48,35 @@ class Edit extends Component
         $this->validate();
 
         try {
-            $this->versement->update([
-                'montant' => $this->montant,
-                'montant_attendu' => $this->montant_attendu,
-                'mode_paiement' => $this->mode_paiement,
-                'statut' => $this->statut,
-                'date_versement' => $this->date_versement,
-                'notes' => $this->notes,
-                'arrieres' => max(0, $this->montant_attendu - $this->montant),
-            ]);
+            DB::transaction(function () {
+                $ancienCaissierId = $this->versement->caissier_id;
+
+                $this->versement->update([
+                    'montant' => $this->montant,
+                    'montant_attendu' => $this->montant_attendu,
+                    'mode_paiement' => $this->mode_paiement,
+                    'statut' => $this->statut,
+                    'date_versement' => $this->date_versement,
+                    'notes' => $this->notes,
+                    'arrieres' => max(0, $this->montant_attendu - $this->montant),
+                ]);
+
+                $caissiersImpactes = collect([$ancienCaissierId, $this->versement->fresh()->caissier_id])
+                    ->filter()
+                    ->unique();
+
+                foreach ($caissiersImpactes as $caissierId) {
+                    $caissier = Caissier::find($caissierId);
+                    if (!$caissier) {
+                        continue;
+                    }
+
+                    // Recalcule depuis les versements non collectés pour garantir un solde exact.
+                    $caissier->update([
+                        'solde_actuel' => $caissier->calculerSoldeActuel(),
+                    ]);
+                }
+            });
 
             session()->flash('success', 'Versement modifié avec succès.');
             return redirect()->route('admin.versements.index');
