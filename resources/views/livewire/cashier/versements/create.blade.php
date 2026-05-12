@@ -47,6 +47,18 @@
                             <label class="form-label fw-semibold">
                                 <i class="bi bi-person me-1 text-primary"></i>Motard <span class="text-danger">*</span>
                             </label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                                <input
+                                    type="text"
+                                    wire:model.live.debounce.300ms="motardSearch"
+                                    class="form-control"
+                                    placeholder="Rechercher par nom, identifiant, plaque ou matricule..."
+                                >
+                            </div>
+                            <small class="text-muted d-block mb-2">
+                                {{ count($motards ?? []) }} motard(s) trouvé(s)
+                            </small>
                             <select wire:model.live="motard_id" class="form-select form-select-lg @error('motard_id') is-invalid @enderror" required>
                                 <option value="">-- Sélectionner un motard --</option>
                                 @foreach($motards ?? [] as $motard)

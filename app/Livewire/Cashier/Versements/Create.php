@@ -16,6 +16,7 @@ use Carbon\Carbon;
 class Create extends Component
 {
     public $motard_id = '';
+    public $motardSearch = '';
     public $motard_secondaire_id = '';
     public $montant = '';
     public $mode_paiement = 'cash';
@@ -894,9 +895,28 @@ class Create extends Component
 
     public function render()
     {
-        $motards = Motard::with(['user', 'moto'])
+        $motardsQuery = Motard::with(['user', 'moto'])
             ->where('is_active', true)
-            ->whereHas('moto')
+            ->whereHas('moto');
+
+        $search = trim((string) $this->motardSearch);
+        if ($search !== '') {
+            $motardsQuery->where(function ($query) use ($search) {
+                $query->where('numero_identifiant', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%')
+                          ->orWhere('email', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('moto', function ($q) use ($search) {
+                        $q->where('plaque_immatriculation', 'like', '%' . $search . '%')
+                          ->orWhere('numero_matricule', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $motards = $motardsQuery
+            ->orderBy('id', 'desc')
+            ->limit(100)
             ->get();
 
         // Motards secondaires (tout motard actif sauf titulaire)
