@@ -95,24 +95,24 @@
                             </div>
                         </div>
 
-                        {{-- ===== CYCLE DE VERSEMENT (5 jours + 1 repos) ===== --}}
+                        {{-- ===== SEMAINE DE VERSEMENT (Lun-Ven) ===== --}}
                         @if(!empty($cycleInfo))
                         <div class="card mb-4 border-{{ $estJourRepos ? 'success' : 'primary' }}">
                             <div class="card-header py-2 bg-{{ $estJourRepos ? 'success' : 'primary' }} bg-opacity-10">
                                 <h6 class="mb-0 fw-bold text-{{ $estJourRepos ? 'success' : 'primary' }} small">
-                                    <i class="bi bi-{{ $estJourRepos ? 'moon-stars' : 'calendar-check' }} me-1"></i>
-                                    Cycle de versement
+                                    <i class="bi bi-{{ $estJourRepos ? 'moon-stars' : 'calendar-week' }} me-1"></i>
+                                    Semaine de versement (Lun–Ven)
                                 </h6>
                             </div>
                             <div class="card-body py-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="text-muted small">Cycle #{{ $cycleInfo['cycle_numero'] ?? 1 }}</span>
+                                    <span class="text-muted small">Semaine #{{ $cycleInfo['cycle_numero'] ?? now()->weekOfYear }}</span>
                                     <span class="badge bg-{{ $estJourRepos ? 'success' : 'primary' }}">
                                         {{ $cycleInfo['jours_travailles_cycle'] ?? 0 }}/5 jours
                                     </span>
                                 </div>
 
-                                {{-- Barre de progression du cycle --}}
+                                {{-- Barre de progression de la semaine --}}
                                 <div class="progress mb-2" style="height: 10px;">
                                     @php
                                         $progressPct = (($cycleInfo['jours_travailles_cycle'] ?? 0) / 5) * 100;
@@ -131,7 +131,7 @@
                                 @if($estJourRepos)
                                 <div class="alert alert-success py-2 mt-2 mb-0 small">
                                     <i class="bi bi-moon-stars me-1"></i>
-                                    <strong>Jour de repos mérité!</strong> Le motard a complété 5 jours de travail.
+                                    <strong>Weekend — Jour de repos!</strong> Les versements reprennent le lundi.
                                     @if($arrieresCumules > 0)
                                     <br>Seul le <strong>remboursement d'arriérés</strong> est autorisé.
                                     @endif
@@ -140,7 +140,7 @@
                                 <div class="d-flex gap-2 mt-2 flex-wrap">
                                     @if(!empty($cycleInfo['dates_cycle_actuel']))
                                     <small class="text-muted">
-                                        <i class="bi bi-clock-history me-1"></i>Jours travaillés ce cycle:
+                                        <i class="bi bi-clock-history me-1"></i>Jours travaillés cette semaine:
                                         @foreach($cycleInfo['dates_cycle_actuel'] as $dateCycle)
                                             <span class="badge bg-light text-dark">{{ \Carbon\Carbon::parse($dateCycle)->format('d/m') }}</span>
                                         @endforeach
@@ -151,24 +151,24 @@
 
                                 @if(($cycleInfo['jours_restants_cycle'] ?? 0) > 0 && !$estJourRepos)
                                 <small class="text-muted mt-1 d-block">
-                                    <i class="bi bi-arrow-right me-1"></i>Encore {{ $cycleInfo['jours_restants_cycle'] }} jour(s) avant le repos.
+                                    <i class="bi bi-arrow-right me-1"></i>Encore {{ $cycleInfo['jours_restants_cycle'] }} jour(s) ouvrable(s) cette semaine.
                                 </small>
                                 @endif
                             </div>
                         </div>
                         @endif
 
-                        {{-- Cycle du motard secondaire --}}
+                        {{-- Semaine du motard secondaire --}}
                         @if(!empty($cycleInfoSecondaire) && $motard_secondaire_id)
                         <div class="card mb-4 border-info">
                             <div class="card-header py-2 bg-info bg-opacity-10">
                                 <h6 class="mb-0 fw-bold text-info small">
-                                    <i class="bi bi-person-badge me-1"></i>Cycle du remplaçant
+                                    <i class="bi bi-person-badge me-1"></i>Semaine du remplaçant
                                 </h6>
                             </div>
                             <div class="card-body py-2">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="text-muted small">Cycle #{{ $cycleInfoSecondaire['cycle_numero'] ?? 1 }}</span>
+                                    <span class="text-muted small">Semaine #{{ $cycleInfoSecondaire['cycle_numero'] ?? now()->weekOfYear }}</span>
                                     <span class="badge bg-info">{{ $cycleInfoSecondaire['jours_travailles_cycle'] ?? 0 }}/5 jours</span>
                                 </div>
                                 <div class="progress mb-1" style="height: 6px;">
