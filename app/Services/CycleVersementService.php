@@ -10,37 +10,30 @@ use Carbon\Carbon;
  * Service de gestion du cycle de versement des motards.
  *
  * Principe:
- * - Un motard doit totaliser 5 jours de travail (versements journaliers).
- * - Ce cycle ne dépend PAS de la semaine civile.
- * - Après 5 jours travaillés, le jour suivant est un jour de repos (pas de versement requis).
- * - Si le motard ne travaille pas certains jours, le cycle reprend là où il s'est arrêté.
- * - Chaque motard (titulaire et secondaire) a son propre cycle indépendant.
- * - Une moto peut être utilisée par un motard secondaire qui a son propre cycle.
+ * - Les versements sont requis du Lundi au Vendredi (jours ouvrables).
+ * - Samedi et Dimanche sont des jours de repos (aucun versement journalier requis).
+ * - Les arriérés peuvent être remboursés n'importe quel jour.
+ * - Chaque motard (titulaire et secondaire) a son propre suivi indépendant.
  */
 class CycleVersementService
 {
-    const JOURS_TRAVAIL_PAR_CYCLE = 5;
+    const JOURS_TRAVAIL_PAR_CYCLE = 5; // Lundi à Vendredi
 
     /**
-     * Obtenir les informations du cycle actuel d'un motard.
+     * Obtenir les informations de la semaine courante d'un motard.
      *
      * @param Motard $motard
      * @return array
      */
     public static function getCycleInfo(Motard $motard): array
     {
-        // RÈGLE CYCLE:
-        // - On compte UNIQUEMENT les jours où CE motard a personnellement travaillé.
-        // - Cas 1: Il est titulaire de la moto ET aucun remplaçant n'a été désigné (motard_secondaire_id IS NULL)
-        //   → C'est lui qui a travaillé, ça compte dans son cycle.
-        // - Cas 2: Il est désigné comme motard secondaire sur la moto d'un autre
-        //   → C'est lui qui a physiquement travaillé, ça compte dans son cycle.
-        // - Cas EXCLU: Un versement sur sa moto (motard_id = lui) mais avec un motard_secondaire_id renseigné
-        //   → C'est le remplaçant qui a travaillé, PAS lui. Ne compte PAS dans son cycle.
+        $today = Carbon::today();
+        // Repos = Samedi (6) ou Dimanche (7)
+        $estWeekend = $today->isWeekend();
 
         // Jours où il a travaillé comme titulaire (sans remplaçant)
         $joursCommeTitulaire = Versement::where('motard_id', $motard->id)
-            ->whereNull('motard_secondaire_id') // Pas de remplaçant = c'est lui qui a travaillé
+            ->whereNull('motard_secondaire_id')
             ->where(function ($q) {
                 $q->where('type', 'journalier')->orWhereNull('type');
             })
@@ -61,7 +54,7 @@ class CycleVersementService
             ->groupBy(fn($v) => Carbon::parse($v->date_versement)->format('Y-m-d'))
             ->keys();
 
-        // Fusionner et dédupliquer: tous les jours où ce motard a PHYSIQUEMENT travaillé
+        // Tous les jours où ce motard a physiquement travaillé
         $toutesLesDates = $joursCommeTitulaire->merge($joursCommeSecondaire)
             ->unique()
             ->sort()
@@ -69,87 +62,60 @@ class CycleVersementService
 
         $totalJoursTravailles = $toutesLesDates->count();
 
-        if ($totalJoursTravailles == 0) {
-            return [
-                'jour_dans_cycle' => 0,
-                'jours_travailles_cycle' => 0,
-                'jours_restants_cycle' => self::JOURS_TRAVAIL_PAR_CYCLE,
-                'est_jour_repos' => false,
-                'cycle_numero' => 1,
-                'total_jours_travailles' => 0,
-                'dernier_versement' => null,
-                'prochain_repos_apres' => self::JOURS_TRAVAIL_PAR_CYCLE,
-                'dates_cycle_actuel' => [],
-                'message' => 'Aucun versement enregistré. Nouveau cycle (Jour 1/' . self::JOURS_TRAVAIL_PAR_CYCLE . ').',
-            ];
+        // Semaine courante: Lundi → Vendredi
+        $debutSemaine = $today->copy()->startOfWeek(Carbon::MONDAY);
+        $finSemaine   = $today->copy()->startOfWeek(Carbon::MONDAY)->addDays(4); // Vendredi
+
+        $datesCetteSemaine = $toutesLesDates->filter(function ($date) use ($debutSemaine, $finSemaine) {
+            $d = Carbon::parse($date);
+            return $d->between($debutSemaine, $finSemaine);
+        })->values();
+
+        $joursTravailesCetteSemaine = $datesCetteSemaine->count();
+        $joursRestantsSemaine = max(0, self::JOURS_TRAVAIL_PAR_CYCLE - $joursTravailesCetteSemaine);
+
+        $dernierVersementDate = $toutesLesDates->isNotEmpty() ? Carbon::parse($toutesLesDates->last()) : null;
+
+        // Numéro de semaine ISO (pour compatibilité affichage)
+        $cycleNumero = $today->weekOfYear;
+
+        if ($estWeekend) {
+            $message = '🟢 Weekend — Jour de repos. Les versements reprennent lundi.';
+        } elseif ($joursTravailesCetteSemaine == 0) {
+            $message = '🔵 Semaine ' . $cycleNumero . ' — Aucun versement cette semaine. Jour 1/5.';
+        } else {
+            $message = '🔵 Semaine ' . $cycleNumero . ' — ' . $joursTravailesCetteSemaine . '/5 jour(s) travaillé(s). Encore ' . $joursRestantsSemaine . ' jour(s).';
         }
-
-        // Calculer le cycle actuel
-        $cycleNumero = (int) floor(($totalJoursTravailles - 1) / self::JOURS_TRAVAIL_PAR_CYCLE) + 1;
-        $joursDansCycleActuel = (($totalJoursTravailles - 1) % self::JOURS_TRAVAIL_PAR_CYCLE) + 1;
-
-        $dernierVersementDate = Carbon::parse($toutesLesDates->last());
-        $joursDepuisDernier = $dernierVersementDate->diffInDays(Carbon::today());
-
-        // Déterminer si aujourd'hui est un jour de repos
-        // Repos = le cycle est complet (5 jours travaillés) ET le dernier versement est recent
-        $cycleComplet = ($joursDansCycleActuel == self::JOURS_TRAVAIL_PAR_CYCLE);
-        $estJourRepos = false;
-
-        if ($cycleComplet) {
-            // Le cycle est complet. Le prochain jour calendaire après le dernier versement est repos.
-            // Si on est le jour juste après le 5eme versement -> repos
-            // Si on est 2+ jours après → le repos a été "consommé", nouveau cycle
-            if ($joursDepuisDernier == 1) {
-                $estJourRepos = true;
-            } elseif ($joursDepuisDernier == 0) {
-                // Le 5eme versement est aujourd'hui -> demain sera repos
-                $estJourRepos = false;
-            } else {
-                // Plus d'1 jour depuis le 5eme versement -> repos consomme, nouveau cycle
-                $joursDansCycleActuel = 0;
-                $cycleNumero++;
-            }
-        }
-
-        $joursRestants = $estJourRepos ? 0 : (self::JOURS_TRAVAIL_PAR_CYCLE - $joursDansCycleActuel);
-
-        // Dates du cycle actuel
-        $debutIndexCycle = ($cycleNumero - 1) * self::JOURS_TRAVAIL_PAR_CYCLE;
-        $datesCycleActuel = $toutesLesDates->slice($debutIndexCycle, self::JOURS_TRAVAIL_PAR_CYCLE)->values();
-
-        // Message descriptif
-        $message = self::genererMessage($joursDansCycleActuel, $estJourRepos, $cycleNumero, $joursRestants);
 
         return [
-            'jour_dans_cycle' => $joursDansCycleActuel,
-            'jours_travailles_cycle' => $joursDansCycleActuel,
-            'jours_restants_cycle' => $joursRestants,
-            'est_jour_repos' => $estJourRepos,
-            'cycle_numero' => $cycleNumero,
-            'total_jours_travailles' => $totalJoursTravailles,
-            'dernier_versement' => $dernierVersementDate->format('d/m/Y'),
-            'prochain_repos_apres' => $joursRestants,
-            'dates_cycle_actuel' => $datesCycleActuel->toArray(),
-            'message' => $message,
+            'jour_dans_cycle'       => $joursTravailesCetteSemaine,
+            'jours_travailles_cycle'=> $joursTravailesCetteSemaine,
+            'jours_restants_cycle'  => $joursRestantsSemaine,
+            'est_jour_repos'        => $estWeekend,
+            'cycle_numero'          => $cycleNumero,
+            'total_jours_travailles'=> $totalJoursTravailles,
+            'dernier_versement'     => $dernierVersementDate?->format('d/m/Y'),
+            'prochain_repos_apres'  => $joursRestantsSemaine,
+            'dates_cycle_actuel'    => $datesCetteSemaine->toArray(),
+            'message'               => $message,
         ];
     }
 
     /**
-     * Vérifier si un motard peut faire un versement aujourd'hui.
+     * Vérifier si un motard peut faire un versement à la date donnée.
      */
     public static function peutFaireVersement(Motard $motard, ?Carbon $date = null): array
     {
         $date = $date ?? Carbon::today();
         $cycleInfo = self::getCycleInfo($motard);
 
-        // Jour de repos → pas de versement journalier requis (mais arriérés OK)
-        if ($cycleInfo['est_jour_repos']) {
+        // Weekend → pas de versement journalier (arriérés toujours OK)
+        if ($date->isWeekend()) {
             return [
-                'peut_verser' => false,
-                'peut_verser_arrieres' => true,
-                'raison' => 'Jour de repos (cycle #' . $cycleInfo['cycle_numero'] . ' complété). Seul le remboursement d\'arriérés est autorisé.',
-                'cycle_info' => $cycleInfo,
+                'peut_verser'         => false,
+                'peut_verser_arrieres'=> true,
+                'raison'              => 'Jour de repos (weekend). Seul le remboursement d\'arriérés est autorisé.',
+                'cycle_info'          => $cycleInfo,
             ];
         }
 
@@ -163,18 +129,18 @@ class CycleVersementService
 
         if ($versementExistant) {
             return [
-                'peut_verser' => false,
-                'peut_verser_arrieres' => true,
-                'raison' => 'Un versement journalier existe déjà pour cette date.',
-                'cycle_info' => $cycleInfo,
+                'peut_verser'         => false,
+                'peut_verser_arrieres'=> true,
+                'raison'              => 'Un versement journalier existe déjà pour cette date.',
+                'cycle_info'          => $cycleInfo,
             ];
         }
 
         return [
-            'peut_verser' => true,
-            'peut_verser_arrieres' => true,
-            'raison' => 'Jour ' . ($cycleInfo['jour_dans_cycle'] + 1) . '/' . self::JOURS_TRAVAIL_PAR_CYCLE . ' du cycle #' . $cycleInfo['cycle_numero'],
-            'cycle_info' => $cycleInfo,
+            'peut_verser'         => true,
+            'peut_verser_arrieres'=> true,
+            'raison'              => $date->translatedFormat('l') . ' — jour ouvrable (Lun-Ven)',
+            'cycle_info'          => $cycleInfo,
         ];
     }
 
@@ -208,25 +174,5 @@ class CycleVersementService
         return $resume;
     }
 
-    /**
-     * Générer un message descriptif pour l'état du cycle.
-     */
-    private static function genererMessage(int $joursDansCycle, bool $estRepos, int $cycleNum, int $joursRestants): string
-    {
-        if ($estRepos) {
-            return "🟢 Jour de repos! Cycle #{$cycleNum} complété (" . self::JOURS_TRAVAIL_PAR_CYCLE . "/" . self::JOURS_TRAVAIL_PAR_CYCLE . " jours travaillés).";
-        }
-
-        if ($joursDansCycle == 0) {
-            return "🔵 Nouveau cycle #{$cycleNum} — Jour 1/" . self::JOURS_TRAVAIL_PAR_CYCLE . ".";
-        }
-
-        $prochainJour = $joursDansCycle + 1;
-        if ($prochainJour > self::JOURS_TRAVAIL_PAR_CYCLE) {
-            return "🟢 Cycle #{$cycleNum} terminé! Prochain versement = nouveau cycle.";
-        }
-
-        return "🔵 Cycle #{$cycleNum} — Jour {$joursDansCycle}/" . self::JOURS_TRAVAIL_PAR_CYCLE . " travaillé(s). Encore {$joursRestants} jour(s) avant le repos.";
-    }
 }
 

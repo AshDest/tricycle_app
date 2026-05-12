@@ -16,6 +16,7 @@ use Carbon\Carbon;
 class Create extends Component
 {
     public $motard_id = '';
+    public $motardSearch = '';
     public $motard_secondaire_id = '';
     public $montant = '';
     public $mode_paiement = 'cash';
@@ -210,13 +211,13 @@ class Create extends Component
     }
 
     /**
-     * Détermine si une date est un jour de versement requis selon le cycle 5/2.
-     * Cycle fixe: 5 jours de versement puis 2 jours sautés, à partir du début contrat.
+     * Détermine si une date est un jour de versement requis.
+     * Règle: Lundi à Vendredi = jours requis. Samedi et Dimanche = repos.
      */
     protected function isJourVersementRequis(Carbon $date, Carbon $dateDebutReference): bool
     {
-        $indexJour = $dateDebutReference->diffInDays($date) % 7;
-        return $indexJour < 5;
+        // $dateDebutReference conservé en signature pour compatibilité mais non utilisé
+        return $date->isWeekday(); // true = Lun-Ven, false = Sam-Dim
     }
 
     /**
@@ -571,9 +572,9 @@ class Create extends Component
 
         if ($motardQuiTravaille && $this->type_versement === 'journalier') {
             $verification = CycleVersementService::peutFaireVersement($motardQuiTravaille, $dateVersement);
-            if (!$verification['peut_verser'] && $verification['cycle_info']['est_jour_repos']) {
+            if (!$verification['peut_verser'] && $dateVersement->isWeekend()) {
                 $nomMotard = $motardQuiTravaille->user?->name ?? 'Le motard';
-                session()->flash('error', "Jour de repos pour {$nomMotard} (cycle de 5 jours complete). Seul le remboursement d'arrieres est autorise.");
+                session()->flash('error', "Weekend — jour de repos pour {$nomMotard}. Seul le remboursement d'arriérés est autorisé le samedi et le dimanche.");
                 return;
             }
         }
@@ -894,9 +895,28 @@ class Create extends Component
 
     public function render()
     {
-        $motards = Motard::with(['user', 'moto'])
+        $motardsQuery = Motard::with(['user', 'moto'])
             ->where('is_active', true)
-            ->whereHas('moto')
+            ->whereHas('moto');
+
+        $search = trim((string) $this->motardSearch);
+        if ($search !== '') {
+            $motardsQuery->where(function ($query) use ($search) {
+                $query->where('numero_identifiant', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%')
+                          ->orWhere('email', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('moto', function ($q) use ($search) {
+                        $q->where('plaque_immatriculation', 'like', '%' . $search . '%')
+                          ->orWhere('numero_matricule', 'like', '%' . $search . '%');
+                    });
+            });
+        }
+
+        $motards = $motardsQuery
+            ->orderBy('id', 'desc')
+            ->limit(100)
             ->get();
 
         // Motards secondaires (tout motard actif sauf titulaire)
