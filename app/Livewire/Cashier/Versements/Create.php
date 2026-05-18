@@ -811,7 +811,8 @@ class Create extends Component
         // Rembourser les arriérés
         $this->rembourserArrieres($motard, $montantEffectif);
 
-        // Créer un enregistrement de versement pour traçabilité avec type arrieres_only
+        // Créer un enregistrement financier unique (daté du remboursement)
+        // pour alimenter la caisse du caissier sans regonfler les anciens montants journaliers.
         $versement = Versement::create([
             'motard_id' => $motard->id,
             'motard_secondaire_id' => $this->motard_secondaire_id ?: null,
@@ -827,7 +828,7 @@ class Create extends Component
             'part_proprietaire' => $partProprietaire,
             'part_okami' => $partOkami,
             'validated_by_caissier_at' => Carbon::now(),
-            'notes' => "Remboursement arrirs" . ($this->notes ? ": " . $this->notes : ''),
+            'notes' => "Remboursement arriérés" . ($this->notes ? ": " . $this->notes : ''),
         ]);
 
         // Le solde_actuel du caissier est recalculé automatiquement par VersementObserver::created()
@@ -858,21 +859,22 @@ class Create extends Component
             $arriereActuel = $versement->arrieres;
             $remboursement = min($restant, $arriereActuel);
 
-            $nouveauMontant = $versement->montant + $remboursement;
             $nouveauxArrieres = $arriereActuel - $remboursement;
             $nouveauStatut = $nouveauxArrieres <= 0 ? 'payé' : 'partiellement_payé';
 
-            $partProprietaire = RepartitionService::getPartProprietaire($nouveauMontant);
-            $partOkami = RepartitionService::getPartOkami($nouveauMontant);
+            // IMPORTANT: ne pas augmenter le montant historique de la journée
+            // pour éviter une double comptabilisation.
+            // L'entrée financière réelle est portée uniquement par la ligne arrieres_only.
+
+            $dateRemboursement = $this->date_versement
+                ? Carbon::parse($this->date_versement)->format('d/m/Y')
+                : now()->format('d/m/Y');
 
             $versement->update([
-                'montant' => $nouveauMontant,
                 'arrieres' => max(0, $nouveauxArrieres),
                 'statut' => $nouveauStatut,
-                'part_proprietaire' => $partProprietaire,
-                'part_okami' => $partOkami,
                 'notes' => ($versement->notes ? $versement->notes . "\n" : '') .
-                           "[Remboursement de " . number_format($remboursement) . " FC le " . now()->format('d/m/Y') . "]",
+                           "[Remboursement de " . number_format($remboursement) . " FC le " . $dateRemboursement . "]",
             ]);
 
             $restant -= $remboursement;
