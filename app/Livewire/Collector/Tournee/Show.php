@@ -7,6 +7,8 @@ use Livewire\Attributes\Layout;
 use App\Models\Tournee;
 use App\Models\Collecte;
 use App\Models\TransactionMobile;
+use App\Models\Versement;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('components.dashlite-layout')]
 class Show extends Component
@@ -48,22 +50,42 @@ class Show extends Component
             return;
         }
 
-        $collecte->update([
-            'valide_par_collecteur' => true,
-            'valide_collecteur_at' => now(),
-        ]);
-
-        // Ajouter le montant à la caisse du collecteur
         $collecteur = auth()->user()->collecteur;
         $montant = (float) $collecte->montant_collecte;
-        if ($collecteur && $montant > 0) {
-            $collecteur->ajouterMontantAvecRepartition($montant);
 
-            // Si le dépôt a été fait via mobile money, créer automatiquement une transaction entrante
-            if ($collecte->mode_paiement !== 'cash' && in_array($collecte->mode_paiement, ['mpesa', 'airtel_money', 'orange_money', 'afrimoney'])) {
-                $this->enregistrerTransactionMobileEntrante($collecte, $collecteur);
+        DB::transaction(function () use ($collecte, $collecteur, $montant) {
+            $collecte->update([
+                'valide_par_collecteur' => true,
+                'valide_collecteur_at' => now(),
+            ]);
+
+            // Associer à cette collecte les versements non collectés du caissier,
+            // jusqu'au moment du dépôt côté caissier.
+            $borneDepot = $collecte->heure_depart ?? $collecte->updated_at ?? now();
+
+            Versement::where('caissier_id', $collecte->caissier_id)
+                ->whereNull('collecte_id')
+                ->where('statut', '!=', 'non_effectué')
+                ->where('created_at', '<=', $borneDepot)
+                ->update(['collecte_id' => $collecte->id]);
+
+            // Recalcul fiable du solde restant chez ce caissier
+            if ($collecte->caissier) {
+                $collecte->caissier->update([
+                    'solde_actuel' => $collecte->caissier->calculerSoldeActuel(),
+                ]);
             }
-        }
+
+            // Ajouter le montant validé à la caisse du collecteur
+            if ($collecteur && $montant > 0) {
+                $collecteur->ajouterMontantAvecRepartition($montant);
+
+                // Si dépôt mobile money, enregistrer automatiquement la transaction entrante
+                if ($collecte->mode_paiement !== 'cash' && in_array($collecte->mode_paiement, ['mpesa', 'airtel_money', 'orange_money', 'afrimoney'])) {
+                    $this->enregistrerTransactionMobileEntrante($collecte, $collecteur);
+                }
+            }
+        });
 
         $this->tournee->refresh();
 

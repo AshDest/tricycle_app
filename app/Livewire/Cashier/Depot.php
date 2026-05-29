@@ -135,16 +135,14 @@ class Depot extends Component
                 'commentaire_caissier' => $this->notes,
             ]);
 
-            // Déduire du solde du caissier
-            $this->caissier->decrement('solde_actuel', $montant);
-
-            // Rafraîchir les données
+            // Le solde du caissier sera réduit uniquement après validation par le collecteur.
+            // On garde le solde affiché tel quel jusqu'à cette validation.
             $this->soldeActuel = $this->caissier->fresh()->solde_actuel;
 
             $this->fermerModal();
 
             $modeLabel = $this->mode_paiement === 'cash' ? 'en cash' : 'via ' . strtoupper(str_replace('_', ' ', $this->mode_paiement));
-            $this->message = "Dépôt de " . number_format($montant) . " FC effectué avec succès {$modeLabel}. En attente de validation par le collecteur.";
+            $this->message = "Dépôt de " . number_format($montant) . " FC effectué avec succès {$modeLabel}. Le solde sera ajusté après validation par le collecteur.";
             $this->messageType = 'success';
 
         } catch (\Exception $e) {
