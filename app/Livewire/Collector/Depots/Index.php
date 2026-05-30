@@ -7,7 +7,9 @@ use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 use App\Models\Collecte;
 use App\Models\Caissier;
+use App\Models\Versement;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Gestion des dépôts reçus des caissiers
@@ -64,16 +66,33 @@ class Index extends Component
             return;
         }
 
-        // Mettre à jour la collecte
-        $collecte->update([
-            'valide_par_collecteur' => true,
-            'valide_collecteur_at' => now(),
-        ]);
+        DB::transaction(function () use ($collecte, $collecteur, $montant) {
+            // Marquer la collecte comme validée par le collecteur
+            $collecte->update([
+                'valide_par_collecteur' => true,
+                'valide_collecteur_at' => now(),
+            ]);
 
-        // Ajouter le montant à la caisse du collecteur
-        if ($collecteur) {
-            $collecteur->ajouterMontantAvecRepartition($montant);
-        }
+            // Lier les versements réellement ramassés à cette collecte.
+            $borneDepot = $collecte->heure_depart ?? $collecte->updated_at ?? now();
+            Versement::where('caissier_id', $collecte->caissier_id)
+                ->whereNull('collecte_id')
+                ->where('statut', '!=', 'non_effectué')
+                ->where('created_at', '<=', $borneDepot)
+                ->update(['collecte_id' => $collecte->id]);
+
+            // Recalcul fiable du solde restant chez le caissier.
+            if ($collecte->caissier) {
+                $collecte->caissier->update([
+                    'solde_actuel' => $collecte->caissier->calculerSoldeActuel(),
+                ]);
+            }
+
+            // Ajouter le montant à la caisse du collecteur.
+            if ($collecteur) {
+                $collecteur->ajouterMontantAvecRepartition($montant);
+            }
+        });
 
         session()->flash('success',
             'Dépôt de ' . number_format($montant) . ' FC validé et ajouté à la caisse!'

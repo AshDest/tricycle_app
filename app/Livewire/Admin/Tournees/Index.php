@@ -8,6 +8,7 @@ use Livewire\WithPagination;
 use App\Models\Tournee;
 use App\Models\Collecte;
 use App\Models\Collecteur;
+use App\Models\Versement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -131,8 +132,18 @@ class Index extends Component
                             'notes_collecteur' => 'Auto-collecté à la terminaison de la tournée',
                         ]);
 
-                        // Déduire du solde du caissier
-                        $caissier->decrement('solde_actuel', $soldeActuel);
+                        // Lier les versements non collectés à cette collecte auto-validée.
+                        $borneDepot = $collecte->heure_depart ?? now();
+                        Versement::where('caissier_id', $caissier->id)
+                            ->whereNull('collecte_id')
+                            ->where('statut', '!=', 'non_effectué')
+                            ->where('created_at', '<=', $borneDepot)
+                            ->update(['collecte_id' => $collecte->id]);
+
+                        // Recalculer le solde réel restant du caissier.
+                        $caissier->update([
+                            'solde_actuel' => $caissier->calculerSoldeActuel(),
+                        ]);
 
                         // Ajouter à la caisse du collecteur
                         if ($collecteur) {
@@ -164,6 +175,21 @@ class Index extends Component
                             'valide_par_collecteur' => true,
                             'valide_collecteur_at' => now(),
                         ]);
+
+                        // Lier les versements correspondant à ce dépôt déjà effectué.
+                        $borneDepot = $collecte->heure_depart ?? $collecte->updated_at ?? now();
+                        Versement::where('caissier_id', $collecte->caissier_id)
+                            ->whereNull('collecte_id')
+                            ->where('statut', '!=', 'non_effectué')
+                            ->where('created_at', '<=', $borneDepot)
+                            ->update(['collecte_id' => $collecte->id]);
+
+                        if ($collecte->caissier) {
+                            $collecte->caissier->update([
+                                'solde_actuel' => $collecte->caissier->calculerSoldeActuel(),
+                            ]);
+                        }
+
                         if ($collecteur && $montant > 0) {
                             $collecteur->ajouterMontantAvecRepartition($montant);
                         }
