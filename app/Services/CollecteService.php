@@ -99,7 +99,7 @@ class CollecteService
 
         // Mettre à jour le solde du caissier
         $collecte->caissier->update([
-            'solde_actuel' => $collecte->caissier->solde_actuel - $collecte->montant_collecte,
+            'solde_actuel' => $collecte->caissier->calculerSoldeActuel(),
         ]);
 
         return $collecte;
